@@ -58,9 +58,15 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
     if 'Join_Date' not in df.columns: 
         return go.Figure()
     
-    # Ensure datetime
+    # Ensure datetime with error handling for messy data
     temp_df = df.copy()
-    temp_df['Join_Date'] = pd.to_datetime(temp_df['Join_Date'])
+    temp_df['Join_Date'] = pd.to_datetime(temp_df['Join_Date'], errors='coerce')
+    
+    # Remove rows with invalid dates
+    temp_df = temp_df.dropna(subset=['Join_Date'])
+    
+    if len(temp_df) == 0:
+        return go.Figure()
     
     trend = temp_df.groupby(temp_df['Join_Date'].dt.to_period("M")).size().reset_index(name='New Members')
     trend['Join_Date'] = trend['Join_Date'].astype(str)
