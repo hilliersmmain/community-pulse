@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import re
 from typing import Optional, List
+from datetime import datetime
 
 class DataCleaner:
     def __init__(self, df: pd.DataFrame):
@@ -14,6 +15,8 @@ class DataCleaner:
         self.raw_df = df.copy()
         self.clean_df = df.copy()
         self.log: List[str] = []
+        self.start_timestamp = datetime.now()
+        self.end_timestamp = None
 
     def clean_all(self) -> pd.DataFrame:
         """
@@ -33,6 +36,7 @@ class DataCleaner:
         self.remove_duplicates()  # Run AFTER standardization for better matching
         self.clean_dates()
         self.handle_missing_values()
+        self.end_timestamp = datetime.now()
         return self.clean_df
 
     def remove_duplicates(self) -> None:
