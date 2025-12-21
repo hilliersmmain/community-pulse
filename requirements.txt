@@ -1,7 +1,7 @@
-streamlit==1.52.2
-pandas==2.2.2
-plotly==6.5.0
-numpy==1.26.4
-faker==39.0.0
-pytest==9.0.2
-python-Levenshtein==0.26.1
+streamlit>=1.52.2
+pandas>=2.2.3
+plotly>=6.5.0
+numpy>=2.1.0
+faker>=39.0.0
+pytest>=9.0.2
+python-Levenshtein>=0.26.1
