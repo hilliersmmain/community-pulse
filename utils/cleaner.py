@@ -39,13 +39,24 @@ class DataCleaner:
         """
         Return True if names are similar enough to be duplicates.
         
+        Uses SequenceMatcher (Python's difflib) which implements a similar algorithm
+        to Levenshtein distance. It calculates the ratio of matching characters
+        between two strings.
+        
         Args:
             name1: First name to compare
             name2: Second name to compare
-            threshold: Similarity threshold (0.0 to 1.0)
+            threshold: Similarity threshold (range: 0.0 to 1.0, where 1.0 is exact match).
+                      Default is 0.85 (85% similarity)
         
         Returns:
             bool: True if names are similar enough to be considered duplicates
+            
+        Example:
+            >>> fuzzy_match_names("John Smith", "Jon Smith")
+            True  # 94% similarity
+            >>> fuzzy_match_names("John Smith", "Jane Doe")
+            False  # 30% similarity
         """
         if pd.isna(name1) or pd.isna(name2):
             return False
@@ -110,7 +121,13 @@ class DataCleaner:
         self.log.append(f"Removed {self.duplicate_count} duplicate rows.")
     
     def remove_fuzzy_duplicates(self) -> None:
-        """Removes near-duplicate names using fuzzy matching."""
+        """
+        Removes near-duplicate names using fuzzy matching.
+        
+        Note: This uses O(n²) complexity with nested loops. For datasets under 10,000
+        records, performance is acceptable. For larger datasets, consider using
+        blocking techniques or indexing strategies for optimization.
+        """
         if 'Name' not in self.clean_df.columns or 'Email' not in self.clean_df.columns:
             return
         

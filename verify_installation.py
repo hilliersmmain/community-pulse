@@ -37,7 +37,9 @@ def test_data_generation():
     df = generate_messy_data(num_records=100, save_path=None)
     
     assert len(df) > 0, "Generated dataframe is empty"
+    # Account for ~10% duplicates added by generator
     assert len(df) >= 100, "Generated fewer records than expected"
+    assert len(df) <= 120, "Generated too many records (expected ~110 with duplicates)"
     
     required_cols = ['Name', 'Email', 'Join_Date', 'Event_Attendance', 'Role']
     for col in required_cols:
