@@ -18,9 +18,9 @@ class DataCleaner:
         self.start_timestamp = datetime.now()
         self.end_timestamp = None
 
-    def clean_all(self) -> pd.DataFrame:
+    def clean_all(self, steps=None) -> pd.DataFrame:
         """
-        Runs the full data cleaning pipeline.
+        Runs the full data cleaning pipeline or selected steps.
         
         Order of operations is critical:
         1. Standardize text (Names, Emails)
@@ -28,14 +28,30 @@ class DataCleaner:
         3. Fix Types (Dates)
         4. Handle Missing Values
         
+        Args:
+            steps (list): List of cleaning steps to apply. If None, applies all steps.
+                         Valid steps: 'standardize_names', 'fix_emails', 'remove_duplicates', 
+                                     'clean_dates', 'handle_missing_values'
+        
         Returns:
             pd.DataFrame: The cleaned dataframe.
         """
-        self.standardize_names()
-        self.fix_emails()
-        self.remove_duplicates()  # Run AFTER standardization for better matching
-        self.clean_dates()
-        self.handle_missing_values()
+        # If no steps specified, run all
+        if steps is None:
+            steps = ['standardize_names', 'fix_emails', 'remove_duplicates', 'clean_dates', 'handle_missing_values']
+        
+        # Execute requested steps in order
+        if 'standardize_names' in steps:
+            self.standardize_names()
+        if 'fix_emails' in steps:
+            self.fix_emails()
+        if 'remove_duplicates' in steps:
+            self.remove_duplicates()
+        if 'clean_dates' in steps:
+            self.clean_dates()
+        if 'handle_missing_values' in steps:
+            self.handle_missing_values()
+            
         self.end_timestamp = datetime.now()
         return self.clean_df
 
