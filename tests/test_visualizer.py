@@ -9,11 +9,6 @@ import pytest
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import sys
-import os
-
-# Add parent directory to path to import utils
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils.visualizer import (
     plot_attendance_trend,
@@ -256,6 +251,3 @@ class TestVisualizerEnhancements:
         assert fig_hist is not None
         assert len(fig_hist.data) > 0
 
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])

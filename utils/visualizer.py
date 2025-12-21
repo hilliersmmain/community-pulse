@@ -3,8 +3,10 @@ import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 from typing import Optional, Dict, Any
-import io
-import base64
+
+# Constants for chart configuration
+MIN_POINTS_FOR_TREND = 3
+DEFAULT_HISTOGRAM_BINS = 20
 
 
 def _add_export_button(fig: go.Figure) -> go.Figure:
@@ -95,7 +97,7 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
     ))
     
     # Add trend line (linear regression)
-    if len(trend) > 2:
+    if len(trend) > MIN_POINTS_FOR_TREND - 1:
         x_numeric = np.arange(len(trend))
         z = np.polyfit(x_numeric, trend['New Members'], 1)
         p = np.poly1d(z)
@@ -245,7 +247,7 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
     
     fig.add_trace(go.Histogram(
         x=df['Event_Attendance'],
-        nbinsx=20,
+        nbinsx=DEFAULT_HISTOGRAM_BINS,
         name='Member Count',
         marker=dict(
             color='#1f77b4',
