@@ -5,7 +5,7 @@ import json
 import plotly.express as px
 from utils.data_generator import generate_messy_data
 from utils.cleaner import DataCleaner
-from utils.visualizer import plot_attendance_trend, plot_role_distribution, plot_attendance_histogram
+from utils.visualizer import plot_attendance_trend, plot_role_distribution, plot_attendance_histogram, get_chart_export_config
 from utils.health_metrics import DataHealthMetrics
 from datetime import datetime
 
@@ -560,18 +560,91 @@ with tab2:
             st.warning("⚠️ No roles selected. Showing all data.")
         
         st.divider()
+        
+        # Get export configuration
+        export_config = get_chart_export_config()
+        
+        # Determine data state label
+        data_state = st.session_state.get('view_state', 'cleaned')
+        
+        # Row 1: Attendance Trend and Histogram
         row1_col1, row1_col2 = st.columns(2)
         
-        
         with row1_col1:
-            st.plotly_chart(plot_attendance_trend(filtered_df), use_container_width=True)
-            st.caption("*Prediction: Attendance is projected to increase by 12% next month based on 3-month MA.*")
+            with st.spinner('📊 Loading attendance trend...'):
+                fig_trend = plot_attendance_trend(filtered_df, data_state=data_state)
+                st.plotly_chart(fig_trend, use_container_width=True, config=export_config)
+            st.caption("💡 **Tip:** Click the camera icon in the chart to export as PNG. Hover over data points for detailed information.")
             
         with row1_col2:
-            st.plotly_chart(plot_attendance_histogram(filtered_df), use_container_width=True)
-            
+            with st.spinner('📊 Loading attendance histogram...'):
+                fig_hist = plot_attendance_histogram(filtered_df, data_state=data_state)
+                st.plotly_chart(fig_hist, use_container_width=True, config=export_config)
+            st.caption("💡 **Tip:** Statistical markers show mean (red dashed) and median (green dotted) values.")
+        
+        st.divider()
+        
+        # Row 2: Role Distribution
         st.subheader("Demographics")
-        st.plotly_chart(plot_role_distribution(filtered_df), use_container_width=True)
+        with st.spinner('📊 Loading role distribution...'):
+            fig_role = plot_role_distribution(filtered_df, data_state=data_state)
+            st.plotly_chart(fig_role, use_container_width=True, config=export_config)
+        st.caption("💡 **Tip:** Pie chart shows both counts and percentages. Click legend items to filter specific roles.")
+        
+        # Before/After Comparison Section
+        if st.session_state.get('cleaned'):
+            st.divider()
+            st.subheader("📊 Before/After Cleaning Visual Comparison")
+            
+            # Create comparison tabs
+            compare_tab1, compare_tab2 = st.tabs(["Side-by-Side Comparison", "Toggle View"])
+            
+            with compare_tab1:
+                st.markdown("#### Compare Raw vs. Cleaned Data Visualizations")
+                
+                # Side by side comparison
+                comp_col1, comp_col2 = st.columns(2)
+                
+                with comp_col1:
+                    st.markdown("##### 🔴 Raw Data")
+                    with st.spinner('Loading raw data charts...'):
+                        raw_trend = plot_attendance_trend(raw_df, data_state="raw")
+                        st.plotly_chart(raw_trend, use_container_width=True, config=export_config, key="raw_trend_compare")
+                
+                with comp_col2:
+                    st.markdown("##### 🟢 Cleaned Data")
+                    with st.spinner('Loading cleaned data charts...'):
+                        clean_trend = plot_attendance_trend(clean_df, data_state="cleaned")
+                        st.plotly_chart(clean_trend, use_container_width=True, config=export_config, key="clean_trend_compare")
+            
+            with compare_tab2:
+                st.markdown("#### Interactive Toggle Comparison")
+                comparison_state = st.radio(
+                    "Select data state to visualize:",
+                    options=['raw', 'cleaned'],
+                    format_func=lambda x: '📊 Raw Data' if x == 'raw' else '✨ Cleaned Data',
+                    horizontal=True
+                )
+                
+                if comparison_state == 'raw':
+                    compare_df = raw_df
+                    state_label = "raw"
+                else:
+                    compare_df = clean_df
+                    state_label = "cleaned"
+                
+                # Show all three charts for selected state
+                with st.spinner(f'Loading {state_label} data visualizations...'):
+                    st.plotly_chart(plot_attendance_trend(compare_df, data_state=state_label), 
+                                  use_container_width=True, config=export_config, key=f"{state_label}_trend_toggle")
+                    
+                    toggle_col1, toggle_col2 = st.columns(2)
+                    with toggle_col1:
+                        st.plotly_chart(plot_attendance_histogram(compare_df, data_state=state_label), 
+                                      use_container_width=True, config=export_config, key=f"{state_label}_hist_toggle")
+                    with toggle_col2:
+                        st.plotly_chart(plot_role_distribution(compare_df, data_state=state_label), 
+                                      use_container_width=True, config=export_config, key=f"{state_label}_role_toggle")
         
     else:
         st.warning("⚠️ Please clean the data in the 'Data Cleaning Ops' tab to generate insights.")

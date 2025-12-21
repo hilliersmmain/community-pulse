@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 data/
 .venv
+demo_outputs/
+*.png
+
