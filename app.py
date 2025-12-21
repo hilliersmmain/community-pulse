@@ -25,8 +25,66 @@ from datetime import datetime
 st.set_page_config(
     page_title="Community Pulse | Data Dashboard",
     page_icon="📊",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
+
+# Custom CSS for professional styling
+st.markdown("""
+<style>
+    /* Main header styling */
+    .main h1 {
+        color: #1f77b4;
+        font-weight: 700;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid #1f77b4;
+    }
+    
+    /* Metric cards enhancement */
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        padding: 12px 24px;
+        font-weight: 500;
+    }
+    
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    /* Success/info box enhancement */
+    .element-container div[data-testid="stMarkdownContainer"] > div[data-testid="stMarkdown"] {
+        font-size: 0.95rem;
+    }
+    
+    /* Chart container shadow */
+    .js-plotly-plot {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Initialize session state for UI features
 initialize_session_state()
@@ -35,12 +93,19 @@ initialize_session_state()
 if st.session_state.get('show_welcome', False):
     show_welcome_modal()
 
-# Title & Description
+# Title & Description with enhanced styling
 st.title("📊 Community Pulse: Intelligent Data Dashboard")
 st.markdown("""
-**Transform your data journey:** From messy, unstructured member records to crystal-clear insights in minutes.  
-*Powered by intelligent data engineering, automated cleaning pipelines, and interactive business intelligence.*
-""")
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            padding: 1.5rem; 
+            border-radius: 10px; 
+            color: white; 
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <strong style="font-size: 1.1rem;">Transform your data journey:</strong> From messy, unstructured member records to crystal-clear insights in minutes.<br>
+    <em style="opacity: 0.9;">Powered by intelligent data engineering, automated cleaning pipelines, and interactive business intelligence.</em>
+</div>
+""", unsafe_allow_html=True)
 
 # What's New panel
 show_whats_new()
