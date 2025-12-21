@@ -706,8 +706,8 @@ with tab2:
         # Get export configuration
         export_config = get_chart_export_config()
         
-        # Determine data state label
-        data_state = st.session_state.get('view_state', 'cleaned')
+        # Determine data state label - always "cleaned" when on Analytics Dashboard with cleaned data
+        data_state = "cleaned"
         
         # Row 1: Attendance Trend and Histogram
         row1_col1, row1_col2 = st.columns(2)
