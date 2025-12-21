@@ -175,6 +175,34 @@ class TestDataCleaner:
         
         # Verify dates are datetime type
         assert pd.api.types.is_datetime64_any_dtype(result['Join_Date'])
+    
+    def test_timestamps_are_set(self):
+        """Test that cleaning operations set timestamps correctly."""
+        messy_data = pd.DataFrame({
+            'Name': ['John Doe', 'Jane Smith'],
+            'Email': ['john@test.com', 'jane@test.com'],
+            'Event_Attendance': [5, 10],
+            'Role': ['Member', 'Admin']
+        })
+        
+        cleaner = DataCleaner(messy_data)
+        
+        # Check start timestamp is set
+        assert cleaner.start_timestamp is not None
+        assert isinstance(cleaner.start_timestamp, datetime)
+        
+        # End timestamp should be None before cleaning
+        assert cleaner.end_timestamp is None
+        
+        # Run cleaning
+        cleaner.clean_all()
+        
+        # Check end timestamp is set after cleaning
+        assert cleaner.end_timestamp is not None
+        assert isinstance(cleaner.end_timestamp, datetime)
+        
+        # End timestamp should be after start timestamp
+        assert cleaner.end_timestamp >= cleaner.start_timestamp
 
 
 if __name__ == '__main__':

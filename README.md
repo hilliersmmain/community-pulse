@@ -19,6 +19,11 @@ Developed using AI-assisted workflows with GitHub Copilot and Google Antigravity
 ## ✨ Key Features
 
 - **Automated Data Cleaning Pipeline:** Handles duplicates, fuzzy string matching (names), and type coercion.
+- **Comprehensive Data Health Metrics:** Real-time calculation of data quality scores across completeness, duplicates, and formatting.
+- **Dynamic State Management:** Toggle between raw and cleaned data views with live KPI updates.
+- **Before/After Comparison:** Side-by-side visualization of data quality improvements.
+- **Interactive Tooltips:** User-friendly explanations for all metrics and KPIs.
+- **Timestamp Tracking:** Automatic tracking and display of data operation timestamps.
 - **Interactive Analytics:** Real-time Plotly charts for attendance trends, role distribution, and engagement.
 - **AI-Lite Prediction:** Simple moving average logic to project future attendance.
 - **Professional UI:** Built with Streamlit for a clean, responsive user experience.
