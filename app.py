@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import json
 import plotly.express as px
 from utils.data_generator import generate_messy_data
 from utils.cleaner import DataCleaner
@@ -23,18 +24,253 @@ st.markdown("""
 """)
 
 # --- SIDEBAR Controls ---
-st.sidebar.header("Data Controls")
+st.sidebar.header("⚙️ Data Controls")
 
 DATA_PATH = "data/messy_club_data.csv"
 
-if st.sidebar.button("🔄 Generate New Messy Data"):
-    with st.spinner("Generating entropy..."):
+# Initialize session state variables
+if 'num_records' not in st.session_state:
+    st.session_state['num_records'] = 500
+if 'messiness_level' not in st.session_state:
+    st.session_state['messiness_level'] = 'medium'
+
+# --- 1. QUICK STATS SECTION ---
+with st.sidebar.expander("📊 Quick Stats", expanded=True):
+    if os.path.exists(DATA_PATH):
+        # Load data for stats
+        try:
+            temp_df = pd.read_csv(DATA_PATH)
+            health = DataHealthMetrics(temp_df)
+            metrics = health.get_detailed_metrics()
+            
+            st.metric("📝 Records", metrics['total_records'])
+            st.metric("💚 Health Score", f"{metrics['overall_score']}%")
+            
+            # Last data load time
+            if 'data_loaded_at' in st.session_state:
+                st.caption(f"📅 Last loaded: {st.session_state['data_loaded_at'].strftime('%H:%M:%S')}")
+            
+            # Last cleaning time
+            if st.session_state.get('cleaned') and 'cleaning_completed_at' in st.session_state:
+                st.caption(f"🧹 Last cleaned: {st.session_state['cleaning_completed_at'].strftime('%H:%M:%S')}")
+        except:
+            st.caption("No data loaded yet")
+    else:
+        st.caption("No data available")
+
+st.sidebar.divider()
+
+# --- 2. DATA GENERATION CONTROLS ---
+st.sidebar.subheader("🔧 Data Generation")
+
+num_records = st.sidebar.slider(
+    "Number of Records",
+    min_value=100,
+    max_value=1000,
+    value=st.session_state['num_records'],
+    step=50,
+    help="Select how many records to generate"
+)
+st.session_state['num_records'] = num_records
+
+messiness_level = st.sidebar.selectbox(
+    "Messiness Level",
+    options=['low', 'medium', 'high'],
+    index=['low', 'medium', 'high'].index(st.session_state['messiness_level']),
+    help="Low: 3% duplicates, 2% errors | Medium: 10% duplicates, 5% errors | High: 20% duplicates, 15% errors"
+)
+st.session_state['messiness_level'] = messiness_level
+
+if st.sidebar.button("🔄 Generate New Data", type="primary"):
+    with st.spinner("Generating data..."):
         if not os.path.exists("data"):
             os.makedirs("data")
-        generate_messy_data(save_path=DATA_PATH)
-    st.sidebar.success("New raw dataset generated!")
+        generate_messy_data(
+            num_records=num_records,
+            save_path=DATA_PATH,
+            messiness_level=messiness_level
+        )
+    st.sidebar.success(f"Generated {num_records} records!")
     st.session_state['cleaned'] = False # Reset state
     st.session_state['data_generated_at'] = datetime.now()
+    st.session_state['data_loaded_at'] = datetime.now()
+    st.rerun()
+
+st.sidebar.divider()
+
+# --- 3. CLEANING PIPELINE CONTROLS ---
+st.sidebar.subheader("🧹 Cleaning Pipeline")
+
+# Initialize cleaning steps in session state
+if 'cleaning_steps' not in st.session_state:
+    st.session_state['cleaning_steps'] = {
+        'standardize_names': True,
+        'fix_emails': True,
+        'remove_duplicates': True,
+        'clean_dates': True,
+        'handle_missing_values': True
+    }
+
+with st.sidebar.expander("Configure Cleaning Steps", expanded=False):
+    st.session_state['cleaning_steps']['standardize_names'] = st.checkbox(
+        "Standardize Names",
+        value=st.session_state['cleaning_steps']['standardize_names'],
+        help="Convert names to Title Case (e.g., 'john doe' → 'John Doe')"
+    )
+    
+    st.session_state['cleaning_steps']['fix_emails'] = st.checkbox(
+        "Fix Email Formats",
+        value=st.session_state['cleaning_steps']['fix_emails'],
+        help="Fix invalid emails (e.g., 'user at domain.com' → 'user@domain.com')"
+    )
+    
+    st.session_state['cleaning_steps']['remove_duplicates'] = st.checkbox(
+        "Remove Duplicates",
+        value=st.session_state['cleaning_steps']['remove_duplicates'],
+        help="Remove duplicate rows based on Email and Name"
+    )
+    
+    st.session_state['cleaning_steps']['clean_dates'] = st.checkbox(
+        "Clean Dates",
+        value=st.session_state['cleaning_steps']['clean_dates'],
+        help="Standardize date formats to YYYY-MM-DD"
+    )
+    
+    st.session_state['cleaning_steps']['handle_missing_values'] = st.checkbox(
+        "Handle Missing Values",
+        value=st.session_state['cleaning_steps']['handle_missing_values'],
+        help="Fill missing attendance values with 0"
+    )
+
+# Show preview of selected steps
+selected_steps = [k for k, v in st.session_state['cleaning_steps'].items() if v]
+if selected_steps:
+    st.sidebar.caption(f"✓ {len(selected_steps)} step(s) selected")
+else:
+    st.sidebar.warning("⚠️ No cleaning steps selected")
+
+st.sidebar.divider()
+
+# --- 4. EXPORT OPTIONS ---
+st.sidebar.subheader("📥 Export Options")
+
+# Check if we have cleaned data to export
+export_df = None
+export_label = "Raw"
+
+if st.session_state.get('cleaned') and st.session_state.get('clean_df') is not None:
+    export_choice = st.sidebar.radio(
+        "Export data:",
+        options=['raw', 'cleaned'],
+        format_func=lambda x: '📊 Raw Data' if x == 'raw' else '✨ Cleaned Data',
+        help="Choose which dataset to export"
+    )
+    if export_choice == 'cleaned':
+        export_df = st.session_state['clean_df']
+        export_label = "Cleaned"
+    else:
+        if os.path.exists(DATA_PATH):
+            export_df = pd.read_csv(DATA_PATH)
+            export_label = "Raw"
+else:
+    if os.path.exists(DATA_PATH):
+        export_df = pd.read_csv(DATA_PATH)
+        export_label = "Raw"
+
+if export_df is not None:
+    # CSV Export
+    csv_data = export_df.to_csv(index=False).encode('utf-8')
+    st.sidebar.download_button(
+        label=f"📄 Download CSV ({export_label})",
+        data=csv_data,
+        file_name=f"community_data_{export_label.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime="text/csv",
+    )
+    
+    # JSON Export
+    json_data = export_df.to_json(orient='records', indent=2)
+    st.sidebar.download_button(
+        label=f"📋 Download JSON ({export_label})",
+        data=json_data,
+        file_name=f"community_data_{export_label.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        mime="application/json",
+    )
+    
+    # PDF Export (Stub)
+    st.sidebar.button(
+        "📑 Export to PDF",
+        help="PDF export coming soon!",
+        disabled=True
+    )
+    
+    # Export Report (Stub)
+    st.sidebar.button(
+        "📊 Export Report",
+        help="Generate a comprehensive data quality report (coming soon!)",
+        disabled=True
+    )
+else:
+    st.sidebar.info("Generate data to enable export options")
+
+st.sidebar.divider()
+
+# --- 5. RESET & VIEW STATE ---
+st.sidebar.subheader("🔄 Data View")
+
+# Data State Toggle
+if st.session_state.get('cleaned'):
+    view_state = st.sidebar.radio(
+        "Current view:",
+        options=['raw', 'cleaned'],
+        format_func=lambda x: '📊 Raw Data' if x == 'raw' else '✨ Cleaned Data',
+        key='view_state',
+        help="Toggle between raw and cleaned data views"
+    )
+else:
+    st.sidebar.info("Clean data first to enable view toggle")
+    if 'view_state' not in st.session_state:
+        st.session_state['view_state'] = 'raw'
+
+# Reset to Raw Data button
+if st.session_state.get('cleaned'):
+    if st.sidebar.button("🔄 Reset to Raw Data", help="Clear cleaned data and return to raw state"):
+        st.session_state['cleaned'] = False
+        if 'clean_df' in st.session_state:
+            del st.session_state['clean_df']
+        if 'clean_log' in st.session_state:
+            del st.session_state['clean_log']
+        # Delete view_state key so it can be reset
+        if 'view_state' in st.session_state:
+            del st.session_state['view_state']
+        st.sidebar.success("Reset to raw data!")
+        st.rerun()
+
+st.sidebar.divider()
+
+# --- 6. HELP/GUIDE SECTION ---
+with st.sidebar.expander("❓ Help & Guide", expanded=False):
+    st.markdown("""
+    ### Quick Start Guide
+    
+    1. **Generate Data**: Use the slider to set record count and select messiness level
+    2. **Clean Data**: Configure cleaning steps and run the pipeline in the 'Data Cleaning Ops' tab
+    3. **Analyze**: View insights in the 'Analytics Dashboard' tab
+    4. **Export**: Download your data in CSV or JSON format
+    
+    ### Tips
+    - 💡 Higher messiness = more data quality issues
+    - 💡 Toggle individual cleaning steps to see their impact
+    - 💡 Check Quick Stats for real-time data health
+    - 💡 Use Reset to start over with raw data
+    
+    ### Cleaning Steps
+    - **Names**: Standardizes capitalization
+    - **Emails**: Fixes format and removes invalid entries  
+    - **Duplicates**: Removes duplicate records
+    - **Dates**: Standardizes date formats
+    - **Missing**: Fills missing attendance values
+    """)
+
 
 # Load Data
 if os.path.exists(DATA_PATH):
@@ -42,24 +278,12 @@ if os.path.exists(DATA_PATH):
     if 'data_loaded_at' not in st.session_state:
         st.session_state['data_loaded_at'] = datetime.now()
 else:
-    st.error("No data found. Please click 'Generate New Messy Data' in the sidebar.")
+    st.error("No data found. Please click 'Generate New Data' in the sidebar.")
     st.stop()
 
-# Initialize data state toggle
+# Initialize view state
 if 'view_state' not in st.session_state:
     st.session_state['view_state'] = 'raw'
-
-# Data State Toggle in sidebar
-st.sidebar.divider()
-st.sidebar.subheader("Data View State")
-view_state = st.sidebar.radio(
-    "Select data state to view:",
-    options=['raw', 'cleaned'],
-    format_func=lambda x: '📊 Raw Data' if x == 'raw' else '✨ Cleaned Data',
-    key='view_state',
-    disabled=not st.session_state.get('cleaned', False),
-    help="Toggle between raw and cleaned data views. Cleaning must be run first."
-)
 
 # Determine which dataframe to show based on state
 if st.session_state['view_state'] == 'cleaned' and st.session_state.get('cleaned'):
@@ -241,11 +465,17 @@ with tab1:
     col_demo, col_log = st.columns([1, 2])
     
     with col_demo:
-        st.info("The raw data contains duplicates, invalid emails, and mixed date formats.")
-        if st.button("🚀 Run Cleaning Algorithms", type="primary"):
+        # Show selected steps
+        selected_steps = [k for k, v in st.session_state['cleaning_steps'].items() if v]
+        if selected_steps:
+            st.info(f"Ready to apply {len(selected_steps)} cleaning step(s). Configure steps in sidebar.")
+        else:
+            st.warning("⚠️ No cleaning steps selected. Enable steps in the sidebar.")
+        
+        if st.button("🚀 Run Cleaning Algorithms", type="primary", disabled=len(selected_steps) == 0):
             try:
                 cleaner = DataCleaner(raw_df)
-                clean_df = cleaner.clean_all()
+                clean_df = cleaner.clean_all(steps=selected_steps)
                 
                 # Save to session state
                 st.session_state['clean_df'] = clean_df
@@ -298,16 +528,10 @@ with tab1:
                 help="Overall data quality improvement after cleaning"
             )
             
-            # CSV Download Button
+            # Note about export options
             st.divider()
-            csv_data = st.session_state['clean_df'].to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Download Cleaned Data (CSV)",
-                data=csv_data,
-                file_name="cleaned_community_data.csv",
-                mime="text/csv",
-                type="primary"
-            )
+            st.info("💡 Export options are available in the sidebar")
+
 
 with tab2:
     if st.session_state.get('cleaned'):
