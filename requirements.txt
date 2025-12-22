@@ -5,3 +5,4 @@ numpy==1.26.4
 faker>=39.0.0
 pytest>=9.0.2
 python-Levenshtein>=0.26.1
+kaleido>=0.2.1
