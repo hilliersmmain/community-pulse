@@ -3,7 +3,7 @@
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.0+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75?logo=plotly&logoColor=white)](https://plotly.com/)
-[![Tests: 45/45](https://img.shields.io/badge/Tests-45%2F45%20passing-brightgreen)](./tests)
+[![Tests: 59/59](https://img.shields.io/badge/Tests-59%2F59%20passing-brightgreen)](./tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 **Transform your data journey:** Convert messy, unstructured member records into crystal-clear business intelligence in minutes with intelligent data engineering and automated cleaning pipelines.
@@ -160,10 +160,10 @@ community_pulse/
 │   └── ui_helpers.py              # UI components (modals, messages, tooltips)
 │
 ├── tests/
-│   ├── test_data_generator.py     # 10 tests for data generation
-│   ├── test_cleaner.py            # 15 tests for cleaning pipeline
-│   ├── test_health_metrics.py      # 10 tests for health scoring
-│   └── test_visualizer.py          # 10 tests for chart rendering
+│   ├── test_cleaner.py            # 7 tests for cleaning pipeline
+│   ├── test_health_metrics.py     # 19 tests for health scoring
+│   ├── test_ui_helpers.py         # 15 tests for UI components
+│   └── test_visualizer.py         # 18 tests for chart rendering
 │
 └── docs/
     ├── CONTRIBUTING.md            # Contribution guidelines
@@ -188,7 +188,7 @@ pytest --cov=utils --cov-report=html
 pytest tests/test_cleaner.py -v
 ```
 
-**Test Results:** ✅ **45/45 tests passing**
+**Test Results:** ✅ **59/59 tests passing**
 
 ---
 
@@ -338,7 +338,7 @@ This project demonstrates:
 
 ✅ **Software Engineering**
 - Modular code architecture
-- 45 passing unit tests
+- 59 passing unit tests
 - Type hints and docstrings
 - Comprehensive documentation
 
