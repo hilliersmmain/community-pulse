@@ -3,7 +3,7 @@
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.0+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75?logo=plotly&logoColor=white)](https://plotly.com/)
-[![Tests: 59/59](https://img.shields.io/badge/Tests-59%2F59%20passing-brightgreen)](./tests)
+[![Tests: 66/66](https://img.shields.io/badge/Tests-66%2F66%20passing-brightgreen)](./tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 **Transform your data journey:** Convert messy, unstructured member records into crystal-clear business intelligence in minutes with intelligent data engineering and automated cleaning pipelines.
@@ -98,12 +98,18 @@ Python 3.9 or higher
    pip install -r requirements.txt
    ```
 
-4. **Run the app**
+4. **Verify installation (recommended)**
+   ```bash
+   python verify_setup.py
+   ```
+   This script checks that all dependencies are installed correctly.
+
+5. **Run the app**
    ```bash
    streamlit run app.py
    ```
 
-5. **Open in your browser**
+6. **Open in your browser**
    ```
    http://localhost:8501
    ```
@@ -140,6 +146,14 @@ Python 3.9 or higher
 2. Export charts as high-res PNG (2x scale)
 3. Share reports with stakeholders
 
+### Demo Visualizations
+
+Generate static PNG exports of all charts:
+```bash
+python demo_charts.py
+```
+This creates high-quality visualizations in the `demo_outputs/` directory.
+
 ---
 
 ## 📁 Project Structure
@@ -147,6 +161,8 @@ Python 3.9 or higher
 ```
 community_pulse/
 ├── app.py                          # Main Streamlit application
+├── demo_charts.py                  # Generate demo PNG visualizations
+├── verify_setup.py                 # Setup verification script
 ├── requirements.txt                # Dependencies
 ├── README.md                       # This file
 ├── LICENSE                         # MIT License
@@ -161,6 +177,7 @@ community_pulse/
 │
 ├── tests/
 │   ├── test_cleaner.py            # 7 tests for cleaning pipeline
+│   ├── test_demo_charts.py        # 7 tests for demo chart generation
 │   ├── test_health_metrics.py     # 19 tests for health scoring
 │   ├── test_ui_helpers.py         # 15 tests for UI components
 │   └── test_visualizer.py         # 18 tests for chart rendering
@@ -175,7 +192,7 @@ community_pulse/
 
 ## 🧪 Testing
 
-Full test coverage with pytest:
+Full test coverage with pytest (66 tests):
 
 ```bash
 # Run all tests
@@ -186,9 +203,12 @@ pytest --cov=utils --cov-report=html
 
 # Run specific test file
 pytest tests/test_cleaner.py -v
+
+# Verify setup
+python verify_setup.py
 ```
 
-**Test Results:** ✅ **59/59 tests passing**
+**Test Results:** ✅ **66/66 tests passing**
 
 ---
 

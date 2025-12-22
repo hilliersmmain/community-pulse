@@ -1,25 +1,61 @@
 import pandas as pd
 import numpy as np
+from typing import Optional
 from faker import Faker
 import random
 from datetime import datetime, timedelta
 
 fake = Faker()
 
-def generate_messy_data(num_records=500, save_path=None, messiness_level="medium"):
+def generate_messy_data(
+    num_records: int = 500, 
+    save_path: Optional[str] = None, 
+    messiness_level: str = "medium"
+) -> pd.DataFrame:
     """
     Generates a dataset with intentional 'messiness' for cleaning demonstration.
+    
+    This function creates realistic member data with controlled quality issues,
+    simulating real-world data quality problems commonly found in CRM systems,
+    spreadsheets, and legacy databases.
+    
     Messiness includes:
-    - Duplicates (approx 10%)
-    - Inconsistent capitalization in Names
-    - Invalid Email formats
-    - Inconsistent Date formats (YYYY-MM-DD vs MM/DD/YYYY)
-    - Missing values (NaN)
+    - Duplicates (3-20% depending on level)
+    - Inconsistent capitalization in Names (UPPER, lower, Title Case)
+    - Invalid Email formats (e.g., "user at domain.com")
+    - Inconsistent Date formats (YYYY-MM-DD, MM/DD/YYYY, DD-MM-YYYY, "Unknown")
+    - Missing values (NaN) in various columns
     
     Args:
-        num_records (int): Number of base records to generate
-        save_path (str): Path to save CSV file
-        messiness_level (str): "low", "medium", or "high" - controls level of data issues
+        num_records (int): Number of base records to generate. Default is 500.
+            The final dataset may be larger due to duplicates added.
+        save_path (str, optional): Path to save CSV file. If None, data is not saved.
+            Example: "data/messy_club_data.csv"
+        messiness_level (str): Controls level of data quality issues. Default is "medium".
+            - "low": 3% duplicates, 2% errors (well-maintained CRM)
+            - "medium": 10% duplicates, 5% errors (typical export)
+            - "high": 20% duplicates, 15% errors (legacy system)
+    
+    Returns:
+        pd.DataFrame: Generated dataset with intentional quality issues.
+            Columns: ID, Name, Email, Join_Date, Last_Login, Event_Attendance,
+                    Role, Event_Registered, Registration_Date
+    
+    Example:
+        >>> # Generate 100 records with medium messiness
+        >>> df = generate_messy_data(num_records=100, messiness_level="medium")
+        >>> print(f"Generated {len(df)} records")
+        
+        >>> # Save to file
+        >>> df = generate_messy_data(
+        ...     num_records=500,
+        ...     save_path="data/sample.csv",
+        ...     messiness_level="high"
+        ... )
+    
+    Note:
+        The actual number of records in the returned DataFrame will be higher
+        than num_records due to the duplicates added based on messiness_level.
     """
     # Set messiness parameters based on level
     if messiness_level == "low":
