@@ -141,7 +141,7 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
         ),
         annotations=[
             dict(
-                text=f'📊 Mean: {stats["mean"]:.1f} | Median: {stats["median"]:.1f} | Total: {trend["New Members"].sum()}',
+                text=f'Mean: {stats["mean"]:.1f} | Median: {stats["median"]:.1f} | Total: {trend["New Members"].sum()}',
                 xref="paper", yref="paper",
                 x=0.5, y=-0.15,
                 showarrow=False,
@@ -210,7 +210,7 @@ def plot_role_distribution(df: pd.DataFrame, data_state: str = "cleaned") -> go.
         ),
         annotations=[
             dict(
-                text=f'📊 Total Members: {total}<br>Unique Roles: {len(counts)}',
+                text=f'Total Members: {total}<br>Unique Roles: {len(counts)}',
                 xref="paper", yref="paper",
                 x=0.5, y=-0.1,
                 showarrow=False,
@@ -292,7 +292,7 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
         hovermode='closest',
         annotations=[
             dict(
-                text=f'📊 Mean: {stats["mean"]:.1f} | Median: {stats["median"]:.1f} | Std Dev: {stats["std"]:.1f} | Range: {stats["min"]:.0f}-{stats["max"]:.0f}',
+                text=f'Mean: {stats["mean"]:.1f} | Median: {stats["median"]:.1f} | Std Dev: {stats["std"]:.1f} | Range: {stats["min"]:.0f}-{stats["max"]:.0f}',
                 xref="paper", yref="paper",
                 x=0.5, y=-0.15,
                 showarrow=False,
