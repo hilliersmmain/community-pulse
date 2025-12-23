@@ -37,7 +37,14 @@ st.markdown("""
         color: #1f77b4;
         font-weight: 700;
         padding-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
         border-bottom: 3px solid #1f77b4;
+    }
+
+    /* Padding fix for top of page */
+    .block-container {
+        padding-top: 3rem !important;
+        padding-bottom: 5rem !important;
     }
     
     /* Metric cards enhancement */
@@ -58,7 +65,17 @@ st.markdown("""
     
     /* Sidebar styling */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+        background-color: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+    }
+    
+    /* Card/Widget styling */
+    div.css-1r6slb0, div.stMetric {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     /* Success/info box enhancement */
@@ -93,17 +110,14 @@ initialize_session_state()
 if st.session_state.get('show_welcome', False):
     show_welcome_modal()
 
-# Title & Description with enhanced styling
-st.title("📊 Community Pulse: Intelligent Data Dashboard")
+# Title & Description
+st.title("Community Pulse Dashboard")
 st.markdown("""
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            padding: 1.5rem; 
-            border-radius: 10px; 
-            color: white; 
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-    <strong style="font-size: 1.1rem;">Transform your data journey:</strong> From messy, unstructured member records to crystal-clear insights in minutes.<br>
-    <em style="opacity: 0.9;">Powered by intelligent data engineering, automated cleaning pipelines, and interactive business intelligence.</em>
+<div style="margin-bottom: 2rem; color: #555;">
+    <p style="font-size: 1.1rem; line-height: 1.6;">
+        Data quality management and member analytics platform. 
+        Transform raw data into actionable insights with automated cleaning pipelines.
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -123,8 +137,11 @@ with tutorial_col1:
         if st.session_state.get('tutorial_mode', False):
             st.session_state['tutorial_mode'] = False
 with tutorial_col2:
-    if st.sidebar.button("🎉", help="What's New"):
+    if st.sidebar.button("What's New"):
         st.session_state['show_whats_new'] = not st.session_state.get('show_whats_new', False)
+        st.rerun()
+    if st.sidebar.button("Help"):
+        st.session_state['show_welcome'] = True
         st.rerun()
 
 # Show tutorial if active
@@ -139,33 +156,48 @@ if 'messiness_level' not in st.session_state:
     st.session_state['messiness_level'] = 'medium'
 
 # --- 1. QUICK STATS SECTION ---
-with st.sidebar.expander("📊 Quick Stats", expanded=True):
-    if os.path.exists(DATA_PATH):
-        # Load data for stats
+with st.sidebar.expander("Quick Stats", expanded=True):
+    # Determine which dataset to use for stats
+    stats_df = None
+    stats_label = "metrics['overall_score']"
+    
+    if st.session_state.get('cleaned') and 'clean_df' in st.session_state:
+        stats_df = st.session_state['clean_df']
+        is_cleaned = True
+    elif os.path.exists(DATA_PATH):
         try:
-            temp_df = pd.read_csv(DATA_PATH)
-            health = DataHealthMetrics(temp_df)
-            metrics = health.get_detailed_metrics()
-            
-            st.metric("📝 Records", metrics['total_records'])
-            st.metric("💚 Health Score", f"{metrics['overall_score']}%")
-            
-            # Last data load time
-            if 'data_loaded_at' in st.session_state:
-                st.caption(f"📅 Last loaded: {st.session_state['data_loaded_at'].strftime('%H:%M:%S')}")
-            
-            # Last cleaning time
-            if st.session_state.get('cleaned') and 'cleaning_completed_at' in st.session_state:
-                st.caption(f"🧹 Last cleaned: {st.session_state['cleaning_completed_at'].strftime('%H:%M:%S')}")
+            stats_df = pd.read_csv(DATA_PATH)
+            is_cleaned = False
         except:
-            st.caption("No data loaded yet")
+            pass
+            
+    if stats_df is not None:
+        health = DataHealthMetrics(stats_df)
+        metrics = health.get_detailed_metrics()
+        
+        st.metric("Records", metrics['total_records'])
+        
+        # Health Score with dynamic label
+        score_val = f"{metrics['overall_score']}%"
+        if is_cleaned:
+            st.metric("Health Score", score_val)
+        else:
+            st.metric("Health Score", score_val, help="Score based on raw data")
+        
+        # Last data load time
+        if 'data_loaded_at' in st.session_state:
+            st.caption(f"Last loaded: {st.session_state['data_loaded_at'].strftime('%H:%M:%S')}")
+        
+        # Last cleaning time
+        if st.session_state.get('cleaned') and 'cleaning_completed_at' in st.session_state:
+            st.caption(f"Last cleaned: {st.session_state['cleaning_completed_at'].strftime('%H:%M:%S')}")
     else:
         st.caption("No data available")
 
 st.sidebar.divider()
 
 # --- 2. DATA GENERATION CONTROLS ---
-st.sidebar.subheader("🔧 Data Generation")
+st.sidebar.subheader("Data Generation")
 
 num_records = st.sidebar.slider(
     "Number of Records",
@@ -185,7 +217,7 @@ messiness_level = st.sidebar.selectbox(
 )
 st.session_state['messiness_level'] = messiness_level
 
-if st.sidebar.button("🔄 Generate New Data", type="primary", help="Create fresh sample data with the selected parameters"):
+if st.sidebar.button("Generate New Data", type="primary", help="Create fresh sample data"):
     with show_loading_message(get_contextual_message("loading_data")):
         if not os.path.exists("data"):
             os.makedirs("data")
@@ -213,7 +245,7 @@ if st.sidebar.button("🔄 Generate New Data", type="primary", help="Create fres
 st.sidebar.divider()
 
 # --- 3. CLEANING PIPELINE CONTROLS ---
-st.sidebar.subheader("🧹 Cleaning Pipeline")
+st.sidebar.subheader("Cleaning Pipeline")
 
 # Initialize cleaning steps in session state
 if 'cleaning_steps' not in st.session_state:
@@ -261,7 +293,7 @@ selected_steps = [k for k, v in st.session_state['cleaning_steps'].items() if v]
 if selected_steps:
     st.sidebar.caption(f"✓ {len(selected_steps)} step(s) selected")
 else:
-    st.sidebar.warning("⚠️ No cleaning steps selected")
+    st.sidebar.warning("No cleaning steps selected")
 
 st.sidebar.divider()
 
@@ -276,7 +308,7 @@ if st.session_state.get('cleaned') and st.session_state.get('clean_df') is not N
     export_choice = st.sidebar.radio(
         "Export data:",
         options=['raw', 'cleaned'],
-        format_func=lambda x: '📊 Raw Data' if x == 'raw' else '✨ Cleaned Data',
+        format_func=lambda x: 'Raw Data' if x == 'raw' else 'Cleaned Data',
         help="Choose which dataset to export"
     )
     if export_choice == 'cleaned':
@@ -295,7 +327,7 @@ if export_df is not None:
     # CSV Export
     csv_data = export_df.to_csv(index=False).encode('utf-8')
     st.sidebar.download_button(
-        label=f"📄 Download CSV ({export_label})",
+        label=f"Download CSV ({export_label})",
         data=csv_data,
         file_name=f"community_data_{export_label.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
         mime="text/csv",
@@ -304,25 +336,25 @@ if export_df is not None:
     # JSON Export
     json_data = export_df.to_json(orient='records', indent=2)
     st.sidebar.download_button(
-        label=f"📋 Download JSON ({export_label})",
+        label=f"Download JSON ({export_label})",
         data=json_data,
         file_name=f"community_data_{export_label.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
         mime="application/json",
     )
     
-    # PDF Export (Stub)
-    st.sidebar.button(
-        "📑 Export to PDF",
-        help="PDF export coming soon!",
-        disabled=True
-    )
+    # PDF Export (Coming Soon)
+    # st.sidebar.button(
+    #     "📑 Export to PDF",
+    #     help="PDF export coming soon!",
+    #     disabled=True
+    # )
     
-    # Export Report (Stub)
-    st.sidebar.button(
-        "📊 Export Report",
-        help="Generate a comprehensive data quality report (coming soon!)",
-        disabled=True
-    )
+    # Export Report (Coming Soon)
+    # st.sidebar.button(
+    #     "📊 Export Report",
+    #     help="Generate a comprehensive data quality report (coming soon!)",
+    #     disabled=True
+    # )
 else:
     st.sidebar.info("Generate data to enable export options")
 
@@ -336,7 +368,7 @@ if st.session_state.get('cleaned'):
     view_state = st.sidebar.radio(
         "Current view:",
         options=['raw', 'cleaned'],
-        format_func=lambda x: '📊 Raw Data' if x == 'raw' else '✨ Cleaned Data',
+        format_func=lambda x: 'Raw Data' if x == 'raw' else 'Cleaned Data',
         key='view_state',
         help="Toggle between raw and cleaned data views"
     )
@@ -347,7 +379,7 @@ else:
 
 # Reset to Raw Data button
 if st.session_state.get('cleaned'):
-    if st.sidebar.button("🔄 Reset to Raw Data", help="Clear cleaned data and return to raw state"):
+    if st.sidebar.button("Reset to Raw Data", help="Clear cleaned data and return to raw state"):
         st.session_state['cleaned'] = False
         if 'clean_df' in st.session_state:
             del st.session_state['clean_df']
@@ -463,14 +495,11 @@ if 'view_state' not in st.session_state:
     st.session_state['view_state'] = 'raw'
 
 # Determine which dataframe to show based on state
-if st.session_state['view_state'] == 'cleaned' and st.session_state.get('cleaned'):
     active_df = st.session_state['clean_df']
     state_label = "Cleaned"
-    state_emoji = "✨"
 else:
     active_df = raw_df
     state_label = "Raw"
-    state_emoji = "📊"
 
 # --- MAIN APP LOGIC ---
 
@@ -479,7 +508,7 @@ health_metrics = DataHealthMetrics(active_df)
 metrics = health_metrics.get_detailed_metrics()
 
 # Display current state and timestamp
-st.markdown(f"### {state_emoji} Current View: **{state_label} Data**")
+st.markdown(f"### Current View: **{state_label} Data**")
 if st.session_state.get('cleaned') and st.session_state['view_state'] == 'cleaned':
     if 'cleaning_completed_at' in st.session_state:
         time_str = st.session_state['cleaning_completed_at'].strftime("%Y-%m-%d %H:%M:%S")
@@ -492,7 +521,7 @@ else:
 st.divider()
 
 # 1. Dynamic KPI Row with enhanced tooltips
-st.subheader(f"📊 Key Performance Indicators - {state_label} Data")
+st.subheader(f"Key Performance Indicators")
 st.caption("Real-time data quality metrics to track your cleaning progress")
 
 show_tutorial_step(1)
@@ -640,10 +669,10 @@ if st.session_state.get('cleaned'):
         )
 
 # 2. Tabs for Workflow
-tab1, tab2, tab3 = st.tabs(["🧹 Data Cleaning Ops", "📈 Analytics Dashboard", "📄 Raw Data View"])
+tab1, tab2, tab3 = st.tabs(["Data Preparation", "Analytics", "Data Explorer"])
 
 with tab1:
-    st.subheader("🧹 Automated Data Hygiene Pipeline")
+    st.subheader("Data Hygiene Pipeline")
     st.caption("Configure and execute intelligent data cleaning operations")
     
     show_tutorial_step(2)
@@ -665,7 +694,7 @@ with tab1:
         
         show_tutorial_step(3)
         
-        if st.button("🚀 Run Cleaning Algorithms", type="primary", disabled=len(selected_steps) == 0, help="Execute the configured cleaning pipeline on your dataset"):
+        if st.button("Run Cleaning Algorithms", type="primary", disabled=len(selected_steps) == 0, help="Execute the configured cleaning pipeline on your dataset"):
             try:
                 with show_loading_message(get_contextual_message("processing_cleaning", step_count=len(selected_steps))):
                     cleaner = DataCleaner(raw_df)

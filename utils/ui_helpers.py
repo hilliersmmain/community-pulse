@@ -37,9 +37,11 @@ def show_welcome_modal():
         .welcome-modal {
             padding: 2rem;
             border-radius: 0.5rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            border-radius: 0.5rem;
+            background: #f1f3f5;
+            color: #333;
             margin-bottom: 2rem;
+            border-left: 5px solid #1f77b4;
         }
         .welcome-title {
             font-size: 2rem;
@@ -63,7 +65,7 @@ def show_welcome_modal():
         
         st.markdown("""
         <div class="welcome-modal">
-            <div class="welcome-title">👋 Welcome to Community Pulse!</div>
+            <div class="welcome-title">Welcome to Community Pulse</div>
             <div class="welcome-subtitle">
                 Transform messy member data into actionable insights in minutes.
             </div>
@@ -73,7 +75,7 @@ def show_welcome_modal():
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("### 🎯 What You Can Do")
+            st.markdown("### What You Can Do")
             st.markdown("""
             - **Generate** realistic messy data
             - **Clean** automatically with AI-powered tools
@@ -82,18 +84,14 @@ def show_welcome_modal():
             """)
         
         with col2:
-            st.markdown("### 🚀 Quick Start")
-            st.markdown("""
             1. Click **"Generate New Data"** in the sidebar
-            2. Navigate to **"Data Cleaning Ops"** tab
+            2. Navigate to **"Data Preparation"** tab
             3. Click **"Run Cleaning Algorithms"**
-            4. Explore insights in **"Analytics Dashboard"**
+            4. Explore insights in **"Analytics"**
             """)
         
         with col3:
-            st.markdown("### 💡 Pro Tips")
-            st.markdown("""
-            - Hover over **ⓘ icons** for help
+            - Hover over **info icons** for help
             - Toggle between **raw** and **cleaned** views
             - Enable **Tutorial Mode** for step-by-step guidance
             - Check **What's New** for latest features
@@ -104,19 +102,19 @@ def show_welcome_modal():
         col_dismiss, col_tutorial, col_start = st.columns([1, 1, 1])
         
         with col_dismiss:
-            if st.button("❌ Don't Show Again", use_container_width=True):
+            if st.button("Dismiss", use_container_width=True):
                 st.session_state['show_welcome'] = False
                 st.rerun()
         
         with col_tutorial:
-            if st.button("🎓 Start Tutorial", type="secondary", use_container_width=True):
+            if st.button("Start Tutorial", type="secondary", use_container_width=True):
                 st.session_state['show_welcome'] = False
                 st.session_state['tutorial_mode'] = True
                 st.session_state['tutorial_step'] = 0
                 st.rerun()
         
         with col_start:
-            if st.button("✅ Get Started", type="primary", use_container_width=True):
+            if st.button("Get Started", type="primary", use_container_width=True):
                 st.session_state['show_welcome'] = False
                 st.rerun()
     
@@ -124,7 +122,7 @@ def show_welcome_modal():
 
 
 def show_empty_state(
-    icon: str = "📭",
+    icon: str = "",
     title: str = "No Data Available",
     message: str = "Get started by generating some data.",
     action_label: Optional[str] = None,
@@ -148,7 +146,7 @@ def show_empty_state(
         border-radius: 0.5rem;
         margin: 2rem 0;
     ">
-        <div style="font-size: 4rem; margin-bottom: 1rem;">{icon}</div>
+        <div style="font-size: 2rem; margin-bottom: 1rem; color: #ccc;">{icon}</div>
         <div style="font-size: 1.5rem; font-weight: bold; color: #333; margin-bottom: 0.5rem;">
             {title}
         </div>
@@ -227,7 +225,7 @@ def show_tutorial_step(step: int) -> bool:
     
     if current_step >= len(tutorial_steps):
         st.session_state['tutorial_mode'] = False
-        st.success("🎉 Tutorial completed! You're now ready to use Community Pulse effectively.")
+        st.success("Tutorial completed! You're now ready to use Community Pulse effectively.")
         return False
     
     step_info = tutorial_steps[current_step]
@@ -241,18 +239,18 @@ def show_tutorial_step(step: int) -> bool:
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
-        if st.button("⏭️ Skip Tutorial"):
+        if st.button("Skip Tutorial"):
             st.session_state['tutorial_mode'] = False
             st.rerun()
     
     with col2:
         if current_step > 0:
-            if st.button("⬅️ Previous"):
+            if st.button("Previous"):
                 st.session_state['tutorial_step'] = current_step - 1
                 st.rerun()
     
     with col3:
-        if st.button("➡️ Next", type="primary"):
+        if st.button("Next", type="primary"):
             st.session_state['tutorial_step'] = current_step + 1
             st.rerun()
     
@@ -264,7 +262,7 @@ def show_whats_new():
     if not st.session_state.get('show_whats_new', False):
         return
     
-    with st.expander("🎉 What's New in Community Pulse", expanded=True):
+    with st.expander("What's New in Community Pulse", expanded=True):
         st.markdown("""
         ### Recent Updates
         
@@ -304,7 +302,7 @@ def show_whats_new():
         - Basic visualizations
         """)
         
-        if st.button("✅ Got it!", key="dismiss_whats_new"):
+        if st.button("Got it!", key="dismiss_whats_new"):
             st.session_state['show_whats_new'] = False
             st.rerun()
 
@@ -316,10 +314,10 @@ def show_loading_message(message: str = "Processing your data..."):
     Args:
         message: Custom loading message
     """
-    return st.spinner(f"⏳ {message}")
+    return st.spinner(f"{message}")
 
 
-def show_success_message(message: str, icon: str = "✅"):
+def show_success_message(message: str, icon: str = ""):
     """
     Display a success message with icon.
     
@@ -327,7 +325,7 @@ def show_success_message(message: str, icon: str = "✅"):
         message: Success message to display
         icon: Emoji icon (default: checkmark)
     """
-    st.success(f"{icon} {message}")
+    st.success(f"{message}")
 
 
 def show_error_message(message: str, details: Optional[str] = None):
@@ -338,7 +336,7 @@ def show_error_message(message: str, details: Optional[str] = None):
         message: Main error message
         details: Optional detailed error information
     """
-    st.error(f"❌ {message}")
+    st.error(f"{message}")
     if details:
         with st.expander("🔍 Error Details"):
             st.code(details)
@@ -352,30 +350,30 @@ def show_warning_message(message: str, context: Optional[str] = None):
         message: Warning message
         context: Optional context or suggestion
     """
-    st.warning(f"⚠️ {message}")
+    st.warning(f"{message}")
     if context:
-        st.info(f"💡 Tip: {context}")
+        st.info(f"Tip: {context}")
 
 
 # Context-aware message templates
 MESSAGES = {
     "no_data_generated": {
-        "icon": "📊",
+        "icon": "",
         "title": "No Data Generated Yet",
         "message": "Start by clicking 'Generate New Data' in the sidebar to create sample data for analysis.",
     },
     "no_data_cleaned": {
-        "icon": "🧹",
+        "icon": "",
         "title": "Data Not Cleaned Yet",
-        "message": "Navigate to the 'Data Cleaning Ops' tab and run the cleaning pipeline to process your data.",
+        "message": "Navigate to the 'Data Preparation' tab and run the cleaning pipeline to process your data.",
     },
     "no_filters_selected": {
-        "icon": "🔍",
+        "icon": "",
         "title": "No Filters Selected",
         "message": "Select at least one role from the filter dropdown to view analytics for specific segments.",
     },
     "empty_analytics": {
-        "icon": "📈",
+        "icon": "",
         "title": "No Analytics Available",
         "message": "Clean your data first to generate insights and visualizations.",
     },
