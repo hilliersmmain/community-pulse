@@ -827,7 +827,7 @@ with tab2:
         # Before/After Comparison Section
         if st.session_state.get('cleaned'):
             st.divider()
-            st.subheader("📊 Before/After Cleaning Visual Comparison")
+            st.subheader("Before/After Cleaning Visual Comparison")
             
             # Create comparison tabs
             compare_tab1, compare_tab2 = st.tabs(["Side-by-Side Comparison", "Toggle View"])
