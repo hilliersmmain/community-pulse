@@ -11,7 +11,11 @@ Run this script after installation to ensure everything is set up properly:
 
 import sys
 import importlib
+import os
 from typing import Tuple, List, Dict
+
+# Add project root to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # ANSI color codes for terminal output
 GREEN = '\033[92m'

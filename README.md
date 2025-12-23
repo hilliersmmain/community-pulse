@@ -100,7 +100,7 @@ Python 3.9 or higher
 
 4. **Verify installation (recommended)**
    ```bash
-   python verify_setup.py
+   python scripts/verify_setup.py
    ```
    This script checks that all dependencies are installed correctly.
 
@@ -150,7 +150,7 @@ Python 3.9 or higher
 
 Generate static PNG exports of all charts:
 ```bash
-python demo_charts.py
+python scripts/demo_charts.py
 ```
 This creates high-quality visualizations in the `demo_outputs/` directory.
 
@@ -161,11 +161,15 @@ This creates high-quality visualizations in the `demo_outputs/` directory.
 ```
 community_pulse/
 ├── app.py                          # Main Streamlit application
-├── demo_charts.py                  # Generate demo PNG visualizations
-├── verify_setup.py                 # Setup verification script
 ├── requirements.txt                # Dependencies
 ├── README.md                       # This file
 ├── LICENSE                         # MIT License
+│
+├── scripts/                        # Utility scripts
+│   ├── demo_charts.py              # Generate demo PNG visualizations
+│   └── verify_setup.py             # Setup verification script
+│
+├── artifacts/                      # Previous implementation reports & summaries
 │
 ├── utils/
 │   ├── __init__.py
@@ -182,10 +186,11 @@ community_pulse/
 │   ├── test_ui_helpers.py         # 15 tests for UI components
 │   └── test_visualizer.py         # 18 tests for chart rendering
 │
-└── docs/
+├── docs/
     ├── CONTRIBUTING.md            # Contribution guidelines
     ├── DOCUMENTATION.md           # Detailed technical docs
-    └── IMPLEMENTATION_SUMMARY.md  # Architecture and design decisions
+    ├── KPI_DEFINITIONS.md         # KPI definitions
+    └── SOP_DATA_CLEANING.md       # Standard Operating Procedure for cleaning
 ```
 
 ---
@@ -205,7 +210,7 @@ pytest --cov=utils --cov-report=html
 pytest tests/test_cleaner.py -v
 
 # Verify setup
-python verify_setup.py
+python scripts/verify_setup.py
 ```
 
 **Test Results:** ✅ **66/66 tests passing**
@@ -372,7 +377,7 @@ This project demonstrates:
 
 ## 📝 Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+Contributions welcome! See [CONTRIBUTING.md](./docs/CONTRIBUTING.md) for guidelines.
 
 **Ideas for enhancement:**
 - [ ] Database backend (PostgreSQL/MongoDB)
@@ -387,8 +392,8 @@ Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 ## 📄 Documentation
 
 - **[DOCUMENTATION.md](./docs/DOCUMENTATION.md)** — Detailed technical reference
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** — How to contribute
-- **[IMPLEMENTATION_SUMMARY.md](./docs/IMPLEMENTATION_SUMMARY.md)** — Architecture decisions
+- **[CONTRIBUTING.md](./docs/CONTRIBUTING.md)** — How to contribute
+- **[KPI_DEFINITIONS.md](./docs/KPI_DEFINITIONS.md)** — KPI reference
 
 ---
 

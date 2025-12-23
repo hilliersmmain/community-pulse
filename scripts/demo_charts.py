@@ -15,6 +15,9 @@ import pandas as pd
 import sys
 import os
 
+# Add project root to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Check for kaleido before importing plotly.io
 try:
     import plotly.io as pio
