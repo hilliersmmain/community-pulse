@@ -5,6 +5,7 @@
 [![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75?logo=plotly&logoColor=white)](https://plotly.com/)
 [![Tests: 66/66](https://img.shields.io/badge/Tests-66%2F66%20passing-brightgreen)](./tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://community-pulse.streamlit.app/)
 
 **Transform your data journey:** Convert messy, unstructured member records into crystal-clear business intelligence in minutes with intelligent data engineering and automated cleaning pipelines.
 
@@ -305,7 +306,7 @@ Cleaned Data Metrics:
 3. "New app" → Select this repository
 4. Streamlit automatically deploys on every push
 
-**Live Demo:** (Add your deployed URL here)
+**Live Demo:** [https://community-pulse.streamlit.app/](https://community-pulse.streamlit.app/)
 
 ### Option 2: Docker
 
