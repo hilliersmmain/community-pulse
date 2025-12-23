@@ -88,7 +88,7 @@ class TestDemoChartsScript:
     def test_demo_charts_error_handling(self):
         """Test that the script has proper error handling."""
         # This test verifies the script file contains error handling
-        script_path = Path(__file__).parent.parent / 'demo_charts.py'
+        script_path = Path(__file__).parent.parent / 'community_pulse' / 'demo_charts.py'
         
         with open(script_path, 'r') as f:
             content = f.read()
@@ -101,7 +101,7 @@ class TestDemoChartsScript:
     
     def test_demo_charts_has_docstring(self):
         """Test that demo_charts.py has proper documentation."""
-        script_path = Path(__file__).parent.parent / 'demo_charts.py'
+        script_path = Path(__file__).parent.parent / 'community_pulse' / 'demo_charts.py'
         
         with open(script_path, 'r') as f:
             content = f.read()
