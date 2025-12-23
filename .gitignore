@@ -5,4 +5,5 @@ data/
 venv/
 demo_outputs/
 *.png
+!docs/screenshots/*.png
 

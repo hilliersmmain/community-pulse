@@ -31,13 +31,18 @@ Community Pulse is a **production-ready Streamlit dashboard** that demonstrates 
 
 ## Key Features
 
-### 1. **Realistic Data Generation**
-- Generate 100–1000 member records with configurable messiness
-- **Low:** 3% duplicates, 2% errors (well-maintained CRM)
-- **Medium:** 10% duplicates, 5% errors (typical export)
-- **High:** 20% duplicates, 15% errors (legacy system)
+### 1. **Dashboard Overview with Real-Time KPIs**
+Monitor your data quality at a glance with comprehensive health metrics displayed on interactive cards.
+
+![Dashboard Overview](./docs/screenshots/dashboard-overview.png)
+*Main dashboard showing KPI cards with data health metrics, including total records, duplicates, missing values, and overall health score*
 
 ### 2. **Automated Data Cleaning Pipeline**
+Execute intelligent data cleaning operations with a single click and monitor the execution log in real-time.
+
+![Data Cleaning Pipeline](./docs/screenshots/data-cleaning-pipeline.png)
+*Data Cleaning Pipeline interface with configurable cleaning steps and the "Run Cleaning Algorithms" button*
+
 ```python
 Configurable steps:
 • Standardize Names (john doe → John Doe)
@@ -47,29 +52,32 @@ Configurable steps:
 • Handle Missing Values (fill attendance with 0)
 ```
 
-### 3. **Data Health Scoring**
-Real-time metrics on a 0–100% scale:
-- **Completeness Score:** % of non-null cells
-- **Duplicate Score:** % of unique records
-- **Formatting Score:** % of valid emails, dates, names
-- **Overall Health:** Weighted composite score
+### 3. **Before/After Cleaning Comparison**
+Visualize the impact of data cleaning with side-by-side metrics showing improvements in data quality.
+
+![Before/After Comparison](./docs/screenshots/before-after-comparison.png)
+*Before vs. After comparison showing improvements in records, duplicates, missing values, and health score*
 
 ### 4. **Interactive Analytics Dashboard**
-- **Membership Growth:** Time-series trend with linear regression
-- **Event Attendance:** Distribution histogram with mean/median annotations
-- **Role Demographics:** Pie chart with counts and percentages
-- **Before/After Views:** Side-by-side and toggle comparison
+Explore your data with interactive visualizations including membership growth trends, attendance distributions, and role demographics.
 
-### 5. **Before/After Comparison**
-- Side-by-side visualization of raw vs. cleaned data
-- Impact metrics: records removed, duplicates eliminated, health improvement
-- Interactive toggle to explore both states
+![Analytics - Membership Trends](./docs/screenshots/analytics-trends.png)
+*Membership growth over time chart with trend line analysis*
 
-### 6. **Export & Data Discovery**
-- Download raw or cleaned data as CSV/JSON
-- Timestamped filenames for version control
-- Chart export buttons (PNG at 2x resolution)
-- Raw data inspector with health metrics
+![Analytics - Attendance Distribution](./docs/screenshots/analytics-distribution.png)
+*Event attendance distribution histogram with statistical annotations (mean, median, standard deviation)*
+
+### 5. **Data Explorer & Inspector**
+Dive deep into your data with the data explorer featuring health metrics overview and detailed data inspection capabilities.
+
+![Data Explorer](./docs/screenshots/data-explorer.png)
+*Data Explorer tab showing data health overview with completeness, uniqueness, formatting, and overall health metrics*
+
+### 6. **Key Capabilities**
+- **Realistic Data Generation:** 100–1000 records with configurable messiness (low/medium/high)
+- **Data Health Scoring:** Real-time metrics on 0–100% scale (completeness, uniqueness, formatting)
+- **Export & Discovery:** Download CSV/JSON with timestamps, chart exports at 2x resolution
+- **Before/After Views:** Side-by-side and toggle comparison modes
 
 ---
 
