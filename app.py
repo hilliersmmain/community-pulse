@@ -494,11 +494,14 @@ if 'view_state' not in st.session_state:
     st.session_state['view_state'] = 'raw'
 
 # Determine which dataframe to show based on state
+if st.session_state.get('cleaned') and st.session_state['view_state'] == 'cleaned':
     active_df = st.session_state['clean_df']
     state_label = "Cleaned"
+    state_emoji = "✨"
 else:
     active_df = raw_df
     state_label = "Raw"
+    state_emoji = "📊"
 
 # --- MAIN APP LOGIC ---
 
