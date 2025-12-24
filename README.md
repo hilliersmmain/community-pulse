@@ -1,56 +1,54 @@
-# Community Pulse: Intelligent Data Dashboard
+# Community Pulse: Data Analytics Dashboard
 
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.0+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.52+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75?logo=plotly&logoColor=white)](https://plotly.com/)
-[![Tests: 66/66](https://img.shields.io/badge/Tests-66%2F66%20passing-brightgreen)](./tests)
+[![Tests: 70/70](https://img.shields.io/badge/Tests-70%2F70%20passing-brightgreen)](./tests)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://community-pulse.streamlit.app/)
 
-**Transform your data journey:** Convert messy, unstructured member records into crystal-clear business intelligence in minutes with intelligent data engineering and automated cleaning pipelines.
+**End-to-end data analytics project:** Transform messy CSV data into clean, actionable insights with automated data cleaning pipelines, interactive visualizations, and comprehensive data quality metrics.
 
 ---
 
 ## Overview
 
-Community Pulse is a **production-ready Streamlit dashboard** that demonstrates end-to-end data engineering excellence:
+Community Pulse is a **production-ready data analytics dashboard** built with Python and Streamlit that demonstrates professional-grade data engineering and visualization skills:
 
-- **Data Generation:** Simulate realistic data quality scenarios (CRM cleanliness to legacy system chaos)
-- **Intelligent Cleaning Pipeline:** Configurable, auditable data transformation with execution logs
-- **Interactive Analytics:** Real-time visualizations with before/after comparison views
+- **Automated Data Cleaning:** Multi-step pipeline with standardization, deduplication, and validation
+- **Interactive Analytics:** Real-time visualizations with Plotly for trend analysis and distribution insights
 - **Data Quality Metrics:** Comprehensive health scoring (completeness, uniqueness, formatting)
-- **Export Ready:** CSV, JSON export with versioning and timestamps
+- **Full Test Coverage:** 70 unit tests ensuring code reliability and maintainability
+- **Export Capabilities:** CSV/JSON downloads with timestamps for reporting
 
-**Who it's for:**
-- Data engineers building data pipelines
-- Analysts who need data quality visibility
-- Data teams validating cleaning workflows
-- Portfolio projects showcasing full-stack data work
+**Perfect for:**
+- Data science/analytics students building a portfolio
+- Analysts demonstrating end-to-end data pipeline skills
+- Recruiters evaluating Python, Pandas, and data visualization expertise
+- Teams seeking data quality automation templates
 
 ---
 
 ## Key Features
 
 ### 1. **Dashboard Overview with Real-Time KPIs**
-Monitor your data quality at a glance with comprehensive health metrics displayed on interactive cards.
+Monitor data quality metrics with comprehensive health scores displayed on interactive cards.
 
 ![Dashboard Overview](./docs/screenshots/dashboard-overview.png)
 *Main dashboard showing KPI cards with data health metrics, including total records, duplicates, missing values, and overall health score*
 
 ### 2. **Automated Data Cleaning Pipeline**
-Execute intelligent data cleaning operations with a single click and monitor the execution log in real-time.
+Execute intelligent data cleaning operations with configurable steps and real-time execution logs.
 
 ![Data Cleaning Pipeline](./docs/screenshots/data-cleaning-pipeline.png)
 *Data Cleaning Pipeline interface with configurable cleaning steps and the "Run Cleaning Algorithms" button*
 
-```python
-Configurable steps:
-• Standardize Names (john doe → John Doe)
-• Fix Email Formats (user at domain.com → user@domain.com)
-• Remove Duplicates (email + name matching)
-• Clean Dates (normalize to YYYY-MM-DD)
-• Handle Missing Values (fill attendance with 0)
-```
+**Configurable cleaning steps:**
+- Standardize Names (john doe → John Doe)
+- Fix Email Formats (user at domain.com → user@domain.com)
+- Remove Duplicates (email + name matching)
+- Clean Dates (normalize to YYYY-MM-DD)
+- Handle Missing Values (fill attendance with 0)
 
 ### 3. **Before/After Cleaning Comparison**
 Visualize the impact of data cleaning with side-by-side metrics showing improvements in data quality.
@@ -59,7 +57,7 @@ Visualize the impact of data cleaning with side-by-side metrics showing improvem
 *Before vs. After comparison showing improvements in records, duplicates, missing values, and health score*
 
 ### 4. **Interactive Analytics Dashboard**
-Explore your data with interactive visualizations including membership growth trends, attendance distributions, and role demographics.
+Explore data with interactive visualizations including membership growth trends, attendance distributions, and role demographics.
 
 ![Analytics - Membership Trends](./docs/screenshots/analytics-trends.png)
 *Membership growth over time chart with trend line analysis*
@@ -68,14 +66,14 @@ Explore your data with interactive visualizations including membership growth tr
 *Event attendance distribution histogram with statistical annotations (mean, median, standard deviation)*
 
 ### 5. **Data Explorer & Inspector**
-Dive deep into your data with the data explorer featuring health metrics overview and detailed data inspection capabilities.
+Dive deep into data with health metrics overview and detailed inspection capabilities.
 
 ![Data Explorer](./docs/screenshots/data-explorer.png)
 *Data Explorer tab showing data health overview with completeness, uniqueness, formatting, and overall health metrics*
 
-### 6. **Key Capabilities**
+### 6. **Additional Capabilities**
 - **Realistic Data Generation:** 100–1000 records with configurable messiness (low/medium/high)
-- **Data Health Scoring:** Real-time metrics on 0–100% scale (completeness, uniqueness, formatting)
+- **Data Health Scoring:** Real-time metrics on 0–100% scale
 - **Export & Discovery:** Download CSV/JSON with timestamps, chart exports at 2x resolution
 - **Before/After Views:** Side-by-side and toggle comparison modes
 
@@ -159,7 +157,7 @@ Python 3.9 or higher
 
 Generate static PNG exports of all charts:
 ```bash
-python demo_charts.py
+python community_pulse/demo_charts.py
 ```
 This creates high-quality visualizations in the `demo_outputs/` directory.
 
@@ -170,38 +168,58 @@ This creates high-quality visualizations in the `demo_outputs/` directory.
 ```
 community_pulse/
 ├── app.py                          # Main Streamlit application
-├── demo_charts.py                  # Generate demo PNG visualizations
 ├── verify_setup.py                 # Setup verification script
-├── requirements.txt                # Dependencies
+├── requirements.txt                # Python dependencies
 ├── README.md                       # This file
 ├── LICENSE                         # MIT License
+├── CONTRIBUTING.md                 # Contribution guidelines
+├── FINAL_ASSESSMENT.md             # Project evaluation
+│
+├── .streamlit/
+│   └── config.toml                 # Streamlit configuration
+│
+├── .devcontainer/
+│   └── devcontainer.json           # VS Code dev container config
+│
+├── .github/
+│   └── workflows/                  # GitHub Actions workflows
 │
 ├── utils/
 │   ├── __init__.py
-│   ├── data_generator.py          # Synthetic data generation with configurable messiness
-│   ├── cleaner.py                 # Data cleaning pipeline with step-by-step logging
-│   ├── visualizer.py              # Plotly chart creation (trend, histogram, pie)
-│   ├── health_metrics.py          # Data quality scoring algorithm
-│   └── ui_helpers.py              # UI components (modals, messages, tooltips)
+│   ├── data_generator.py           # Synthetic data generation with configurable messiness
+│   ├── cleaner.py                  # Data cleaning pipeline with step-by-step logging
+│   ├── visualizer.py               # Plotly chart creation (trend, histogram, pie)
+│   ├── health_metrics.py           # Data quality scoring algorithm
+│   └── ui_helpers.py               # UI components (modals, messages, tooltips)
+│
+├── community_pulse/
+│   ├── __init__.py
+│   └── demo_charts.py              # Generate demo PNG visualizations
 │
 ├── tests/
-│   ├── test_cleaner.py            # 7 tests for cleaning pipeline
-│   ├── test_demo_charts.py        # 7 tests for demo chart generation
-│   ├── test_health_metrics.py     # 19 tests for health scoring
-│   ├── test_ui_helpers.py         # 15 tests for UI components
-│   └── test_visualizer.py         # 18 tests for chart rendering
+│   ├── __init__.py
+│   ├── test_cleaner.py             # Tests for cleaning pipeline
+│   ├── test_demo_charts.py         # Tests for demo chart generation
+│   ├── test_emoji_removal.py       # Tests for emoji handling
+│   ├── test_health_metrics.py      # Tests for health scoring
+│   ├── test_ui_helpers.py          # Tests for UI components
+│   └── test_visualizer.py          # Tests for chart rendering
 │
-└── docs/
-    ├── CONTRIBUTING.md            # Contribution guidelines
-    ├── DOCUMENTATION.md           # Detailed technical docs
-    └── IMPLEMENTATION_SUMMARY.md  # Architecture and design decisions
+├── docs/
+│   ├── screenshots/                # Application screenshots (6 images)
+│   ├── ARCHITECTURAL_OVERVIEW.md   # Technical architecture details
+│   ├── KPI_DEFINITIONS.md          # Key performance indicators
+│   └── SOP_DATA_CLEANING.md        # Standard operating procedures
+│
+└── artifacts/
+    └── *.md                        # Project documentation archives
 ```
 
 ---
 
 ## Testing
 
-Full test coverage with pytest (66 tests):
+Full test coverage with pytest (70 tests):
 
 ```bash
 # Run all tests
@@ -217,7 +235,7 @@ pytest tests/test_cleaner.py -v
 python verify_setup.py
 ```
 
-**Test Results:** **66/66 tests passing**
+**Test Results:** **70/70 tests passing**
 
 ---
 
@@ -225,11 +243,11 @@ python verify_setup.py
 
 | Component | Technology | Purpose |
 |-----------|-----------|----------|
-| **Frontend** | Streamlit 1.28+ | Interactive web UI with real-time updates |
-| **Data Processing** | Pandas 2.0+ | DataFrame manipulation, cleaning operations |
-| **Visualization** | Plotly 5.0+ | Interactive charts with export capabilities |
+| **Frontend** | Streamlit 1.52+ | Interactive web UI with real-time updates |
+| **Data Processing** | Pandas 2.2+ | DataFrame manipulation, cleaning operations |
+| **Visualization** | Plotly 6.5+ | Interactive charts with export capabilities |
 | **Data Generation** | NumPy, Faker | Realistic synthetic data with configurable quality |
-| **Testing** | pytest 7.0+ | Unit tests with 45 test cases |
+| **Testing** | pytest 9.0+ | Unit tests with 70 test cases |
 | **Code Quality** | Python 3.9+ | Type hints, docstrings, clean code standards |
 
 ---
@@ -345,37 +363,51 @@ sudo systemctl start community-pulse
 
 ---
 
-## Learning & Portfolio Value
+## How This Demonstrates My Skills
 
-This project demonstrates:
+This project showcases key competencies for **data science and analytics roles**:
 
-**Data Engineering**
-- Data generation with realistic quality issues
-- Multi-step cleaning pipelines
-- Comprehensive error handling
+### **Python Programming**
+- Clean, modular code architecture with reusable utility modules
+- Type hints and comprehensive docstrings for maintainability
+- Error handling and input validation throughout the codebase
+- Professional code organization following Python best practices
 
-**Data Analysis**
-- Health scoring algorithms
-- Statistical analysis (mean, median, std dev)
-- Trend detection (linear regression)
+### **Data Manipulation & Cleaning (Pandas)**
+- Multi-step data transformation pipelines
+- Handling missing values, duplicates, and data quality issues
+- DataFrame operations: filtering, grouping, aggregation
+- Data validation and standardization techniques
 
-**Frontend & UX**
-- Responsive Streamlit design
-- Interactive Plotly visualizations
-- Real-time metric updates
-- Modal dialogs and form validation
+### **Data Visualization (Plotly)**
+- Interactive charts with hover tooltips and drill-down capabilities
+- Multiple visualization types: line charts, histograms, pie charts
+- Statistical overlays (mean, median, trend lines)
+- Export-ready visualizations at high resolution
 
-**Software Engineering**
-- Modular code architecture
-- 66 passing unit tests
-- Type hints and docstrings
-- Comprehensive documentation
+### **Web Application Development (Streamlit)**
+- Interactive dashboard with session state management
+- Responsive UI components and form validation
+- Real-time data updates and user feedback
+- Configuration panels and export functionality
 
-**Production Readiness**
-- Error handling and recovery
-- Session state management
-- Configuration flexibility
-- Audit logging
+### **Software Testing & Quality**
+- 70 comprehensive unit tests covering all core functionality
+- Test-driven development approach ensuring code reliability
+- Edge case handling and validation testing
+- Continuous integration-ready test suite
+
+### **Data Analytics Skills**
+- Data quality assessment and health scoring algorithms
+- Before/after analysis and impact measurement
+- Statistical analysis (mean, median, standard deviation)
+- Trend detection using linear regression
+
+### **Professional Development Practices**
+- Version control with Git and GitHub
+- Clear documentation and contribution guidelines
+- Deployment to cloud platforms (Streamlit Cloud)
+- Production-ready code with error handling and logging
 
 ---
 
@@ -395,9 +427,10 @@ Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ## Documentation
 
-- **[DOCUMENTATION.md](./docs/DOCUMENTATION.md)** — Detailed technical reference
+- **[ARCHITECTURAL_OVERVIEW.md](./docs/ARCHITECTURAL_OVERVIEW.md)** — Technical architecture details
+- **[KPI_DEFINITIONS.md](./docs/KPI_DEFINITIONS.md)** — Key performance indicators
+- **[SOP_DATA_CLEANING.md](./docs/SOP_DATA_CLEANING.md)** — Standard operating procedures
 - **[CONTRIBUTING.md](./CONTRIBUTING.md)** — How to contribute
-- **[IMPLEMENTATION_SUMMARY.md](./docs/IMPLEMENTATION_SUMMARY.md)** — Architecture decisions
 
 ---
 
@@ -427,7 +460,7 @@ Built with:
 
 ## Support
 
-- Check [DOCUMENTATION.md](./docs/DOCUMENTATION.md)
+- Check the [documentation files](./docs/) for detailed guides
 - Report issues on [GitHub Issues](https://github.com/hilliersmmain/community_pulse/issues)
 - Discuss ideas in [GitHub Discussions](https://github.com/hilliersmmain/community_pulse/discussions)
 
