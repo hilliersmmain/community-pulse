@@ -62,19 +62,10 @@ st.markdown("""
         font-weight: 500;
     }
     
-    /* Sidebar styling */
-    [data-testid="stSidebar"] {
-        background-color: #f8f9fa;
-        border-right: 1px solid #e9ecef;
-    }
-    
     /* Card/Widget styling */
     div.css-1r6slb0, div.stMetric {
-        background-color: white;
         padding: 1rem;
         border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     /* Success/info box enhancement */
@@ -112,7 +103,7 @@ if st.session_state.get('show_welcome', False):
 # Title & Description
 st.title("Community Pulse Dashboard")
 st.markdown("""
-<div style="margin-bottom: 2rem; color: #555;">
+<div style="margin-bottom: 2rem;">
     <p style="font-size: 1.1rem; line-height: 1.6;">
         Data quality management and member analytics platform. 
         Transform raw data into actionable insights with automated cleaning pipelines.
@@ -125,26 +116,6 @@ show_whats_new()
 
 # --- SIDEBAR Controls ---
 st.sidebar.header("Data Controls")
-
-# Add tutorial mode toggle
-tutorial_col1, tutorial_col2 = st.sidebar.columns([3, 1])
-with tutorial_col1:
-    if st.sidebar.checkbox("Tutorial Mode", value=st.session_state.get('tutorial_mode', False), help="Enable step-by-step guided tour"):
-        st.session_state['tutorial_mode'] = True
-        st.session_state['tutorial_step'] = 0
-    else:
-        if st.session_state.get('tutorial_mode', False):
-            st.session_state['tutorial_mode'] = False
-with tutorial_col2:
-    if st.sidebar.button("What's New"):
-        st.session_state['show_whats_new'] = not st.session_state.get('show_whats_new', False)
-        st.rerun()
-    if st.sidebar.button("Help"):
-        st.session_state['show_welcome'] = True
-        st.rerun()
-
-# Show tutorial if active
-show_tutorial_step(0)
 
 DATA_PATH = "data/messy_club_data.csv"
 
