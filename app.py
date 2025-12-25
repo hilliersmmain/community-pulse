@@ -64,17 +64,14 @@ st.markdown("""
     
     /* Sidebar styling */
     [data-testid="stSidebar"] {
-        background-color: #f8f9fa;
-        border-right: 1px solid #e9ecef;
+        /* Removed hardcoded background-color and border for dark mode compatibility */
     }
     
     /* Card/Widget styling */
     div.css-1r6slb0, div.stMetric {
-        background-color: white;
+        /* Removed hardcoded background-color and border for dark mode compatibility */
         padding: 1rem;
         border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     
     /* Success/info box enhancement */
