@@ -207,10 +207,20 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ## Documentation
 
-- [ARCHITECTURAL_OVERVIEW.md](./docs/ARCHITECTURAL_OVERVIEW.md) — Technical details
-- [KPI_DEFINITIONS.md](./docs/KPI_DEFINITIONS.md) — Metrics definitions
-- [SOP_DATA_CLEANING.md](./docs/SOP_DATA_CLEANING.md) — Procedures
-- [CONTRIBUTING.md](./CONTRIBUTING.md) — Contribution guide
+**For Users:**
+- [README.md](./README.md) — Project overview and quick start
+- [CHANGELOG.md](./CHANGELOG.md) — Version history and release notes
+
+**For Developers:**
+- [API.md](./docs/API.md) — Complete API reference for all modules
+- [DEVELOPMENT.md](./docs/DEVELOPMENT.md) — Developer setup and contribution guide
+- [ARCHITECTURAL_OVERVIEW.md](./docs/ARCHITECTURAL_OVERVIEW.md) — System design and architecture
+- [KPI_DEFINITIONS.md](./docs/KPI_DEFINITIONS.md) — Data quality metrics explained
+- [SOP_DATA_CLEANING.md](./docs/SOP_DATA_CLEANING.md) — Standard operating procedures
+
+**For Recruiters:**
+- [PORTFOLIO.md](./PORTFOLIO.md) — Skills demonstration and project showcase
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — Contribution guidelines
 
 ---
 
