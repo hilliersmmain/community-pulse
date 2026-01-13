@@ -10,14 +10,17 @@
 
 **Community Pulse** is a production-grade data analytics platform that transforms raw, unstructured community data into actionable business intelligence. By automating the entire data engineering lifecycle—from ingestion and cleaning to validation and visualization—it delivers real-time insights into community engagement, growth trends, and member behavior patterns.
 
-## 🚀 [**Try the Live Demo →**](https://community-pulse.streamlit.app/)
+### 🧬 Why I Built This
+As a former biology student used to dealing with messy organic data, I realized that human community data—with its duplicates, missing fields, and chaotic growth patterns—required the same rigorous treatment as biological datasets. I built **Community Pulse** to prove that a robust, automated data engineering pipeline can be just as elegant as the visualizations it powers. It’s not just a dashboard; it’s an attempt to bring scientific order to social chaos.
 
+---
+
+## 🚀 [**Try the Live Demo →**](https://community-pulse.streamlit.app/)
 *No installation required — explore the full dashboard instantly*
 
 ---
 
 ## 📸 Dashboard Preview
-
 | Dashboard Overview | Data Cleaning Pipeline |
 |:--:|:--:|
 | ![Dashboard Overview](docs/screenshots/dashboard-overview.png) | ![Data Cleaning](docs/screenshots/data-cleaning-pipeline.png) |
@@ -29,7 +32,6 @@
 ---
 
 ## 🔑 Key Features
-
 ### 1. Automated Data Engineering Pipeline
 - **Robust ETL Process:** Ingests raw CSV data, handles missing values, standardizes date formats, and deduplicates records automatically
 - **Intelligent Validation:** Enforces strict data quality schemas with configurable rules
@@ -47,7 +49,6 @@
 ---
 
 ## 📊 Impact & Results
-
 | Metric | Before | After | Improvement |
 |--------|--------|-------|-------------|
 | **Records Processed** | 500 raw | 450 clean | -10% duplicates removed |
@@ -59,7 +60,6 @@
 ---
 
 ## 💻 Quick Start
-
 **Prerequisites:** Python 3.9+
 
 ```bash
@@ -79,7 +79,6 @@ Open browser to `http://localhost:8501`
 ---
 
 ## 📖 Usage Workflow
-
 1. **Generate Data** — Create synthetic community data with configurable messiness levels (100-1000 records)
 2. **Configure Cleaning** — Select cleaning algorithms via sidebar toggles or use optimized defaults
 3. **Execute Pipeline** — Run automated cleaning with real-time progress logging
@@ -89,7 +88,6 @@ Open browser to `http://localhost:8501`
 ---
 
 ## 🛠️ Technology Stack
-
 | Component | Technology | Purpose |
 |-----------|------------|---------|
 | **Frontend** | Streamlit 1.52+ | Interactive web UI with reactive components |
@@ -102,7 +100,6 @@ Open browser to `http://localhost:8501`
 ---
 
 ## 📁 Project Architecture
-
 ```
 community-pulse/
 ├── app.py                    # Main Streamlit application (entry point)
@@ -123,7 +120,6 @@ community-pulse/
 ---
 
 ## 🧪 Testing & Quality
-
 ```bash
 pytest                    # Run all 70 tests
 pytest --cov=utils        # Generate coverage report
@@ -139,7 +135,6 @@ python verify_setup.py    # Verify installation
 ---
 
 ## 🚀 Deployment
-
 **Streamlit Cloud (Recommended):**
 1. Push to GitHub
 2. Connect at [share.streamlit.io](https://share.streamlit.io)
@@ -161,7 +156,6 @@ CMD ["streamlit", "run", "app.py"]
 ---
 
 ## 🎯 Skills & Competencies Demonstrated
-
 **Data Engineering & Analytics**
 - End-to-end ETL pipeline design and implementation
 - Data quality assessment and automated remediation
@@ -172,7 +166,7 @@ CMD ["streamlit", "run", "app.py"]
 - Modular, maintainable Python architecture
 - Comprehensive test coverage (70 tests, 90% coverage)
 - CI/CD pipeline with GitHub Actions
-- Production deployment on Streamlit Cloud
+- Production deployment of Streamlit Cloud
 
 **Technical Communication**
 - Clear documentation and code commenting
@@ -182,12 +176,11 @@ CMD ["streamlit", "run", "app.py"]
 ---
 
 ## 👤 About the Developer
-
-I'm **Sam Hillier**, an undergraduate researcher making the transition from cellular biology to artificial intelligence and data science. After spending my first year at Appalachian State studying cellular/molecular biology, I realized my passion lay in computational approaches to understanding biological systems—particularly the brain.
+I'm **Sam Hillier**, an undergraduate researcher making the transition from cellular biology to artificial intelligence and data science.
 
 - 🎓 **Current:** B.S. Data Science, UNC Charlotte (Transitioning to B.S. Artificial Intelligence, Fall 2026)
 - 🧠 **Minor:** Cognitive Science
-- 🔬 **Background:** B.S. Biology (Cellular/Molecular concentration), Appalachian State University (2024-2025)
+- 🔬 **History:** I started my university career at **Appalachian State University** (2024-2025), studying Cellular/Molecular Biology. It was there, while modeling biological systems, that I realized I wanted to build the computational tools that analyze the data, not just collect it. This drove my transfer to UNCC to pursue Data Science full-time.
 - 📚 **Spring 2026 Coursework:** Human-Centered Computing (ITIS 3130), Computer Science II (ITSC 1213), Mathematics for Computer Science (MATH 2112)
 
 *I'm especially interested in AI applications in neuroscience and human-computer interaction—this project showcases how I apply computational thinking to messy, real-world data problems.*
@@ -195,5 +188,4 @@ I'm **Sam Hillier**, an undergraduate researcher making the transition from cell
 ---
 
 ## 📄 License
-
 MIT License — See [LICENSE](./LICENSE) for details.
