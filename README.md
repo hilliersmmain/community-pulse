@@ -183,14 +183,14 @@ CMD ["streamlit", "run", "app.py"]
 
 ## 👤 About the Developer
 
-**Sam Hillier** — Undergraduate researcher transitioning from cellular/molecular biology to artificial intelligence and data science.
+I'm **Sam Hillier**, an undergraduate researcher making the transition from cellular biology to artificial intelligence and data science. After spending my first year at Appalachian State studying cellular/molecular biology, I realized my passion lay in computational approaches to understanding biological systems—particularly the brain.
 
 - 🎓 **Current:** B.S. Data Science, UNC Charlotte (Transitioning to B.S. Artificial Intelligence, Fall 2026)
 - 🧠 **Minor:** Cognitive Science
 - 🔬 **Background:** B.S. Biology (Cellular/Molecular concentration), Appalachian State University (2024-2025)
-- 📚 **Spring 2026 Coursework:** Human-Centered Computing (ITIS 3130), Computer Science II (ITSC 1213), Discrete Mathematics (MATH 2112)
+- 📚 **Spring 2026 Coursework:** Human-Centered Computing (ITIS 3130), Computer Science II (ITSC 1213), Mathematics for Computer Science (MATH 2112)
 
-*Interdisciplinary background bridging life sciences and technology — passionate about AI applications in neuroscience and human-computer interaction.*
+*I'm especially interested in AI applications in neuroscience and human-computer interaction—this project showcases how I apply computational thinking to messy, real-world data problems.*
 
 ---
 
