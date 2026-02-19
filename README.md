@@ -100,7 +100,7 @@ Open browser to `http://localhost:8501`
 | Frontend | Streamlit 1.52+ | Interactive web UI with reactive components |
 | Data Processing | Pandas 2.2+, NumPy | High-performance DataFrame operations |
 | Visualization | Plotly 6.5+ | Interactive, publication-quality charts |
-| Testing | pytest 9.0+ | 70 unit tests with 90% code coverage |
+| Testing | pytest 9.0+ | 70 unit tests with 85% code coverage |
 | Data Generation | Faker | Realistic synthetic data with controlled quality issues |
 | CI/CD | GitHub Actions | Automated testing, linting, and deployment |
 
@@ -175,7 +175,7 @@ CMD ["streamlit", "run", "app.py"]
 
 **Software Engineering**
 - Modular, maintainable Python architecture
-- Comprehensive test coverage (70 tests, 90% coverage)
+- Comprehensive test coverage (70 tests, 85% coverage)
 - CI/CD pipeline with GitHub Actions
 - Production deployment on Streamlit Cloud
 

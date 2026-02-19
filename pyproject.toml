@@ -56,11 +56,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hilliersmmain/community_pulse"
+Homepage = "https://github.com/hilliersmmain/community-pulse"
 "Live Demo" = "https://community-pulse.streamlit.app/"
-Documentation = "https://github.com/hilliersmmain/community_pulse/tree/main/docs"
-"Bug Tracker" = "https://github.com/hilliersmmain/community_pulse/issues"
-"Source Code" = "https://github.com/hilliersmmain/community_pulse"
+Documentation = "https://github.com/hilliersmmain/community-pulse/tree/main/docs"
+"Bug Tracker" = "https://github.com/hilliersmmain/community-pulse/issues"
+"Source Code" = "https://github.com/hilliersmmain/community-pulse"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
