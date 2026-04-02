@@ -1,7 +1,7 @@
 """UI Helper Module"""
 
 import streamlit as st
-from typing import Optional
+from typing import Callable, Optional
 
 
 def initialize_session_state():
@@ -27,7 +27,6 @@ def show_welcome_modal():
         <style>
         .welcome-modal {
             padding: 2rem;
-            border-radius: 0.5rem;
             border-radius: 0.5rem;
             background: #f1f3f5;
             color: #333;
@@ -126,7 +125,7 @@ def show_empty_state(
     title: str = "No Data Available",
     message: str = "Get started by generating some data.",
     action_label: Optional[str] = None,
-    action_callback: Optional[callable] = None,
+    action_callback: Optional[Callable] = None,
 ):
     """Display an empty state message with optional action button."""
     st.markdown(

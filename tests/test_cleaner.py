@@ -1,4 +1,3 @@
-
 import pytest
 import pandas as pd
 import numpy as np
@@ -67,6 +66,7 @@ class TestDataCleaner:
                 "Role": ["Admin", "Member", "Guest"],
             }
         )
+
     def test_remove_duplicates(self, sample_data_with_duplicates):
         cleaner = DataCleaner(sample_data_with_duplicates)
         cleaner.remove_duplicates()
@@ -74,6 +74,7 @@ class TestDataCleaner:
         assert len(cleaner.clean_df) == 2
         assert any("duplicate" in msg.lower() for msg in cleaner.log)
         assert cleaner.clean_df["Email"].nunique() == 2
+
     def test_fix_emails(self, sample_data_with_invalid_emails):
         cleaner = DataCleaner(sample_data_with_invalid_emails)
         cleaner.fix_emails()
@@ -84,6 +85,7 @@ class TestDataCleaner:
 
         emails = cleaner.clean_df["Email"].tolist()
         assert "alice@example.com" in emails
+
     def test_standardize_names(self, sample_data_with_mixed_case_names):
         cleaner = DataCleaner(sample_data_with_mixed_case_names)
         cleaner.standardize_names()
@@ -91,6 +93,7 @@ class TestDataCleaner:
         expected_names = ["John Doe", "Jane Smith", "Bob Wilson"]
         assert cleaner.clean_df["Name"].tolist() == expected_names
         assert any("name" in msg.lower() and "title case" in msg.lower() for msg in cleaner.log)
+
     def test_clean_dates(self, sample_data_with_bad_dates):
         cleaner = DataCleaner(sample_data_with_bad_dates)
         cleaner.clean_dates()
@@ -100,6 +103,7 @@ class TestDataCleaner:
 
         valid_dates = cleaner.clean_df["Join_Date"].dropna()
         assert len(valid_dates) >= 1
+
     def test_handle_missing_values(self, sample_data_with_missing_values):
         cleaner = DataCleaner(sample_data_with_missing_values)
         cleaner.handle_missing_values()
@@ -109,6 +113,7 @@ class TestDataCleaner:
         expected = [8.0, 0.0, 0.0]
         assert cleaner.clean_df["Event_Attendance"].tolist() == expected
         assert any("attendance" in msg.lower() for msg in cleaner.log)
+
     def test_clean_all_pipeline(self):
         messy_data = pd.DataFrame(
             {
@@ -128,6 +133,7 @@ class TestDataCleaner:
         assert all(name.istitle() for name in result["Name"])
         assert result["Event_Attendance"].isna().sum() == 0
         assert pd.api.types.is_datetime64_any_dtype(result["Join_Date"])
+
     def test_timestamps_are_set(self):
         messy_data = pd.DataFrame(
             {

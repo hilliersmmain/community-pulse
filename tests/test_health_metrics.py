@@ -1,4 +1,3 @@
-
 import pytest
 import pandas as pd
 import numpy as np
@@ -57,11 +56,13 @@ class TestDataHealthMetrics:
                 "Role": ["Member", "Admin", "Member"],
             }
         )
+
     def test_completeness_score_perfect_data(self, perfect_data):
         metrics = DataHealthMetrics(perfect_data)
         score = metrics.calculate_completeness_score()
 
         assert score == 100.0
+
     def test_completeness_score_with_missing_values(self, data_with_missing_values):
 
         metrics = DataHealthMetrics(data_with_missing_values)
@@ -69,18 +70,21 @@ class TestDataHealthMetrics:
 
         # 12 total cells, 4 missing = 8/12 = 66.67%
         assert 66.0 <= score <= 67.0
+
     def test_completeness_score_empty_dataframe(self):
 
         metrics = DataHealthMetrics(pd.DataFrame())
         score = metrics.calculate_completeness_score()
 
         assert score == 0.0
+
     def test_duplicate_score_no_duplicates(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)
         score = metrics.calculate_duplicate_score()
 
         assert score == 100.0
+
     def test_duplicate_score_with_duplicates(self, data_with_duplicates):
 
         metrics = DataHealthMetrics(data_with_duplicates)
@@ -88,12 +92,14 @@ class TestDataHealthMetrics:
 
         # 2 unique out of 3 total = 66.67%
         assert 66.0 <= score <= 67.0
+
     def test_duplicate_score_empty_dataframe(self):
 
         metrics = DataHealthMetrics(pd.DataFrame())
         score = metrics.calculate_duplicate_score()
 
         assert score == 100.0
+
     def test_formatting_score_perfect_data(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)
@@ -101,6 +107,7 @@ class TestDataHealthMetrics:
 
         # Should be high but not necessarily 100 due to case sensitivity
         assert score >= 90.0
+
     def test_formatting_score_with_bad_formatting(self, data_with_bad_formatting):
 
         metrics = DataHealthMetrics(data_with_bad_formatting)
@@ -108,6 +115,7 @@ class TestDataHealthMetrics:
 
         # Should be lower due to invalid emails, dates, and names
         assert score < 80.0
+
     def test_is_valid_email(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)
@@ -117,6 +125,7 @@ class TestDataHealthMetrics:
         assert metrics._is_valid_email("test at example.com") is False
         assert metrics._is_valid_email(np.nan) is False
         assert metrics._is_valid_email("") is False
+
     def test_is_valid_name(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)
@@ -127,12 +136,14 @@ class TestDataHealthMetrics:
         assert metrics._is_valid_name("123invalid") is False
         assert metrics._is_valid_name(np.nan) is False
         assert metrics._is_valid_name("") is False
+
     def test_count_valid_dates(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)
 
         valid_count = metrics._count_valid_dates("Join_Date")
         assert valid_count == 3
+
     def test_count_valid_dates_with_invalid(self, data_with_bad_formatting):
 
         metrics = DataHealthMetrics(data_with_bad_formatting)
@@ -140,6 +151,7 @@ class TestDataHealthMetrics:
         valid_count = metrics._count_valid_dates("Join_Date")
         # At least 1 should be valid (the ISO format)
         assert valid_count >= 1
+
     def test_overall_health_score_perfect_data(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)
@@ -148,6 +160,7 @@ class TestDataHealthMetrics:
         # Should be very high for perfect data
         assert score >= 95.0
         assert score <= 100.0
+
     def test_overall_health_score_mixed_quality(self, data_with_missing_values):
 
         metrics = DataHealthMetrics(data_with_missing_values)
@@ -155,6 +168,7 @@ class TestDataHealthMetrics:
 
         # Should be moderate due to missing values
         assert 50.0 <= score <= 90.0
+
     def test_get_all_metrics(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)
@@ -172,6 +186,7 @@ class TestDataHealthMetrics:
         assert isinstance(all_metrics["formatting_score"], float)
         assert isinstance(all_metrics["overall_score"], float)
         assert isinstance(all_metrics["timestamp"], datetime)
+
     def test_get_detailed_metrics(self, data_with_duplicates):
 
         metrics = DataHealthMetrics(data_with_duplicates)
@@ -188,6 +203,7 @@ class TestDataHealthMetrics:
         assert "formatting_score" in detailed
         assert "overall_score" in detailed
         assert "timestamp" in detailed
+
     def test_timestamp_is_recent(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)
@@ -195,6 +211,7 @@ class TestDataHealthMetrics:
         # Timestamp should be within the last second
         time_diff = (datetime.now() - metrics.timestamp).total_seconds()
         assert time_diff < 1.0
+
     def test_score_ranges(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)
@@ -203,6 +220,7 @@ class TestDataHealthMetrics:
         assert 0 <= metrics.calculate_duplicate_score() <= 100
         assert 0 <= metrics.calculate_formatting_score() <= 100
         assert 0 <= metrics.calculate_overall_health_score() <= 100
+
     def test_dataframe_copy(self, perfect_data):
 
         original_len = len(perfect_data)

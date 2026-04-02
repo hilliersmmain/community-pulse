@@ -122,7 +122,7 @@ community-pulse/
 │   ├── API.md                 # Module API reference
 │   ├── ARCHITECTURAL_OVERVIEW.md
 │   └── screenshots/          # Dashboard screenshots
-└── . github/workflows/        # CI/CD automation
+└── .github/workflows/        # CI/CD automation
 ```
 
 ---
@@ -193,9 +193,9 @@ Sam Hillier — Sophomore at UNC Charlotte bridging data science and artificial 
 Program: B.S. Data Science → B.S in Artificial Intelligence (Fall 2026)
 Minors: Cognitive Science, AI
 Spring 2026 Coursework: Human-Centered Computing (ITIS 3130), Computer Science II (ITSC 1213), Mathematics for Computer Science (MATH 2112)
-Background: Started in Cellular/Molecular Biology at Appalachian State University (2024-2025), where AI's potential in neruoscience, sparked my transition to Data Science/Aritifical Intelligence
+Background: Started in Cellular/Molecular Biology at Appalachian State University (2024-2025), where AI's potential in neuroscience, sparked my transition to Data Science/Artificial Intelligence
 
-Interested in AI applications in neuroscience, human-computer interaction, and building & researching the infrastructure and fundementals that powers intelligent systems from the ground up.
+Interested in AI applications in neuroscience, human-computer interaction, and building & researching the infrastructure and fundamentals that powers intelligent systems from the ground up.
 
 
 ---

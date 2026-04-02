@@ -26,6 +26,7 @@ class TestEmojiRemoval:
                 "Role": np.random.choice(["Member", "Admin", "Guest"], 100, p=[0.7, 0.1, 0.2]),
             }
         )
+
     def test_attendance_trend_no_emoji(self, sample_member_data):
 
         fig = plot_attendance_trend(sample_member_data, data_state="cleaned")
@@ -37,6 +38,7 @@ class TestEmojiRemoval:
             assert not any(
                 ord(c) > 0x1F300 and ord(c) < 0x1F9FF for c in annotation.text
             ), f"Found emoji character in annotation: {annotation.text}"
+
     def test_role_distribution_no_emoji(self, sample_member_data):
 
         fig = plot_role_distribution(sample_member_data, data_state="cleaned")
@@ -48,6 +50,7 @@ class TestEmojiRemoval:
             assert not any(
                 ord(c) > 0x1F300 and ord(c) < 0x1F9FF for c in annotation.text
             ), f"Found emoji character in annotation: {annotation.text}"
+
     def test_attendance_histogram_no_emoji(self, sample_member_data):
 
         fig = plot_attendance_histogram(sample_member_data, data_state="cleaned")
@@ -59,6 +62,7 @@ class TestEmojiRemoval:
             assert not any(
                 ord(c) > 0x1F300 and ord(c) < 0x1F9FF for c in annotation.text
             ), f"Found emoji character in annotation: {annotation.text}"
+
     def test_all_charts_contain_statistics(self, sample_member_data):
 
         # Attendance trend should have Mean, Median, and Total
