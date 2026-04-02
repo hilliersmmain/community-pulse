@@ -9,6 +9,9 @@ MIN_RECORDS = 100
 MAX_RECORDS = 1000
 RECORDS_STEP = 50
 
+REQUIRED_COLUMNS = ["Name", "Email"]
+OPTIONAL_COLUMNS = ["Join_Date", "Last_Login", "Event_Attendance", "Role", "Event_Registered", "Registration_Date"]
+
 CLEANING_STEPS_DEFAULT = {
     "standardize_names": True,
     "fix_emails": True,
