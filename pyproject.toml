@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "community-pulse"
-version = "1.0.0"
+version = "2.0.0"
 description = "Production-ready data analytics dashboard with automated cleaning pipelines, interactive visualizations, and comprehensive data quality metrics"
 authors = [{name = "Samuel M. Hillier"}]
 license = {text = "MIT"}
@@ -88,7 +88,7 @@ extend-exclude = '''
 '''
 
 [tool.coverage.run]
-source = ["utils", "community_pulse"]
+source = ["utils", "community_pulse", "components"]
 omit = ["*/tests/*", "*/test_*.py"]
 
 [tool.coverage.report]

@@ -3,7 +3,7 @@
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.52+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75?logo=plotly&logoColor=white)](https://plotly.com/)
-[![Tests: 70/70](https://img.shields.io/badge/Tests-70%2F70%20passing-brightgreen)](./tests)
+[![Tests: 106/106](https://img.shields.io/badge/Tests-106%2F106%20passing-brightgreen)](./tests)
 [![Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Live Demo](https://img.shields.io/badge/%20Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://community-pulse.streamlit.app/)
@@ -86,6 +86,7 @@ Open browser to `http://localhost:8501`
 ## Usage Workflow
 
 1. Generate Data — Create synthetic community data with configurable messiness levels (100-1000 records)
+1b. **Or Upload CSV** — Upload your own data file with Name and Email columns
 2. Configure Cleaning — Select cleaning algorithms via sidebar toggles or use optimized defaults
 3. Execute Pipeline — Run automated cleaning with real-time progress logging
 4. Analyze Results — Explore interactive dashboard with filters, drill-downs, and exports
@@ -100,7 +101,7 @@ Open browser to `http://localhost:8501`
 | Frontend | Streamlit 1.52+ | Interactive web UI with reactive components |
 | Data Processing | Pandas 2.2+, NumPy | High-performance DataFrame operations |
 | Visualization | Plotly 6.5+ | Interactive, publication-quality charts |
-| Testing | pytest 9.0+ | 70 unit tests with 90% code coverage |
+| Testing | pytest 9.0+ | 106 unit tests with comprehensive coverage |
 | Data Generation | Faker | Realistic synthetic data with controlled quality issues |
 | CI/CD | GitHub Actions | Automated testing, linting, and deployment |
 
@@ -110,16 +111,26 @@ Open browser to `http://localhost:8501`
 
 ```
 community-pulse/
-├── app.py                     # Main Streamlit application (entry point)
+├── app.py                     # Thin orchestrator (111 lines)
+├── components/               # UI component modules
+│   ├── sidebar.py            # Sidebar controls and data source selection
+│   ├── kpi_display.py        # KPI metrics row
+│   ├── comparison.py         # Before/after comparison section
+│   ├── tab_preparation.py    # Data Preparation tab
+│   ├── tab_analytics.py      # Analytics tab with charts
+│   └── tab_explorer.py       # Data Explorer tab
 ├── utils/                    # Core processing modules
+│   ├── constants.py          # Configuration constants
 │   ├── data_generator.py     # Synthetic data generation with configurable noise
 │   ├── cleaner.py            # Multi-step cleaning pipeline with logging
 │   ├── visualizer.py         # Plotly chart components and themes
 │   ├── health_metrics.py     # Quality scoring algorithms
 │   └── ui_helpers.py         # Reusable UI components
-├── tests/                    # 70 comprehensive unit tests
+├── scripts/                  # Automation scripts
+│   └── update_claude_md.py   # Auto-generate CLAUDE.md
+├── tests/                    # 106 comprehensive unit tests
 ├── docs/                     # Technical documentation
-│   ├── API.md                 # Module API reference
+│   ├── API.md                # Module API reference
 │   ├── ARCHITECTURAL_OVERVIEW.md
 │   └── screenshots/          # Dashboard screenshots
 └── .github/workflows/        # CI/CD automation
@@ -130,15 +141,15 @@ community-pulse/
 ## Testing & Quality
 
 ```bash
-pytest                    # Run all 70 tests
+pytest                    # Run all 106 tests
 pytest --cov=utils        # Generate coverage report
 python verify_setup.py    # Verify installation
 ```
 
 **Quality Metrics:**
-- 70/70 tests passing
-- 85% code coverage (core modules)
-- Type hints throughout
+- 106/106 tests passing
+- Comprehensive coverage (core modules 92%+)
+- Type hints throughout with mypy enforcement
 - Comprehensive docstrings
 
 ---
@@ -175,7 +186,7 @@ CMD ["streamlit", "run", "app.py"]
 
 **Software Engineering**
 - Modular, maintainable Python architecture
-- Comprehensive test coverage (70 tests, 90% coverage)
+- Comprehensive test coverage (106 tests with modular component architecture)
 - CI/CD pipeline with GitHub Actions
 - Production deployment on Streamlit Cloud
 

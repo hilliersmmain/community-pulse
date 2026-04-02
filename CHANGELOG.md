@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-02
+
+### Added
+- **CSV Upload Feature**: Upload custom CSV files as alternative to synthetic data generation
+  - Column validation ensures required fields (Name, Email) are present
+  - Seamless integration with existing cleaning pipeline
+- **Self-Modifying CLAUDE.md**: Script to auto-generate project documentation
+  - Discovers modules, counts tests, measures coverage
+  - Run with `python scripts/update_claude_md.py`
+
+### Changed
+- **Major Architecture Refactor**: Decomposed 883-line monolithic app.py into modular components
+  - app.py reduced to 111-line thin orchestrator
+  - Created `components/` package with 6 focused UI modules
+  - Each component exposes a single `render()` function
+- **Extracted Constants**: Created `utils/constants.py` for all configuration values
+  - Eliminated magic numbers and strings throughout codebase
+  - Centralized CSS, thresholds, defaults, and cleaning step configuration
+- **CI Pipeline Hardened**: Black check now blocks builds, mypy added to pipeline
+- **Test Suite Expanded**: 70 → 106 tests with comprehensive edge case coverage
+
+### Fixed
+- Redundant double deduplication in `cleaner.py` (was doing full-row + email dedup)
+- Weak email regex in cleaner (now matches health_metrics standard)
+- NaN-unsafe statistics calculation in visualizer
+- Invalid type hint (`Optional[callable]` → `Optional[Callable]`)
+- Duplicate CSS property in welcome modal
+- Bare `except:` clause replaced with `except Exception:`
+- README typos: "neruoscience", "Aritifical", "fundementals"
+- Unused imports in demo_charts.py
+- mypy type errors in health_metrics.py and cleaner.py
+
+### Removed
+- Dead code: `show_whats_new()` function call (session state always False)
+- Commented-out PDF export and report sections
+- Unused `stats_label` variable
+
 ## [1.0.0] - 2025-12-29
 
 ### Added
@@ -152,5 +189,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for planned enhancements including:
 
 ---
 
+[2.0.0]: https://github.com/hilliersmmain/community_pulse/releases/tag/v2.0.0
 [1.0.0]: https://github.com/hilliersmmain/community_pulse/releases/tag/v1.0.0
 [0.1.0]: https://github.com/hilliersmmain/community_pulse/releases/tag/v0.1.0
