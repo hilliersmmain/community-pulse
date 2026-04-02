@@ -142,6 +142,53 @@ class TestDataCleaner:
         assert len(result) == 0
         assert cleaner.end_timestamp is not None
 
+    def test_clean_all_selective_steps(self):
+        """Test running only selected cleaning steps."""
+        messy_data = pd.DataFrame(
+            {
+                "Name": ["john doe", "JANE SMITH"],
+                "Email": ["john@test.com", "jane@test.com"],
+                "Join_Date": ["2023-01-15", "2023-06-01"],
+                "Event_Attendance": [5, 10],
+                "Role": ["Member", "Admin"],
+            }
+        )
+        cleaner = DataCleaner(messy_data)
+        result = cleaner.clean_all(steps=["standardize_names"])
+        # Only name standardization should have run
+        assert len(cleaner.log) == 1
+        assert "Standardized Names" in cleaner.log[0]
+
+    def test_clean_all_no_steps(self):
+        """Test running with empty steps list."""
+        messy_data = pd.DataFrame(
+            {
+                "Name": ["John Doe"],
+                "Email": ["john@test.com"],
+                "Event_Attendance": [5],
+                "Role": ["Member"],
+            }
+        )
+        cleaner = DataCleaner(messy_data)
+        result = cleaner.clean_all(steps=[])
+        assert len(cleaner.log) == 0
+        assert cleaner.end_timestamp is not None
+
+    def test_remove_duplicates_no_email_column(self):
+        """Test dedup falls back to drop_duplicates when no Email column."""
+        df = pd.DataFrame({"Name": ["Alice", "Alice", "Bob"], "Value": [1, 1, 2]})
+        cleaner = DataCleaner(df)
+        cleaner.remove_duplicates()
+        assert len(cleaner.clean_df) == 2
+
+    def test_fix_emails_at_replacement(self):
+        """Test that 'user at domain.com' becomes 'user@domain.com'."""
+        df = pd.DataFrame({"Email": ["john at test.com", "valid@test.com"]})
+        cleaner = DataCleaner(df)
+        cleaner.fix_emails()
+        emails = cleaner.clean_df["Email"].tolist()
+        assert "john@test.com" in emails
+
     def test_timestamps_are_set(self):
         messy_data = pd.DataFrame(
             {
