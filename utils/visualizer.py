@@ -20,6 +20,9 @@ def _add_export_button(fig: go.Figure) -> go.Figure:
 
 def _calculate_stats(data: pd.Series) -> Dict[str, float]:
     """Calculate statistical measures for a data series."""
+    data = data.dropna()
+    if data.empty:
+        return {"mean": 0.0, "median": 0.0, "std": 0.0, "min": 0.0, "max": 0.0}
     return {
         "mean": float(data.mean()),
         "median": float(data.median()),
