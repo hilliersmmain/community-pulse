@@ -18,6 +18,11 @@ class DataCleaner:
         if steps is None:
             steps = ["standardize_names", "fix_emails", "remove_duplicates", "clean_dates", "handle_missing_values"]
 
+        if self.clean_df.empty:
+            self.end_timestamp = datetime.now()
+            self.log.append("No data to clean (empty DataFrame).")
+            return self.clean_df
+
         if "standardize_names" in steps:
             self.standardize_names()
         if "fix_emails" in steps:
@@ -36,11 +41,11 @@ class DataCleaner:
         """Removes duplicates based on Email and Name."""
         initial_count = len(self.clean_df)
 
-        self.clean_df = self.clean_df.drop_duplicates()
-
         if "Email" in self.clean_df.columns:
             temp_email = self.clean_df["Email"].astype(str).str.lower()
             self.clean_df = self.clean_df[~temp_email.duplicated(keep="first")]
+        else:
+            self.clean_df = self.clean_df.drop_duplicates()
 
         final_count = len(self.clean_df)
         self.log.append(f"Removed {initial_count - final_count} duplicate rows.")

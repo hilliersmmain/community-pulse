@@ -7,10 +7,18 @@ import random
 fake = Faker()
 
 
+EVENT_CHOICES = ["Spring Gala", "Summer Camp", "Fall Fundraiser", "None"]
+
+
 def generate_messy_data(
     num_records: int = 500, save_path: Optional[str] = None, messiness_level: str = "medium"
 ) -> pd.DataFrame:
     """Generates a dataset with intentional messiness for cleaning demonstration."""
+    if not isinstance(num_records, int) or num_records <= 0:
+        raise ValueError(f"num_records must be a positive integer, got {num_records}")
+    if messiness_level not in ("low", "medium", "high"):
+        raise ValueError(f"messiness_level must be 'low', 'medium', or 'high', got '{messiness_level}'")
+
     if messiness_level == "low":
         duplicate_rate = 0.03  # 3% duplicates
         email_error_rate = 0.02  # 2% invalid emails
@@ -33,8 +41,7 @@ def generate_messy_data(
     data = []
 
     for _ in range(num_records):
-        event_choices = ["Spring Gala", "Summer Camp", "Fall Fundraiser", "None"]
-        event_registered = np.random.choice(event_choices, p=[0.25, 0.25, 0.25, 0.25])
+        event_registered = np.random.choice(EVENT_CHOICES, p=[0.25, 0.25, 0.25, 0.25])
 
         if event_registered != "None" and random.random() > 0.4:
             reg_date = fake.date_between(start_date="-6m", end_date="today")

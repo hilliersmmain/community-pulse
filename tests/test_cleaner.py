@@ -134,6 +134,14 @@ class TestDataCleaner:
         assert result["Event_Attendance"].isna().sum() == 0
         assert pd.api.types.is_datetime64_any_dtype(result["Join_Date"])
 
+    def test_clean_all_empty_dataframe(self):
+        """Test clean_all handles empty DataFrame gracefully."""
+        empty_df = pd.DataFrame(columns=["Name", "Email", "Join_Date", "Event_Attendance"])
+        cleaner = DataCleaner(empty_df)
+        result = cleaner.clean_all()
+        assert len(result) == 0
+        assert cleaner.end_timestamp is not None
+
     def test_timestamps_are_set(self):
         messy_data = pd.DataFrame(
             {
