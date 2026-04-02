@@ -1,6 +1,5 @@
 """Demo script to showcase enhanced chart features."""
 
-import pandas as pd
 import sys
 import os
 
@@ -12,7 +11,7 @@ except ImportError as e:
     sys.exit(1)
 
 try:
-    import kaleido
+    import kaleido  # noqa: F401
 except ImportError:
     print("❌ Error: kaleido package is not installed")
     print("   Install it with: pip install kaleido")

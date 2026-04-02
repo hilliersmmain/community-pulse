@@ -11,7 +11,7 @@ class DataCleaner:
         self.clean_df = df.copy()
         self.log: List[str] = []
         self.start_timestamp = datetime.now()
-        self.end_timestamp = None
+        self.end_timestamp: Optional[datetime] = None
 
     def clean_all(self, steps=None) -> pd.DataFrame:
         """Runs the full data cleaning pipeline or selected steps."""

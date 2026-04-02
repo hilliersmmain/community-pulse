@@ -91,7 +91,7 @@ class DataHealthMetrics:
 
         return round(overall, 1)
 
-    def get_all_metrics(self) -> Dict[str, float]:
+    def get_all_metrics(self) -> Dict[str, Any]:
         """Get all health metrics in a single dictionary."""
         return {
             "completeness_score": round(self.calculate_completeness_score(), 1),

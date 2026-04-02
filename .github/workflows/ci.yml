@@ -35,7 +35,7 @@ jobs:
 
       - name: Code formatting check with Black
         run: |
-          black --check --line-length=120 utils/ community_pulse/ tests/ || true
+          black --check --line-length=120 utils/ community_pulse/ tests/
 
       - name: Lint with Flake8
         run: |
@@ -43,6 +43,11 @@ jobs:
           flake8 utils/ community_pulse/ --count --select=E9,F63,F7,F82 --show-source --statistics
           # Exit-zero treats all errors as warnings. Line length set to 120.
           flake8 utils/ community_pulse/ --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+
+      - name: Type check with mypy
+        run: |
+          pip install mypy
+          mypy utils/ community_pulse/ --ignore-missing-imports
 
       - name: Run tests with pytest
         run: |
@@ -63,8 +68,9 @@ jobs:
         run: |
           pip install bandit
           # Scan Python files for common security issues
+          # || true keeps Bandit non-blocking — security findings are advisory, not build-breaking
           bandit -r utils/ community_pulse/ -f json -o bandit-report.json || true
-          # Display summary (non-blocking)
+          # Display summary (non-blocking, same rationale)
           bandit -r utils/ community_pulse/ -ll || true
 
       - name: Display test summary

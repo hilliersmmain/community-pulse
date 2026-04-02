@@ -24,31 +24,37 @@ class TestUIHelpers:
         assert isinstance(MESSAGES["cleaning_success"], str)
         assert "data_generated" in MESSAGES
         assert "loading_data" in MESSAGES
+
     def test_get_contextual_message_string(self):
 
         message = get_contextual_message("loading_data")
         assert isinstance(message, str)
         assert len(message) > 0
+
     def test_get_contextual_message_with_params(self):
 
         message = get_contextual_message("cleaning_success", records_processed=100)
         assert isinstance(message, str)
         assert "100" in message
+
     def test_get_contextual_message_multiple_params(self):
 
         message = get_contextual_message("data_generated", num_records=500, messiness="medium")
         assert isinstance(message, str)
         assert "500" in message
         assert "medium" in message
+
     def test_get_contextual_message_nonexistent(self):
 
         message = get_contextual_message("nonexistent_message_key")
         assert message == "" or isinstance(message, dict)
+
     def test_show_info_tooltip_format(self):
 
         result = show_info_tooltip("Test Text", "Tooltip content")
         assert "Test Text" in result
         assert "ⓘ" in result
+
     def test_empty_state_message_icons(self):
 
         empty_states = ["no_data_generated", "no_data_cleaned", "no_filters_selected", "empty_analytics"]
@@ -58,6 +64,7 @@ class TestUIHelpers:
             assert "icon" in MESSAGES[state]
             # Icons should be emoji (1-4 characters typically)
             assert len(MESSAGES[state]["icon"]) <= 10
+
     def test_message_templates_complete(self):
 
         required_string_messages = [
@@ -74,6 +81,7 @@ class TestUIHelpers:
             assert msg_key in MESSAGES
             assert isinstance(MESSAGES[msg_key], str)
             assert len(MESSAGES[msg_key]) > 0
+
     def test_message_parameter_placeholders(self):
 
         # Test cleaning_success has records_processed placeholder
@@ -85,6 +93,7 @@ class TestUIHelpers:
 
         # Test processing_cleaning has step_count placeholder
         assert "{step_count}" in MESSAGES["processing_cleaning"]
+
     def test_empty_state_titles_descriptive(self):
 
         empty_states = ["no_data_generated", "no_data_cleaned", "no_filters_selected", "empty_analytics"]
@@ -94,6 +103,7 @@ class TestUIHelpers:
             # Titles should be reasonably long and descriptive
             assert len(title) >= 10
             assert len(title) <= 100
+
     def test_empty_state_messages_helpful(self):
 
         empty_states = ["no_data_generated", "no_data_cleaned", "no_filters_selected", "empty_analytics"]
@@ -109,7 +119,6 @@ class TestUIHelpers:
 
 class TestMessageConsistency:
 
-
     def test_all_loading_messages_have_ellipsis(self):
 
         loading_messages = ["loading_data", "processing_cleaning", "calculating_metrics", "rendering_charts"]
@@ -118,6 +127,7 @@ class TestMessageConsistency:
             message = MESSAGES[msg_key]
             # Loading messages should end with ... or similar
             assert message.endswith("...") or message.endswith("…")
+
     def test_success_messages_positive(self):
 
         success_messages = ["cleaning_success", "data_generated", "export_ready"]
@@ -127,6 +137,7 @@ class TestMessageConsistency:
         for msg_key in success_messages:
             message = MESSAGES[msg_key].lower()
             assert any(indicator in message for indicator in positive_indicators)
+
     def test_no_duplicate_messages(self):
 
         string_messages = {k: v for k, v in MESSAGES.items() if isinstance(v, str)}
