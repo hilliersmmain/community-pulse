@@ -14,6 +14,7 @@ from utils.constants import (
     MAX_RECORDS,
     RECORDS_STEP,
     CLEANING_STEPS_DEFAULT,
+    REQUIRED_COLUMNS,
 )
 
 
@@ -60,42 +61,80 @@ def render_sidebar():
 
     st.sidebar.divider()
 
-    # --- 2. DATA GENERATION CONTROLS ---
-    st.sidebar.subheader("Data Generation")
-
-    num_records = st.sidebar.slider(
-        "Number of Records",
-        min_value=MIN_RECORDS,
-        max_value=MAX_RECORDS,
-        value=st.session_state["num_records"],
-        step=RECORDS_STEP,
-        help="Select how many sample records to generate. More records = more realistic analysis, but slower processing.",
+    # --- 2. DATA SOURCE SELECTOR ---
+    data_source = st.sidebar.radio(
+        "Data Source",
+        options=["Generate Sample", "Upload CSV"],
+        help="Choose how to load data into the dashboard",
+        horizontal=True,
     )
-    st.session_state["num_records"] = num_records
 
-    messiness_level = st.sidebar.selectbox(
-        "Messiness Level",
-        options=MESSINESS_OPTIONS,
-        index=MESSINESS_OPTIONS.index(st.session_state["messiness_level"]),
-        help="Control data quality simulation:\n\u2022 Low: 3% duplicates, 2% errors (clean CRM)\n\u2022 Medium: 10% duplicates, 5% errors (typical export)\n\u2022 High: 20% duplicates, 15% errors (legacy system)",
-    )
-    st.session_state["messiness_level"] = messiness_level
+    if data_source == "Generate Sample":
+        st.sidebar.subheader("Data Generation")
 
-    if st.sidebar.button("Generate New Data", type="primary", help="Create fresh sample data"):
-        with show_loading_message(get_contextual_message("loading_data")):
-            if not os.path.exists("data"):
-                os.makedirs("data")
+        num_records = st.sidebar.slider(
+            "Number of Records",
+            min_value=MIN_RECORDS,
+            max_value=MAX_RECORDS,
+            value=st.session_state["num_records"],
+            step=RECORDS_STEP,
+            help="Select how many sample records to generate. More records = more realistic analysis, but slower processing.",
+        )
+        st.session_state["num_records"] = num_records
+
+        messiness_level = st.sidebar.selectbox(
+            "Messiness Level",
+            options=MESSINESS_OPTIONS,
+            index=MESSINESS_OPTIONS.index(st.session_state["messiness_level"]),
+            help="Control data quality simulation:\n\u2022 Low: 3% duplicates, 2% errors (clean CRM)\n\u2022 Medium: 10% duplicates, 5% errors (typical export)\n\u2022 High: 20% duplicates, 15% errors (legacy system)",
+        )
+        st.session_state["messiness_level"] = messiness_level
+
+        if st.sidebar.button("Generate New Data", type="primary", help="Create fresh sample data"):
+            with show_loading_message(get_contextual_message("loading_data")):
+                if not os.path.exists("data"):
+                    os.makedirs("data")
+                try:
+                    generate_messy_data(num_records=num_records, save_path=DATA_PATH, messiness_level=messiness_level)
+                    show_success_message(
+                        get_contextual_message("data_generated", num_records=num_records, messiness=messiness_level)
+                    )
+                    st.session_state["cleaned"] = False  # Reset state
+                    st.session_state["data_generated_at"] = datetime.now()
+                    st.session_state["data_loaded_at"] = datetime.now()
+                    st.rerun()
+                except Exception as e:
+                    show_error_message(
+                        "Unable to generate sample data. Please try again with different settings.", str(e)
+                    )
+    else:
+        st.sidebar.subheader("Upload Data")
+        uploaded_file = st.sidebar.file_uploader(
+            "Choose a CSV file",
+            type=["csv"],
+            help="Upload a CSV file with community data. Required columns: Name, Email",
+        )
+
+        if uploaded_file is not None:
             try:
-                generate_messy_data(num_records=num_records, save_path=DATA_PATH, messiness_level=messiness_level)
-                show_success_message(
-                    get_contextual_message("data_generated", num_records=num_records, messiness=messiness_level)
-                )
-                st.session_state["cleaned"] = False  # Reset state
-                st.session_state["data_generated_at"] = datetime.now()
-                st.session_state["data_loaded_at"] = datetime.now()
-                st.rerun()
+                upload_df = pd.read_csv(uploaded_file)
+
+                # Validate required columns
+                missing_cols = [col for col in REQUIRED_COLUMNS if col not in upload_df.columns]
+                if missing_cols:
+                    st.sidebar.error(f"Missing required columns: {', '.join(missing_cols)}")
+                else:
+                    # Save to CSV so the rest of the app can load it
+                    if not os.path.exists("data"):
+                        os.makedirs("data")
+                    upload_df.to_csv(DATA_PATH, index=False)
+                    st.session_state["cleaned"] = False
+                    st.session_state["data_loaded_at"] = datetime.now()
+                    st.sidebar.success(f"Uploaded {len(upload_df)} records successfully!")
             except Exception as e:
-                show_error_message("Unable to generate sample data. Please try again with different settings.", str(e))
+                st.sidebar.error(f"Error reading file: {e}")
+        else:
+            st.sidebar.info("Upload a CSV file to get started")
 
     st.sidebar.divider()
 
