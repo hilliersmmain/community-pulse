@@ -17,7 +17,6 @@ from utils.ui_helpers import (
     show_welcome_modal,
     show_empty_state,
     show_tutorial_step,
-    show_whats_new,
     show_loading_message,
     show_success_message,
     show_error_message,
@@ -25,68 +24,24 @@ from utils.ui_helpers import (
     MESSAGES,
 )
 from datetime import datetime
+from utils.constants import (
+    DATA_PATH,
+    DEFAULT_NUM_RECORDS,
+    DEFAULT_MESSINESS,
+    MESSINESS_OPTIONS,
+    MIN_RECORDS,
+    MAX_RECORDS,
+    RECORDS_STEP,
+    CLEANING_STEPS_DEFAULT,
+    SCORE_THRESHOLDS,
+    CUSTOM_CSS,
+)
 
 st.set_page_config(
     page_title="Community Pulse | Data Dashboard", page_icon="🔵", layout="wide", initial_sidebar_state="expanded"
 )
 
-st.markdown(
-    """
-<style>
-    .main h1 {
-        color: #1f77b4;
-        font-weight: 700;
-        padding-bottom: 0.5rem;
-        border-bottom: 3px solid #1f77b4;
-    }
-
-    .block-container {
-        padding-top: 3rem !important;
-        padding-bottom: 5rem !important;
-    }
-    
-    [data-testid="stMetricValue"] {
-        font-size: 1.8rem;
-        font-weight: 600;
-    }
-    
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        padding: 12px 24px;
-        font-weight: 500;
-    }
-    
-    div.css-1r6slb0, div.stMetric {
-        padding: 1rem;
-        border-radius: 8px;
-    }
-    
-    .element-container div[data-testid="stMarkdownContainer"] > div[data-testid="stMarkdown"] {
-        font-size: 0.95rem;
-    }
-    
-    .js-plotly-plot {
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    
-    .stButton > button {
-        border-radius: 6px;
-        font-weight: 500;
-        transition: all 0.2s;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-</style>
-""",
-    unsafe_allow_html=True,
-)
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 initialize_session_state()
 
@@ -106,21 +61,15 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-show_whats_new()
-
 st.sidebar.header("Data Controls")
 
-DATA_PATH = "data/messy_club_data.csv"
-
 if "num_records" not in st.session_state:
-    st.session_state["num_records"] = 500
+    st.session_state["num_records"] = DEFAULT_NUM_RECORDS
 if "messiness_level" not in st.session_state:
-    st.session_state["messiness_level"] = "medium"
+    st.session_state["messiness_level"] = DEFAULT_MESSINESS
 
 with st.sidebar.expander("Quick Stats", expanded=True):
     stats_df = None
-    stats_label = "metrics['overall_score']"
-
     if st.session_state.get("cleaned") and "clean_df" in st.session_state:
         stats_df = st.session_state["clean_df"]
         is_cleaned = True
@@ -128,7 +77,7 @@ with st.sidebar.expander("Quick Stats", expanded=True):
         try:
             stats_df = pd.read_csv(DATA_PATH)
             is_cleaned = False
-        except:
+        except Exception:
             pass
 
     if stats_df is not None:
@@ -158,18 +107,18 @@ st.sidebar.subheader("Data Generation")
 
 num_records = st.sidebar.slider(
     "Number of Records",
-    min_value=100,
-    max_value=1000,
+    min_value=MIN_RECORDS,
+    max_value=MAX_RECORDS,
     value=st.session_state["num_records"],
-    step=50,
+    step=RECORDS_STEP,
     help="Select how many sample records to generate. More records = more realistic analysis, but slower processing.",
 )
 st.session_state["num_records"] = num_records
 
 messiness_level = st.sidebar.selectbox(
     "Messiness Level",
-    options=["low", "medium", "high"],
-    index=["low", "medium", "high"].index(st.session_state["messiness_level"]),
+    options=MESSINESS_OPTIONS,
+    index=MESSINESS_OPTIONS.index(st.session_state["messiness_level"]),
     help="Control data quality simulation:\n• Low: 3% duplicates, 2% errors (clean CRM)\n• Medium: 10% duplicates, 5% errors (typical export)\n• High: 20% duplicates, 15% errors (legacy system)",
 )
 st.session_state["messiness_level"] = messiness_level
@@ -197,13 +146,7 @@ st.sidebar.subheader("Cleaning Pipeline")
 
 # Initialize cleaning steps in session state
 if "cleaning_steps" not in st.session_state:
-    st.session_state["cleaning_steps"] = {
-        "standardize_names": True,
-        "fix_emails": True,
-        "remove_duplicates": True,
-        "clean_dates": True,
-        "handle_missing_values": True,
-    }
+    st.session_state["cleaning_steps"] = CLEANING_STEPS_DEFAULT.copy()
 
 with st.sidebar.expander("Configure Cleaning Steps", expanded=False):
     st.session_state["cleaning_steps"]["standardize_names"] = st.checkbox(
@@ -290,19 +233,6 @@ if export_df is not None:
         mime="application/json",
     )
 
-    # PDF Export (Coming Soon)
-    # st.sidebar.button(
-    #     "📑 Export to PDF",
-    #     help="PDF export coming soon!",
-    #     disabled=True
-    # )
-
-    # Export Report (Coming Soon)
-    # st.sidebar.button(
-    #     "📊 Export Report",
-    #     help="Generate a comprehensive data quality report (coming soon!)",
-    #     disabled=True
-    # )
 else:
     st.sidebar.info("Generate data to enable export options")
 
@@ -525,9 +455,9 @@ with col4:
     )
     # Overall health score with color coding
     score = metrics["overall_score"]
-    if score >= 90:
+    if score >= SCORE_THRESHOLDS["excellent"]:
         score_label = "Excellent"
-    elif score >= 70:
+    elif score >= SCORE_THRESHOLDS["good"]:
         score_label = "Good"
     else:
         score_label = "Needs Work"
