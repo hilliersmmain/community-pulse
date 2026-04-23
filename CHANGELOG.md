@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **CI lint enforcement restored**: Flake8 complexity checks (`--max-complexity=10`) now fail correctly instead of being suppressed.
+- **Bandit behavior restored to advisory**: Security scan output is retained in CI logs/artifacts, but low-severity findings (e.g., demo data generator `B311`) no longer fail the build.
+- **CSV upload UX safety**: Invalid uploads no longer short-circuit sidebar rendering; downstream controls remain available.
+- **Data generator refactor**: Split `generate_messy_data()` into smaller helpers to satisfy complexity linting while preserving behavior.
+- **Upload contract clarified**: Required CSV schema documented as `Name`, `Email`, `Role`, `Join_Date`, and `Event_Attendance`.
+
 ## [2.0.0] - 2026-04-02
 
 ### Added

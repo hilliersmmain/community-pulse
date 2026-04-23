@@ -31,6 +31,9 @@ def render_analytics_tab(raw_df):
 
         # Role Filter
         st.markdown("### Filters")
+        if "Role" not in clean_df.columns:
+            st.warning("`Role` column is missing in cleaned data. Run cleaning again or upload a valid schema.")
+            return
         available_roles = clean_df["Role"].unique().tolist()
         selected_roles = st.multiselect(
             "Filter by Role:",
@@ -43,13 +46,13 @@ def render_analytics_tab(raw_df):
         if selected_roles:
             filtered_df = clean_df[clean_df["Role"].isin(selected_roles)]
         else:
-            filtered_df = clean_df
             show_empty_state(
                 icon=MESSAGES["no_filters_selected"]["icon"],
                 title=MESSAGES["no_filters_selected"]["title"],
                 message=MESSAGES["no_filters_selected"]["message"],
             )
-            st.stop()
+            st.info("Select at least one role to render analytics.")
+            return
 
         st.divider()
 
@@ -168,7 +171,7 @@ def render_analytics_tab(raw_df):
         st.info("""
         **Quick Steps to Generate Analytics:**
 
-        1. Go to the **"Data Cleaning Ops"** tab above
+        1. Go to the **"Data Preparation"** tab above
         2. Configure which cleaning steps you want to apply (or leave defaults)
         3. Click the **"Run Cleaning Algorithms"** button
         4. Return here to see your interactive charts and insights!

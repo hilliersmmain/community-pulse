@@ -1,10 +1,11 @@
 import streamlit as st
-import pandas as pd
 import os
 from datetime import datetime
 from utils.ui_helpers import initialize_session_state, show_welcome_modal, show_empty_state, MESSAGES
 from utils.health_metrics import DataHealthMetrics
 from utils.constants import DATA_PATH, CUSTOM_CSS
+from utils.data_access import load_csv
+from utils.session_keys import KEY_DATA_LOADED_AT, KEY_VIEW_STATE, KEY_CLEANED, KEY_CLEAN_DF, KEY_CLEANING_COMPLETED_AT
 from components.sidebar import render_sidebar
 from components.kpi_display import render_kpi_section
 from components.comparison import render_comparison
@@ -40,9 +41,9 @@ render_sidebar()
 
 # Load Data
 if os.path.exists(DATA_PATH):
-    raw_df = pd.read_csv(DATA_PATH)
-    if "data_loaded_at" not in st.session_state:
-        st.session_state["data_loaded_at"] = datetime.now()
+    raw_df = load_csv(DATA_PATH)
+    if KEY_DATA_LOADED_AT not in st.session_state:
+        st.session_state[KEY_DATA_LOADED_AT] = datetime.now()
 else:
     show_empty_state(
         icon=MESSAGES["no_data_generated"]["icon"],
@@ -65,12 +66,12 @@ else:
     st.stop()
 
 # Initialize view state
-if "view_state" not in st.session_state:
-    st.session_state["view_state"] = "raw"
+if KEY_VIEW_STATE not in st.session_state:
+    st.session_state[KEY_VIEW_STATE] = "raw"
 
 # Determine which dataframe to show based on state
-if st.session_state.get("cleaned") and st.session_state["view_state"] == "cleaned":
-    active_df = st.session_state["clean_df"]
+if st.session_state.get(KEY_CLEANED) and st.session_state[KEY_VIEW_STATE] == "cleaned":
+    active_df = st.session_state[KEY_CLEAN_DF]
     state_label = "Cleaned"
 else:
     active_df = raw_df
@@ -82,20 +83,20 @@ metrics = health_metrics.get_detailed_metrics()
 
 # Display current state and timestamp
 st.markdown(f"### Current View: **{state_label} Data**")
-if st.session_state.get("cleaned") and st.session_state["view_state"] == "cleaned":
-    if "cleaning_completed_at" in st.session_state:
-        time_str = st.session_state["cleaning_completed_at"].strftime("%Y-%m-%d %H:%M:%S")
+if st.session_state.get(KEY_CLEANED) and st.session_state[KEY_VIEW_STATE] == "cleaned":
+    if KEY_CLEANING_COMPLETED_AT in st.session_state:
+        time_str = st.session_state[KEY_CLEANING_COMPLETED_AT].strftime("%Y-%m-%d %H:%M:%S")
         st.caption(f"Last cleaned: {time_str}")
 else:
-    if "data_loaded_at" in st.session_state:
-        time_str = st.session_state["data_loaded_at"].strftime("%Y-%m-%d %H:%M:%S")
+    if KEY_DATA_LOADED_AT in st.session_state:
+        time_str = st.session_state[KEY_DATA_LOADED_AT].strftime("%Y-%m-%d %H:%M:%S")
         st.caption(f"Data loaded: {time_str}")
 
 st.divider()
 
 render_kpi_section(metrics)
 
-if st.session_state.get("cleaned"):
+if st.session_state.get(KEY_CLEANED):
     render_comparison(raw_df)
 
 # Tabs for Workflow
