@@ -184,7 +184,7 @@ def show_tutorial_step(step: int) -> bool:
         },
         2: {
             "title": "Step 3: Configure Cleaning",
-            "message": "Go to the Data Cleaning Ops tab and configure which cleaning steps to apply. Each step targets specific data quality issues.",
+            "message": "Go to the Data Preparation tab and configure which cleaning steps to apply. Each step targets specific data quality issues.",
             "highlight": "cleaning",
         },
         3: {
@@ -194,7 +194,7 @@ def show_tutorial_step(step: int) -> bool:
         },
         4: {
             "title": "Step 5: View Analytics",
-            "message": "Navigate to Analytics Dashboard to visualize insights from your cleaned data. Use filters to focus on specific segments.",
+            "message": "Navigate to the Analytics tab to visualize insights from your cleaned data. Use filters to focus on specific segments.",
             "highlight": "analytics",
         },
     }

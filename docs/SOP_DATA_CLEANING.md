@@ -25,11 +25,12 @@ This SOP defines the standardized process for cleaning and preparing member data
 
 1. Open the Community Pulse application
 2. If using sample data first, click **"Generate New Messy Data"** in the sidebar
-3. For real data: Upload your CSV file (future enhancement)
+3. For real data: Use **Upload CSV** in the sidebar
+4. Ensure your CSV includes required fields: `Name`, `Email`, `Role`, `Join_Date`, `Event_Attendance`
 
 ### Step 3: Run Automated Cleaning
 
-1. Navigate to the **"Data Cleaning Ops"** tab
+1. Navigate to the **"Data Preparation"** tab
 2. Review the initial data quality metrics displayed at the top:
    - Raw Records count
    - Duplicates Detected
@@ -58,7 +59,7 @@ This SOP defines the standardized process for cleaning and preparing member data
 ### Step 6: Import to CRM or Use for Reporting
 
 1. **Option A** (CRM Re-import): Use the cleaned CSV to update your CRM system
-2. **Option B** (Reporting): Use the Analytics Dashboard tab to visualize insights
+2. **Option B** (Reporting): Use the Analytics tab to visualize insights
 3. Document any issues or anomalies discovered during the process
 
 ---
@@ -84,7 +85,7 @@ The cleaning pipeline applies the following rules automatically:
 - Run this process weekly to maintain data quality
 - Keep backup copies of both raw and cleaned data
 - Review the cleaning log for unexpected patterns
-- Use the Analytics Dashboard to validate results visually
+- Use the Analytics tab to validate results visually
 
 ❌ **DON'T:**
 
@@ -101,7 +102,7 @@ The cleaning pipeline applies the following rules automatically:
 | ------------------------------- | ------------------------------------------ | ---------------------------------------------------- |
 | "No data found" error           | Data file not generated                    | Click "Generate New Messy Data" or upload CSV        |
 | Large number of records removed | High duplicate rate or many invalid emails | Review raw data source for systemic issues           |
-| Cleaning fails with error       | Missing required columns                   | Ensure CSV has Name, Email, Event_Attendance columns |
+| Cleaning fails with error       | Missing required columns                   | Ensure CSV has Name, Email, Role, Join_Date, and Event_Attendance columns |
 | Dates show as "NaT"             | Unsupported date format                    | Check CRM export settings                            |
 
 ---
