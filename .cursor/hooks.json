@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "python .cursor/hooks/verify-before-commit.py",
+        "matcher": "git commit",
+        "timeout": 8,
+        "failClosed": true
+      }
+    ]
+  }
+}

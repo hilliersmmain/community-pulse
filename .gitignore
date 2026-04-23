@@ -12,3 +12,4 @@ demo_outputs/
 .coverage
 coverage.xml
 .pytest_cache/
+.verification/

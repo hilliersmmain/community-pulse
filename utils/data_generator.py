@@ -42,7 +42,11 @@ def _validate_inputs(num_records: int, messiness_level: str) -> None:
 
 def _build_record() -> dict:
     event_registered = np.random.choice(EVENT_CHOICES, p=[0.25, 0.25, 0.25, 0.25])
-    reg_date = fake.date_between(start_date="-6m", end_date="today") if event_registered != "None" and random.random() > 0.4 else None
+    reg_date = (
+        fake.date_between(start_date="-6m", end_date="today")
+        if event_registered != "None" and random.random() > 0.4
+        else None
+    )
     return {
         "ID": fake.uuid4(),
         "Name": fake.name(),
