@@ -1,6 +1,7 @@
 """Constants and configuration values for Community Pulse."""
 
 DATA_PATH = "data/messy_club_data.csv"
+DATA_DIR = "data"
 
 DEFAULT_NUM_RECORDS = 500
 DEFAULT_MESSINESS = "medium"
@@ -9,8 +10,11 @@ MIN_RECORDS = 100
 MAX_RECORDS = 1000
 RECORDS_STEP = 50
 
-REQUIRED_COLUMNS = ["Name", "Email"]
+REQUIRED_COLUMNS = ["Name", "Email", "Role", "Join_Date", "Event_Attendance"]
 OPTIONAL_COLUMNS = ["Join_Date", "Last_Login", "Event_Attendance", "Role", "Event_Registered", "Registration_Date"]
+
+MAX_UPLOAD_SIZE_MB = 5
+MAX_UPLOAD_ROWS = 50000
 
 CLEANING_STEPS_DEFAULT = {
     "standardize_names": True,

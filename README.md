@@ -86,7 +86,7 @@ Open browser to `http://localhost:8501`
 ## Usage Workflow
 
 1. Generate Data — Create synthetic community data with configurable messiness levels (100-1000 records)
-1b. **Or Upload CSV** — Upload your own data file with Name and Email columns
+1b. **Or Upload CSV** — Upload your own data file with `Name`, `Email`, `Role`, `Join_Date`, and `Event_Attendance` columns
 2. Configure Cleaning — Select cleaning algorithms via sidebar toggles or use optimized defaults
 3. Execute Pipeline — Run automated cleaning with real-time progress logging
 4. Analyze Results — Explore interactive dashboard with filters, drill-downs, and exports

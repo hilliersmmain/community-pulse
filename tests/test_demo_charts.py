@@ -17,6 +17,13 @@ class TestDemoChartsScript:
             from utils.cleaner import DataCleaner
             from utils.visualizer import plot_attendance_trend, plot_role_distribution, plot_attendance_histogram
 
+            assert pio is not None
+            assert kaleido is not None
+            assert generate_messy_data is not None
+            assert DataCleaner is not None
+            assert plot_attendance_trend is not None
+            assert plot_role_distribution is not None
+            assert plot_attendance_histogram is not None
             assert True
         except ImportError as e:
             pytest.fail(f"Failed to import required module: {e}")
@@ -47,7 +54,6 @@ class TestDemoChartsScript:
         from utils.data_generator import generate_messy_data
         from utils.cleaner import DataCleaner
         from utils.visualizer import plot_attendance_trend, plot_role_distribution, plot_attendance_histogram
-        import plotly.io as pio
 
         # Generate minimal test data
         df = generate_messy_data(num_records=10, messiness_level="low")
@@ -74,7 +80,7 @@ class TestDemoChartsScript:
         # This test verifies the script file contains error handling
         script_path = Path(__file__).parent.parent / "community_pulse" / "demo_charts.py"
 
-        with open(script_path, "r") as f:
+        with open(script_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Check for error handling patterns
@@ -87,7 +93,7 @@ class TestDemoChartsScript:
 
         script_path = Path(__file__).parent.parent / "community_pulse" / "demo_charts.py"
 
-        with open(script_path, "r") as f:
+        with open(script_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         assert '"""' in content or "'''" in content, "Script should have docstring"
