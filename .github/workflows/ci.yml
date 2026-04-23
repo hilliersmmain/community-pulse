@@ -12,15 +12,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
@@ -41,8 +41,8 @@ jobs:
         run: |
           # Stop the build if there are Python syntax errors or undefined names
           flake8 utils/ community_pulse/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Exit-zero treats all errors as warnings. Line length set to 120.
-          flake8 utils/ community_pulse/ --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+          # General linting should block CI on violations while honoring project line-length/formatting policy.
+          flake8 utils/ community_pulse/ --count --max-complexity=10 --max-line-length=120 --ignore=E203,W503,E501 --statistics
 
       - name: Type check with mypy
         run: |
@@ -55,10 +55,10 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          pytest --cov=utils --cov=community_pulse --cov-report=term --cov-report=xml
+          pytest --cov=utils --cov=community_pulse --cov-report=term --cov-report=xml --cov-fail-under=55
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
           flags: unittests
@@ -68,9 +68,8 @@ jobs:
         run: |
           pip install bandit
           # Scan Python files for common security issues
-          # || true keeps Bandit non-blocking — security findings are advisory, not build-breaking
+          # Keep advisory (non-blocking): this project intentionally uses random data generation for synthetic demos.
           bandit -r utils/ community_pulse/ -f json -o bandit-report.json || true
-          # Display summary (non-blocking, same rationale)
           bandit -r utils/ community_pulse/ -ll || true
 
       - name: Display test summary

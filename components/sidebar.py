@@ -5,8 +5,21 @@ from datetime import datetime
 from utils.data_generator import generate_messy_data
 from utils.health_metrics import DataHealthMetrics
 from utils.ui_helpers import show_loading_message, show_success_message, show_error_message, get_contextual_message
+from utils.data_access import load_csv, save_csv, ensure_data_dir
+from utils.upload_validation import validate_upload_dataframe
+from utils.session_keys import (
+    KEY_CLEANED,
+    KEY_CLEAN_DF,
+    KEY_VIEW_STATE,
+    KEY_CLEANING_STEPS,
+    KEY_DATA_LOADED_AT,
+    KEY_DATA_GENERATED_AT,
+    KEY_CLEANING_COMPLETED_AT,
+    reset_clean_state,
+)
 from utils.constants import (
     DATA_PATH,
+    DATA_DIR,
     DEFAULT_NUM_RECORDS,
     DEFAULT_MESSINESS,
     MESSINESS_OPTIONS,
@@ -14,7 +27,7 @@ from utils.constants import (
     MAX_RECORDS,
     RECORDS_STEP,
     CLEANING_STEPS_DEFAULT,
-    REQUIRED_COLUMNS,
+    MAX_UPLOAD_SIZE_MB,
 )
 
 
@@ -29,15 +42,15 @@ def render_sidebar():
 
     with st.sidebar.expander("Quick Stats", expanded=True):
         stats_df = None
-        if st.session_state.get("cleaned") and "clean_df" in st.session_state:
-            stats_df = st.session_state["clean_df"]
+        if st.session_state.get(KEY_CLEANED) and KEY_CLEAN_DF in st.session_state:
+            stats_df = st.session_state[KEY_CLEAN_DF]
             is_cleaned = True
         elif os.path.exists(DATA_PATH):
             try:
-                stats_df = pd.read_csv(DATA_PATH)
+                stats_df = load_csv(DATA_PATH)
                 is_cleaned = False
             except Exception:
-                pass
+                st.caption("Unable to load quick stats.")
 
         if stats_df is not None:
             health = DataHealthMetrics(stats_df)
@@ -51,11 +64,11 @@ def render_sidebar():
             else:
                 st.metric("Health Score", score_val, help="Score based on raw data")
 
-            if "data_loaded_at" in st.session_state:
-                st.caption(f"Last loaded: {st.session_state['data_loaded_at'].strftime('%H:%M:%S')}")
+            if KEY_DATA_LOADED_AT in st.session_state:
+                st.caption(f"Last loaded: {st.session_state[KEY_DATA_LOADED_AT].strftime('%H:%M:%S')}")
 
-            if st.session_state.get("cleaned") and "cleaning_completed_at" in st.session_state:
-                st.caption(f"Last cleaned: {st.session_state['cleaning_completed_at'].strftime('%H:%M:%S')}")
+            if st.session_state.get(KEY_CLEANED) and KEY_CLEANING_COMPLETED_AT in st.session_state:
+                st.caption(f"Last cleaned: {st.session_state[KEY_CLEANING_COMPLETED_AT].strftime('%H:%M:%S')}")
         else:
             st.caption("No data available")
 
@@ -92,16 +105,15 @@ def render_sidebar():
 
         if st.sidebar.button("Generate New Data", type="primary", help="Create fresh sample data"):
             with show_loading_message(get_contextual_message("loading_data")):
-                if not os.path.exists("data"):
-                    os.makedirs("data")
                 try:
+                    ensure_data_dir()
                     generate_messy_data(num_records=num_records, save_path=DATA_PATH, messiness_level=messiness_level)
                     show_success_message(
                         get_contextual_message("data_generated", num_records=num_records, messiness=messiness_level)
                     )
-                    st.session_state["cleaned"] = False  # Reset state
-                    st.session_state["data_generated_at"] = datetime.now()
-                    st.session_state["data_loaded_at"] = datetime.now()
+                    reset_clean_state()
+                    st.session_state[KEY_DATA_GENERATED_AT] = datetime.now()
+                    st.session_state[KEY_DATA_LOADED_AT] = datetime.now()
                     st.rerun()
                 except Exception as e:
                     show_error_message(
@@ -112,27 +124,30 @@ def render_sidebar():
         uploaded_file = st.sidebar.file_uploader(
             "Choose a CSV file",
             type=["csv"],
-            help="Upload a CSV file with community data. Required columns: Name, Email",
+            help="Upload a CSV with required columns: Name, Email, Role, Join_Date, Event_Attendance",
         )
 
         if uploaded_file is not None:
             try:
-                upload_df = pd.read_csv(uploaded_file)
-
-                # Validate required columns
-                missing_cols = [col for col in REQUIRED_COLUMNS if col not in upload_df.columns]
-                if missing_cols:
-                    st.sidebar.error(f"Missing required columns: {', '.join(missing_cols)}")
+                upload_size_mb = uploaded_file.size / (1024 * 1024)
+                if upload_size_mb > MAX_UPLOAD_SIZE_MB:
+                    st.sidebar.error(f"File too large ({upload_size_mb:.2f}MB). Max allowed is {MAX_UPLOAD_SIZE_MB}MB.")
                 else:
-                    # Save to CSV so the rest of the app can load it
-                    if not os.path.exists("data"):
-                        os.makedirs("data")
-                    upload_df.to_csv(DATA_PATH, index=False)
-                    st.session_state["cleaned"] = False
-                    st.session_state["data_loaded_at"] = datetime.now()
-                    st.sidebar.success(f"Uploaded {len(upload_df)} records successfully!")
+                    upload_df = pd.read_csv(uploaded_file)
+
+                    validation = validate_upload_dataframe(upload_df)
+                    if not validation.is_valid:
+                        for error in validation.errors:
+                            st.sidebar.error(error)
+                    else:
+                        ensure_data_dir()
+                        save_csv(upload_df, DATA_PATH)
+                        reset_clean_state()
+                        st.session_state[KEY_DATA_LOADED_AT] = datetime.now()
+                        st.sidebar.success(f"Uploaded {len(upload_df)} records successfully to `{DATA_DIR}`.")
             except Exception as e:
-                st.sidebar.error(f"Error reading file: {e}")
+                st.sidebar.error("Error reading file. Please ensure it is a valid CSV.")
+                st.sidebar.caption(f"Details: {e}")
         else:
             st.sidebar.info("Upload a CSV file to get started")
 
@@ -142,42 +157,42 @@ def render_sidebar():
     st.sidebar.subheader("Cleaning Pipeline")
 
     # Initialize cleaning steps in session state
-    if "cleaning_steps" not in st.session_state:
-        st.session_state["cleaning_steps"] = CLEANING_STEPS_DEFAULT.copy()
+    if KEY_CLEANING_STEPS not in st.session_state:
+        st.session_state[KEY_CLEANING_STEPS] = CLEANING_STEPS_DEFAULT.copy()
 
     with st.sidebar.expander("Configure Cleaning Steps", expanded=False):
-        st.session_state["cleaning_steps"]["standardize_names"] = st.checkbox(
+        st.session_state[KEY_CLEANING_STEPS]["standardize_names"] = st.checkbox(
             "Standardize Names",
-            value=st.session_state["cleaning_steps"]["standardize_names"],
+            value=st.session_state[KEY_CLEANING_STEPS]["standardize_names"],
             help="Convert names to Title Case (e.g., 'john doe' \u2192 'John Doe')",
         )
 
-        st.session_state["cleaning_steps"]["fix_emails"] = st.checkbox(
+        st.session_state[KEY_CLEANING_STEPS]["fix_emails"] = st.checkbox(
             "Fix Email Formats",
-            value=st.session_state["cleaning_steps"]["fix_emails"],
+            value=st.session_state[KEY_CLEANING_STEPS]["fix_emails"],
             help="Fix invalid emails (e.g., 'user at domain.com' \u2192 'user@domain.com')",
         )
 
-        st.session_state["cleaning_steps"]["remove_duplicates"] = st.checkbox(
+        st.session_state[KEY_CLEANING_STEPS]["remove_duplicates"] = st.checkbox(
             "Remove Duplicates",
-            value=st.session_state["cleaning_steps"]["remove_duplicates"],
+            value=st.session_state[KEY_CLEANING_STEPS]["remove_duplicates"],
             help="Remove duplicate rows based on Email and Name",
         )
 
-        st.session_state["cleaning_steps"]["clean_dates"] = st.checkbox(
+        st.session_state[KEY_CLEANING_STEPS]["clean_dates"] = st.checkbox(
             "Clean Dates",
-            value=st.session_state["cleaning_steps"]["clean_dates"],
+            value=st.session_state[KEY_CLEANING_STEPS]["clean_dates"],
             help="Standardize date formats to YYYY-MM-DD",
         )
 
-        st.session_state["cleaning_steps"]["handle_missing_values"] = st.checkbox(
+        st.session_state[KEY_CLEANING_STEPS]["handle_missing_values"] = st.checkbox(
             "Handle Missing Values",
-            value=st.session_state["cleaning_steps"]["handle_missing_values"],
+            value=st.session_state[KEY_CLEANING_STEPS]["handle_missing_values"],
             help="Fill missing attendance values with 0",
         )
 
     # Show preview of selected steps
-    selected_steps = [k for k, v in st.session_state["cleaning_steps"].items() if v]
+    selected_steps = [k for k, v in st.session_state[KEY_CLEANING_STEPS].items() if v]
     if selected_steps:
         st.sidebar.caption(f"\u2713 {len(selected_steps)} step(s) selected")
     else:
@@ -192,7 +207,7 @@ def render_sidebar():
     export_df = None
     export_label = "Raw"
 
-    if st.session_state.get("cleaned") and st.session_state.get("clean_df") is not None:
+    if st.session_state.get(KEY_CLEANED) and st.session_state.get(KEY_CLEAN_DF) is not None:
         export_choice = st.sidebar.radio(
             "Export data:",
             options=["raw", "cleaned"],
@@ -200,15 +215,15 @@ def render_sidebar():
             help="Choose which dataset to export",
         )
         if export_choice == "cleaned":
-            export_df = st.session_state["clean_df"]
+            export_df = st.session_state[KEY_CLEAN_DF]
             export_label = "Cleaned"
         else:
             if os.path.exists(DATA_PATH):
-                export_df = pd.read_csv(DATA_PATH)
+                export_df = load_csv(DATA_PATH)
                 export_label = "Raw"
     else:
         if os.path.exists(DATA_PATH):
-            export_df = pd.read_csv(DATA_PATH)
+            export_df = load_csv(DATA_PATH)
             export_label = "Raw"
 
     if export_df is not None:
@@ -239,7 +254,7 @@ def render_sidebar():
     st.sidebar.subheader("Data View")
 
     # Data State Toggle
-    if st.session_state.get("cleaned"):
+    if st.session_state.get(KEY_CLEANED):
         st.sidebar.radio(
             "Current view:",
             options=["raw", "cleaned"],
@@ -249,20 +264,13 @@ def render_sidebar():
         )
     else:
         st.sidebar.info("Clean data first to enable view toggle")
-        if "view_state" not in st.session_state:
-            st.session_state["view_state"] = "raw"
+        if KEY_VIEW_STATE not in st.session_state:
+            st.session_state[KEY_VIEW_STATE] = "raw"
 
     # Reset to Raw Data button
-    if st.session_state.get("cleaned"):
+    if st.session_state.get(KEY_CLEANED):
         if st.sidebar.button("Reset to Raw Data", help="Clear cleaned data and return to raw state"):
-            st.session_state["cleaned"] = False
-            if "clean_df" in st.session_state:
-                del st.session_state["clean_df"]
-            if "clean_log" in st.session_state:
-                del st.session_state["clean_log"]
-            # Delete view_state key so it can be reset
-            if "view_state" in st.session_state:
-                del st.session_state["view_state"]
+            reset_clean_state()
             st.sidebar.success("Reset to raw data!")
             st.rerun()
 
@@ -280,12 +288,12 @@ def render_sidebar():
        Choose messiness level based on your scenario
 
     2. **Clean Data**
-       Navigate to 'Data Cleaning Ops' tab
+       Navigate to 'Data Preparation' tab
        Configure cleaning steps (or use defaults)
        Click 'Run Cleaning Algorithms'
 
     3. **Analyze Results**
-       View insights in 'Analytics Dashboard' tab
+       View insights in 'Analytics' tab
        Use filters to focus on specific segments
        Compare raw vs. cleaned data
 
