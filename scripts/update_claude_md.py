@@ -8,6 +8,7 @@ CLAUDE.md so future Claude Code sessions have accurate context.
 import re
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
 
@@ -45,7 +46,17 @@ def count_tests():
 
 
 def get_coverage_summary():
-    """Run pytest with coverage and extract the total percentage."""
+    """Read coverage from coverage.xml, fallback to pytest if missing."""
+    coverage_xml = PROJECT_ROOT / "coverage.xml"
+    if coverage_xml.exists():
+        try:
+            root = ET.parse(coverage_xml).getroot()
+            line_rate = root.attrib.get("line-rate")
+            if line_rate is not None:
+                return f"{float(line_rate) * 100:.2f}%"
+        except (ET.ParseError, ValueError):
+            pass
+
     try:
         result = subprocess.run(
             [
@@ -191,7 +202,7 @@ Tests are in `tests/` and use pytest. Coverage is configured to measure `utils/`
 def main():
     content = generate_claude_md()
     output_path = PROJECT_ROOT / "CLAUDE.md"
-    output_path.write_text(content)
+    output_path.write_text(content, encoding="utf-8")
     print(f"Updated {output_path}")
 
 

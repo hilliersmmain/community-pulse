@@ -154,6 +154,20 @@ python verify_setup.py    # Verify installation
 
 ---
 
+## Engineering Verification Workflow
+
+Use the verification loop before every commit to reduce regressions:
+
+```bash
+python scripts/verify_loop.py --localhost-check
+```
+
+The loop validates formatting, linting, typing, tests, coverage, localhost app health, and then regenerates `CLAUDE.md`.
+
+Project hook support is included in `.cursor/hooks.json`: when `git commit` is attempted without a fresh verification stamp for the current working tree, Cursor blocks until verification is rerun.
+
+---
+
 ## Deployment
 
 **Streamlit Cloud (Recommended):**

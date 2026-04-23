@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-*Auto-generated on 2026-04-02 by `scripts/update_claude_md.py`*
+*Auto-generated on 2026-04-23 by `scripts/update_claude_md.py`*
 
 ## Project Overview
 
@@ -14,7 +14,7 @@ Community Pulse is a data analytics dashboard built with Streamlit that automate
 # Run the app
 streamlit run app.py
 
-# Run all tests (106 tests collected, 59.52% coverage)
+# Run all tests (108 tests collected, 60.22% coverage)
 pytest
 
 # Run a specific test file
@@ -46,7 +46,7 @@ python scripts/update_claude_md.py
 
 **Data flow:** `DataGenerator / CSV Upload → DataCleaner → DataHealthMetrics → Visualizer → Streamlit UI`
 
-### app.py (111 lines) — Thin orchestrator
+### app.py (112 lines) — Thin orchestrator
 Loads data, initializes state, calls component render functions.
 
 ### components/ — UI components
@@ -60,9 +60,12 @@ Loads data, initializes state, calls component render functions.
 ### utils/ — Core business logic
 - `utils/cleaner.py`
 - `utils/constants.py`
+- `utils/data_access.py`
 - `utils/data_generator.py`
 - `utils/health_metrics.py`
+- `utils/session_keys.py`
 - `utils/ui_helpers.py`
+- `utils/upload_validation.py`
 - `utils/visualizer.py`
 
 ### Key modules
