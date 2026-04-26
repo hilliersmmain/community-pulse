@@ -1,5 +1,6 @@
 """Data Health Metrics Module"""
 
+import logging
 import pandas as pd
 import re
 from datetime import datetime
@@ -10,6 +11,8 @@ from utils.constants import (
     HEALTH_SCORE_WEIGHT_FORMATTING,
     HEALTH_SCORE_WEIGHT_UNIQUENESS,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DataHealthMetrics:
@@ -85,6 +88,7 @@ class DataHealthMetrics:
             parsed = pd.to_datetime(self.df[column], errors="coerce")
             return parsed.notna().sum()
         except Exception:
+            logger.warning("Health metric date validation failed for column %s", column, exc_info=True)
             return 0
 
     def calculate_overall_health_score(self) -> float:
