@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Live demo
+    url: https://community-pulse.streamlit.app/
+    about: Try the live deployment before filing a bug.
+  - name: General questions
+    url: https://github.com/hilliersmmain/community_pulse/discussions
+    about: Ask questions or share ideas in Discussions.
