@@ -1,0 +1,104 @@
+{
+  "data": [
+    {
+      "hovertemplate": "<b>Events Attended:</b> %{x}<br><b>Number of Members:</b> %{y}<br><extra></extra>",
+      "marker": {
+        "color": "#1f77b4",
+        "line": {
+          "color": "white",
+          "width": 1
+        }
+      },
+      "name": "Member Count",
+      "nbinsx": 20,
+      "type": "histogram",
+      "x": {
+        "bdata": "AAAAAAAAJEAAAAAAAAAqQAAAAAAAACRAAAAAAAAAIEAAAAAAAAAmQAAAAAAAAC5AAAAAAAAACEAAAAAAAAAAQAAAAAAAAABAAAAAAAAAGEAAAAAAAAAmQAAAAAAAABhAAAAAAAAAGEAAAAAAAAAUQAAAAAAAABRAAAAAAAAA8D8AAAAAAAAYQAAAAAAAAABAAAAAAAAA8D8AAAAAAAAuQAAAAAAAAAAAAAAAAAAALEAAAAAAAAAkQAAAAAAAACBAAAAAAAAAAAAAAAAAAAAuQAAAAAAAABRAAAAAAAAAMkAAAAAAAAAyQAAAAAAAACxAAAAAAAAAJkAAAAAAAAAoQAAAAAAAACBAAAAAAAAACEAAAAAAAAAsQAAAAAAAADBAAAAAAAAAKEAAAAAAAAAAAAAAAAAAABBAAAAAAAAAMkAAAAAAAAAyQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAwQAAAAAAAABhAAAAAAAAAJkAAAAAAAAAmQAAAAAAAADFAAAAAAAAAKEAAAAAAAAAQQAAAAAAAADFAAAAAAAAALkAAAAAAAAAyQAAAAAAAAABAAAAAAAAAKkAAAAAAAAAcQAAAAAAAACxAAAAAAAAAKkAAAAAAAADwPwAAAAAAAAhAAAAAAAAAKEAAAAAAAAAwQAAAAAAAABBAAAAAAAAAFEAAAAAAAAAYQAAAAAAAADBAAAAAAAAAIEAAAAAAAAAsQAAAAAAAABhAAAAAAAAAEEAAAAAAAAAqQAAAAAAAABhAAAAAAAAALkAAAAAAAAAgQAAAAAAAABhAAAAAAAAAIEAAAAAAAAAyQAAAAAAAAAAAAAAAAAAALkAAAAAAAAAyQAAAAAAAACRAAAAAAAAAMUAAAAAAAAAqQAAAAAAAAAhAAAAAAAAAHEAAAAAAAAAqQAAAAAAAAAAAAAAAAAAAGEAAAAAAAADwPwAAAAAAAABAAAAAAAAAEEAAAAAAAAAQQAAAAAAAAABAAAAAAAAALkAAAAAAAAAyQAAAAAAAADFAAAAAAAAAFEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAHEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA+H8AAAAAAAAkQAAAAAAAADJAAAAAAAAA8D8AAAAAAAAQQAAAAAAAAABAAAAAAAAAAEAAAAAAAAAkQAAAAAAAAPA/AAAAAAAAFEAAAAAAAADwPwAAAAAAAABAAAAAAAAALkAAAAAAAAAoQAAAAAAAABRAAAAAAAAALkAAAAAAAAAAAAAAAAAAAABAAAAAAAAAM0AAAAAAAAAwQAAAAAAAABhAAAAAAAAALEAAAAAAAAAcQAAAAAAAADNAAAAAAAAAMkAAAAAAAAAmQAAAAAAAAAhAAAAAAAAAKkAAAAAAAAAAAAAAAAAAAABAAAAAAAAAFEAAAAAAAAAoQAAAAAAAABhAAAAAAAAAKkAAAAAAAAAQQAAAAAAAACxAAAAAAAAAIkAAAAAAAAAQQAAAAAAAACxAAAAAAAAAKkAAAAAAAAAcQAAAAAAAACZAAAAAAAAA+H8AAAAAAAAQQAAAAAAAAAhAAAAAAAAAM0AAAAAAAAAqQAAAAAAAACpAAAAAAAAAFEAAAAAAAAAqQAAAAAAAACJAAAAAAAAAKkAAAAAAAAAzQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzQAAAAAAAACBAAAAAAAAAEEAAAAAAAAAuQAAAAAAAAABAAAAAAAAAJEAAAAAAAAAxQAAAAAAAADBAAAAAAAAAIkAAAAAAAAAcQAAAAAAAADBAAAAAAAAAMUAAAAAAAAAwQAAAAAAAABBAAAAAAAAAJkAAAAAAAAAuQAAAAAAAADJAAAAAAAAAFEAAAAAAAAAQQAAAAAAAAPA/AAAAAAAA8D8AAAAAAAAxQAAAAAAAACJAAAAAAAAAM0AAAAAAAAAcQAAAAAAAADJAAAAAAAAA+H8AAAAAAAAgQAAAAAAAAAAAAAAAAAAAIEAAAAAAAAAiQAAAAAAAAC5AAAAAAAAAAAAAAAAAAAAsQAAAAAAAACJAAAAAAAAAMUAAAAAAAAAUQAAAAAAAADNAAAAAAAAAIEAAAAAAAAAAAAAAAAAAACxAAAAAAAAAGEAAAAAAAAAQQAAAAAAAAPh/AAAAAAAACEAAAAAAAADwPwAAAAAAABBAAAAAAAAACEAAAAAAAAAxQA==",
+        "dtype": "f8"
+      }
+    }
+  ],
+  "layout": {
+    "annotations": [
+      {
+        "font": {
+          "color": "gray",
+          "size": 12
+        },
+        "showarrow": false,
+        "text": "Mean: 8.9 | Median: 8.0 | Std Dev: 6.0 | Range: 0-19",
+        "x": 0.5,
+        "xanchor": "center",
+        "xref": "paper",
+        "y": -0.15,
+        "yanchor": "bottom",
+        "yref": "paper"
+      },
+      {
+        "font": {
+          "color": "gray",
+          "size": 12
+        },
+        "showarrow": false,
+        "text": "Mean: 8.9 | Median: 8.0 | Std Dev: 6.0 | Range: 0-19",
+        "x": 0.5,
+        "xanchor": "center",
+        "xref": "paper",
+        "y": -0.15,
+        "yanchor": "top",
+        "yref": "paper"
+      }
+    ],
+    "bargap": 0.1,
+    "hovermode": "closest",
+    "modebar": {
+      "add": [
+        "toImage"
+      ]
+    },
+    "plot_bgcolor": "rgba(240, 240, 240, 0.5)",
+    "shapes": [
+      {
+        "line": {
+          "color": "red",
+          "dash": "dash"
+        },
+        "type": "line",
+        "x0": 8.856435643564357,
+        "x1": 8.856435643564357,
+        "xref": "x",
+        "y0": 0,
+        "y1": 1,
+        "yref": "y domain"
+      },
+      {
+        "line": {
+          "color": "green",
+          "dash": "dot"
+        },
+        "type": "line",
+        "x0": 8.0,
+        "x1": 8.0,
+        "xref": "x",
+        "y0": 0,
+        "y1": 1,
+        "yref": "y domain"
+      }
+    ],
+    "title": {
+      "text": "Event Attendance Distribution<br><sub>Data State: Cleaned | Total Members: 206</sub>",
+      "x": 0.5,
+      "xanchor": "center"
+    },
+    "xaxis": {
+      "title": {
+        "text": "Number of Events Attended"
+      }
+    },
+    "yaxis": {
+      "title": {
+        "text": "Number of Members"
+      }
+    }
+  }
+}

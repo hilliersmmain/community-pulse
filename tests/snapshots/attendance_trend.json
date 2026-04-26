@@ -1,0 +1,157 @@
+{
+  "data": [
+    {
+      "customdata": {
+        "bdata": "AgAHABUAGgAnACwANAA/AEQAUABWAFwAaQBtAHYAfACJAJEAmQCeAKgAtAC4AMAAxwA=",
+        "dtype": "i2"
+      },
+      "hovertemplate": "<b>Month:</b> %{x}<br><b>New Members:</b> %{y}<br><b>Cumulative:</b> %{customdata}<br><extra></extra>",
+      "line": {
+        "color": "#1f77b4",
+        "width": 3
+      },
+      "marker": {
+        "color": "#1f77b4",
+        "size": 8
+      },
+      "mode": "lines+markers",
+      "name": "New Members",
+      "type": "scatter",
+      "x": [
+        "2024-04",
+        "2024-05",
+        "2024-06",
+        "2024-07",
+        "2024-08",
+        "2024-09",
+        "2024-10",
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04"
+      ],
+      "y": {
+        "bdata": "AgUOBQ0FCAsFDAYGDQQJBg0ICAUKDAQIBw==",
+        "dtype": "i1"
+      }
+    },
+    {
+      "hovertemplate": "<b>Trend:</b> %{y:.1f}<extra></extra>",
+      "line": {
+        "color": "rgba(255, 127, 14, 0.6)",
+        "dash": "dash",
+        "width": 2
+      },
+      "mode": "lines",
+      "name": "Trend Line",
+      "type": "scatter",
+      "x": [
+        "2024-04",
+        "2024-05",
+        "2024-06",
+        "2024-07",
+        "2024-08",
+        "2024-09",
+        "2024-10",
+        "2024-11",
+        "2024-12",
+        "2025-01",
+        "2025-02",
+        "2025-03",
+        "2025-04",
+        "2025-05",
+        "2025-06",
+        "2025-07",
+        "2025-08",
+        "2025-09",
+        "2025-10",
+        "2025-11",
+        "2025-12",
+        "2026-01",
+        "2026-02",
+        "2026-03",
+        "2026-04"
+      ],
+      "y": {
+        "bdata": "KM8lkDWMHkDhYEFJx6ceQJryXAJZwx5AU4R4u+reHkAMFpR0fPoeQManry0OFh9AfznL5p8xH0A4y+afMU0fQPFcAlnDaB9Aqu4dElWEH0BjgDnL5p8fQBwSVYR4ux9A1aNwPQrXH0CONYz2m/IfQKTj09cWByBAgKxhtN8UIEBdde+QqCIgQDk+fW1xMCBAFgcLSjo+IEDyz5gmA0wgQM+YJgPMWSBArGG035RnIECIKkK8XXUgQGXzz5gmgyBAQbxdde+QIEA=",
+        "dtype": "f8"
+      }
+    }
+  ],
+  "layout": {
+    "annotations": [
+      {
+        "font": {
+          "color": "gray",
+          "size": 12
+        },
+        "showarrow": false,
+        "text": "Mean: 8.0 | Median: 8.0 | Total: 199",
+        "x": 0.5,
+        "xanchor": "left",
+        "xref": "paper",
+        "y": -0.15,
+        "yanchor": "middle",
+        "yref": "paper"
+      }
+    ],
+    "hovermode": "x unified",
+    "legend": {
+      "x": 0.01,
+      "xanchor": "left",
+      "y": 0.99,
+      "yanchor": "top"
+    },
+    "modebar": {
+      "add": [
+        "toImage"
+      ]
+    },
+    "plot_bgcolor": "rgba(240, 240, 240, 0.5)",
+    "shapes": [
+      {
+        "line": {
+          "color": "green",
+          "dash": "dot"
+        },
+        "type": "line",
+        "x0": 0,
+        "x1": 1,
+        "xref": "x domain",
+        "y0": 7.96,
+        "y1": 7.96,
+        "yref": "y"
+      }
+    ],
+    "showlegend": true,
+    "title": {
+      "text": "Membership Growth Over Time<br><sub>Data State: Cleaned | Total Members: 206</sub>",
+      "x": 0.5,
+      "xanchor": "center"
+    },
+    "xaxis": {
+      "title": {
+        "text": "Month (YYYY-MM)"
+      }
+    },
+    "yaxis": {
+      "title": {
+        "text": "Number of New Members Joined"
+      }
+    }
+  }
+}

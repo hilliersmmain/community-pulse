@@ -1,10 +1,18 @@
 """Test suite for the visualizer module."""
 
+import json
+import os
+import math
+from pathlib import Path
+
 import pytest
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 
+import plotly.utils
+
+from utils.data_generator import DataGenerator
 from utils.visualizer import (
     plot_attendance_trend,
     plot_role_distribution,
@@ -13,6 +21,87 @@ from utils.visualizer import (
     _calculate_stats,
     _attach_export,
 )
+
+# ---------------------------------------------------------------------------
+# Snapshot helpers (factored here; move to conftest.py if >30 lines)
+# ---------------------------------------------------------------------------
+
+SNAPSHOTS_DIR = Path(__file__).parent / "snapshots"
+
+
+def _strip_volatile(d: dict) -> dict:
+    """Remove keys from a fig.to_dict() that are volatile across test runs.
+
+    ``layout.template`` is Plotly's built-in default theme object.  It is
+    populated by the Plotly library, not by our chart functions, and its
+    content varies depending on which other libraries (e.g. Faker) have
+    mutated global state before the chart is rendered.  We exclude it so
+    that snapshot diffs focus on *our* chart output (data traces, title,
+    annotations, shapes, axis config) and are not invalidated by unrelated
+    test-ordering effects.
+    """
+    result = dict(d)
+    if "layout" in result and isinstance(result["layout"], dict):
+        layout = dict(result["layout"])
+        layout.pop("template", None)
+        result["layout"] = layout
+    return result
+
+
+def _load_or_write_snapshot(name: str, data: dict) -> dict | None:
+    """Load a JSON snapshot or write one if missing/UPDATE_SNAPSHOTS is set.
+
+    The ``data`` dict should already have volatile keys stripped (via
+    ``_strip_volatile``) before being passed here.
+
+    Returns the loaded snapshot dict, or None when the snapshot was just
+    written for the first time (caller should pytest.skip in that case).
+    """
+    SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+    path = SNAPSHOTS_DIR / f"{name}.json"
+    update = os.environ.get("UPDATE_SNAPSHOTS", "").strip() == "1"
+
+    if update or not path.exists():
+        serialized = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder, indent=2, sort_keys=True)
+        path.write_text(serialized, encoding="utf-8")
+        return None  # caller should skip or just return in update mode
+
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _assert_deep_equal(actual, expected, path: str = "", tol: float = 1e-6) -> None:
+    """Recursively compare two JSON-like structures with numeric tolerance.
+
+    Floats are compared with absolute tolerance *tol* (default 1e-6).
+    Lists are compared element-wise; dicts are compared key-by-key.
+
+    Raises AssertionError with a descriptive path on first mismatch.
+    """
+    if isinstance(expected, dict):
+        assert isinstance(actual, dict), f"[{path}] expected dict, got {type(actual).__name__}"
+        for key in expected:
+            assert key in actual, f"[{path}] missing key '{key}'"
+            _assert_deep_equal(actual[key], expected[key], path=f"{path}.{key}", tol=tol)
+        for key in actual:
+            assert key in expected, f"[{path}] unexpected extra key '{key}'"
+    elif isinstance(expected, list):
+        assert isinstance(actual, list), f"[{path}] expected list, got {type(actual).__name__}"
+        assert len(actual) == len(
+            expected
+        ), f"[{path}] list length mismatch: actual={len(actual)} expected={len(expected)}"
+        for i, (a, e) in enumerate(zip(actual, expected)):
+            _assert_deep_equal(a, e, path=f"{path}[{i}]", tol=tol)
+    elif isinstance(expected, float) or isinstance(actual, float):
+        # Handle NaN: both must be NaN, or neither
+        if isinstance(expected, float) and math.isnan(expected):
+            assert isinstance(actual, float) and math.isnan(actual), f"[{path}] expected NaN, got {actual!r}"
+        else:
+            assert isinstance(actual, (int, float)), f"[{path}] expected numeric, got {type(actual).__name__}"
+            assert (
+                abs(float(actual) - float(expected)) <= tol
+            ), f"[{path}] numeric mismatch: actual={actual!r} expected={expected!r} (tol={tol})"
+    else:
+        assert actual == expected, f"[{path}] mismatch: actual={actual!r} expected={expected!r}"
 
 
 class TestVisualizerEnhancements:
@@ -246,3 +335,64 @@ class TestVisualizerEnhancements:
         fig_hist = plot_attendance_histogram(filtered_df, data_state="cleaned")
         assert fig_hist is not None
         assert len(fig_hist.data) > 0
+
+
+class TestChartSnapshots:
+    """Snapshot / regression tests for chart output.
+
+    Each test compares ``fig.to_dict()`` against a JSON fixture stored in
+    ``tests/snapshots/<chart_name>.json``.  Fixtures are generated from
+    deterministic input data produced by ``DataGenerator(seed=42)``.
+
+    Regeneration policy
+    -------------------
+    If a Plotly upgrade causes legitimate diffs, review the diff manually then
+    regenerate all fixtures with::
+
+        UPDATE_SNAPSHOTS=1 pytest tests/test_visualizer.py::TestChartSnapshots
+
+    Commit the regenerated JSON files together with the code change that caused
+    the churn.
+
+    Note: ``layout.template`` (Plotly's built-in default theme) is excluded
+    from snapshots via ``_strip_volatile`` because it varies with test-suite
+    ordering when other test helpers reseed global state.  All chart-authored
+    output (data traces, title, annotations, shapes, axis titles, colors) is
+    still captured.
+
+    First-run / missing-fixture behaviour
+    --------------------------------------
+    If a fixture file does not exist the test writes it and is *skipped* with a
+    message "snapshot generated; commit it and re-run".  This makes the initial
+    setup ergonomic: run once, commit fixtures, then run again to verify.
+
+    Under ``UPDATE_SNAPSHOTS=1`` tests regenerate fixtures and pass immediately
+    (no comparison is performed).
+    """
+
+    @pytest.fixture
+    def seeded_df(self):
+        """Return a reproducible 200-row DataFrame via DataGenerator(seed=42)."""
+        return DataGenerator(seed=42).generate(num_records=200, messiness_level="low")
+
+    def _run_snapshot(self, chart_fn, df, name: str, **kwargs):
+        """Shared helper: call chart_fn, compare/write snapshot, skip if new."""
+        fig = chart_fn(df, **kwargs)
+        raw = json.loads(json.dumps(fig.to_dict(), cls=plotly.utils.PlotlyJSONEncoder, sort_keys=True))
+        actual = _strip_volatile(raw)
+        snapshot = _load_or_write_snapshot(name, actual)
+        if snapshot is None:
+            update = os.environ.get("UPDATE_SNAPSHOTS", "").strip() == "1"
+            if update:
+                return  # regenerated — pass immediately
+            pytest.skip(f"Snapshot '{name}.json' generated; commit it and re-run")
+        _assert_deep_equal(actual, snapshot, path=name)
+
+    def test_attendance_trend_snapshot(self, seeded_df):
+        self._run_snapshot(plot_attendance_trend, seeded_df, "attendance_trend", data_state="cleaned")
+
+    def test_role_distribution_snapshot(self, seeded_df):
+        self._run_snapshot(plot_role_distribution, seeded_df, "role_distribution", data_state="cleaned")
+
+    def test_attendance_histogram_snapshot(self, seeded_df):
+        self._run_snapshot(plot_attendance_histogram, seeded_df, "attendance_histogram", data_state="cleaned")
