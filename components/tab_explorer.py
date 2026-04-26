@@ -1,7 +1,9 @@
 import streamlit as st
+import pandas as pd
+from typing import Dict, Any
 
 
-def render_explorer_tab(active_df, state_label, metrics):
+def render_explorer_tab(active_df: pd.DataFrame, state_label: str, metrics: Dict[str, Any]) -> None:
     """Render the Data Explorer tab content."""
     st.subheader(f"{state_label} Data Inspector")
 

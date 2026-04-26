@@ -1,8 +1,9 @@
 import streamlit as st
+import pandas as pd
 from utils.health_metrics import DataHealthMetrics
 
 
-def render_comparison(raw_df):
+def render_comparison(raw_df: pd.DataFrame) -> None:
     """Render before/after cleaning comparison section."""
     st.divider()
     st.subheader("Before vs. After Cleaning Comparison")

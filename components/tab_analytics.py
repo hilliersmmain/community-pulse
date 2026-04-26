@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+from typing import Dict, cast
 from utils.visualizer import (
     plot_attendance_trend,
     plot_role_distribution,
@@ -14,7 +16,7 @@ from utils.ui_helpers import (
 )
 
 
-def render_analytics_tab(raw_df):
+def render_analytics_tab(raw_df: pd.DataFrame) -> None:
     """Render the Analytics tab content."""
     show_tutorial_step(4)
 
@@ -46,10 +48,11 @@ def render_analytics_tab(raw_df):
         if selected_roles:
             filtered_df = clean_df[clean_df["Role"].isin(selected_roles)]
         else:
+            _msg = cast(Dict[str, str], MESSAGES["no_filters_selected"])
             show_empty_state(
-                icon=MESSAGES["no_filters_selected"]["icon"],
-                title=MESSAGES["no_filters_selected"]["title"],
-                message=MESSAGES["no_filters_selected"]["message"],
+                icon=_msg["icon"],
+                title=_msg["title"],
+                message=_msg["message"],
             )
             st.info("Select at least one role to render analytics.")
             return
@@ -162,10 +165,11 @@ def render_analytics_tab(raw_df):
                         )
 
     else:
+        _msg2 = cast(Dict[str, str], MESSAGES["no_data_cleaned"])
         show_empty_state(
-            icon=MESSAGES["no_data_cleaned"]["icon"],
-            title=MESSAGES["no_data_cleaned"]["title"],
-            message=MESSAGES["no_data_cleaned"]["message"],
+            icon=_msg2["icon"],
+            title=_msg2["title"],
+            message=_msg2["message"],
         )
 
         st.info("""
