@@ -29,6 +29,11 @@ SCORE_THRESHOLDS = {
     "good": 70,
 }
 
+# Health score weights — must sum to 1.0. Documented in docs/KPI_DEFINITIONS.md.
+HEALTH_SCORE_WEIGHT_COMPLETENESS = 0.4
+HEALTH_SCORE_WEIGHT_UNIQUENESS = 0.3
+HEALTH_SCORE_WEIGHT_FORMATTING = 0.3
+
 CUSTOM_CSS = """
 <style>
     .main h1 {

@@ -2,8 +2,14 @@
 
 import pandas as pd
 import re
-from typing import Dict, Any
 from datetime import datetime
+from typing import Dict, Any
+
+from utils.constants import (
+    HEALTH_SCORE_WEIGHT_COMPLETENESS,
+    HEALTH_SCORE_WEIGHT_FORMATTING,
+    HEALTH_SCORE_WEIGHT_UNIQUENESS,
+)
 
 
 class DataHealthMetrics:
@@ -87,7 +93,11 @@ class DataHealthMetrics:
         duplicates = self.calculate_duplicate_score()
         formatting = self.calculate_formatting_score()
 
-        overall = (completeness * 0.4) + (duplicates * 0.3) + (formatting * 0.3)
+        overall = (
+            (completeness * HEALTH_SCORE_WEIGHT_COMPLETENESS)
+            + (duplicates * HEALTH_SCORE_WEIGHT_UNIQUENESS)
+            + (formatting * HEALTH_SCORE_WEIGHT_FORMATTING)
+        )
 
         return round(overall, 1)
 
