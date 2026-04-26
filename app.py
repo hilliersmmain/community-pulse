@@ -2,7 +2,7 @@ import streamlit as st
 import os
 from datetime import datetime
 from utils.ui_helpers import initialize_session_state, show_welcome_modal, show_empty_state, MESSAGES
-from utils.health_metrics import DataHealthMetrics
+from utils.health_metrics import get_health_metrics
 from utils.constants import DATA_PATH, CUSTOM_CSS
 from utils.data_access import load_csv
 from utils.session_keys import KEY_DATA_LOADED_AT, KEY_VIEW_STATE, KEY_CLEANED, KEY_CLEAN_DF, KEY_CLEANING_COMPLETED_AT
@@ -77,9 +77,8 @@ else:
     active_df = raw_df
     state_label = "Raw"
 
-# Calculate health metrics for active data state
-health_metrics = DataHealthMetrics(active_df)
-metrics = health_metrics.get_detailed_metrics()
+# Calculate health metrics for active data state (cached by DataFrame content)
+metrics = get_health_metrics(active_df)
 
 # Display current state and timestamp
 st.markdown(f"### Current View: **{state_label} Data**")

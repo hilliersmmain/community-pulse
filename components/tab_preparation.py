@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from utils.cleaner import DataCleaner
-from utils.health_metrics import DataHealthMetrics
+from utils.health_metrics import get_health_score
 from utils.session_keys import (
     KEY_CLEANED,
     KEY_CLEAN_DF,
@@ -98,19 +98,20 @@ def render_preparation_tab(raw_df: pd.DataFrame) -> None:
             original_len = len(raw_df)
             new_len = len(st.session_state[KEY_CLEAN_DF])
 
-            # Calculate health scores
-            raw_health = DataHealthMetrics(raw_df)
-            clean_health = DataHealthMetrics(st.session_state[KEY_CLEAN_DF])
+            # Health scores served from @st.cache_data; each distinct DataFrame
+            # gets its own cache entry, so raw and cleaned never collide.
+            raw_score = get_health_score(raw_df)
+            clean_score = get_health_score(st.session_state[KEY_CLEAN_DF])
 
             c1.metric(
                 "Records Removed",
                 original_len - new_len,
                 help="Number of records removed during cleaning (duplicates and invalid entries)",
             )
-            improvement = clean_health.calculate_overall_health_score() - raw_health.calculate_overall_health_score()
+            improvement = clean_score - raw_score
             c2.metric(
                 "Data Health Score",
-                f"{clean_health.calculate_overall_health_score()}%",
+                f"{clean_score}%",
                 delta=f"+{improvement:.1f}%",
                 help="Overall data quality improvement after cleaning",
             )

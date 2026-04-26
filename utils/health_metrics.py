@@ -3,6 +3,7 @@
 import logging
 import pandas as pd
 import re
+import streamlit as st
 from datetime import datetime
 from typing import Dict, Any
 
@@ -135,3 +136,19 @@ class DataHealthMetrics:
             "overall_score": self.calculate_overall_health_score(),
             "timestamp": self.timestamp,
         }
+
+
+@st.cache_data(show_spinner=False)
+def get_health_metrics(df: pd.DataFrame) -> Dict[str, Any]:
+    """Return detailed health metrics for *df*, cached by DataFrame content.
+
+    Streamlit's default DataFrame hasher keys on shape + values, so a fresh
+    cleaned DataFrame always gets its own cache entry separate from raw data.
+    """
+    return DataHealthMetrics(df).get_detailed_metrics()
+
+
+@st.cache_data(show_spinner=False)
+def get_health_score(df: pd.DataFrame) -> float:
+    """Return overall health score for *df*, cached by DataFrame content."""
+    return DataHealthMetrics(df).calculate_overall_health_score()

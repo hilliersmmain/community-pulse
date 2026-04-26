@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.health_metrics import DataHealthMetrics
+from utils.health_metrics import get_health_metrics
 
 
 def render_comparison(raw_df: pd.DataFrame) -> None:
@@ -8,11 +8,9 @@ def render_comparison(raw_df: pd.DataFrame) -> None:
     st.divider()
     st.subheader("Before vs. After Cleaning Comparison")
 
-    # Calculate metrics for both states
-    raw_health = DataHealthMetrics(raw_df)
-    raw_metrics = raw_health.get_detailed_metrics()
-    clean_health = DataHealthMetrics(st.session_state["clean_df"])
-    clean_metrics = clean_health.get_detailed_metrics()
+    # Metrics are served from @st.cache_data; no recomputation on re-renders
+    raw_metrics = get_health_metrics(raw_df)
+    clean_metrics = get_health_metrics(st.session_state["clean_df"])
 
     # Create comparison table
     comparison_col1, comparison_col2, comparison_col3, comparison_col4 = st.columns(4)
