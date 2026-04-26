@@ -2,6 +2,14 @@ import streamlit as st
 from datetime import datetime
 from utils.cleaner import DataCleaner
 from utils.health_metrics import DataHealthMetrics
+from utils.session_keys import (
+    KEY_CLEANED,
+    KEY_CLEAN_DF,
+    KEY_CLEAN_LOG,
+    KEY_CLEANING_COMPLETED_AT,
+    KEY_CLEANING_DURATION,
+    KEY_CLEANING_STEPS,
+)
 from utils.ui_helpers import (
     show_empty_state,
     show_tutorial_step,
@@ -23,7 +31,7 @@ def render_preparation_tab(raw_df):
 
     with col_demo:
         # Show selected steps
-        selected_steps = [k for k, v in st.session_state["cleaning_steps"].items() if v]
+        selected_steps = [k for k, v in st.session_state[KEY_CLEANING_STEPS].items() if v]
         if selected_steps:
             st.success(f"Ready to apply **{len(selected_steps)} cleaning step(s)**")
             st.caption("Configure steps in the sidebar to customize your cleaning pipeline")
@@ -50,11 +58,11 @@ def render_preparation_tab(raw_df):
                     clean_df = cleaner.clean_all(steps=selected_steps)
 
                     # Save to session state
-                    st.session_state["clean_df"] = clean_df
-                    st.session_state["clean_log"] = cleaner.log
-                    st.session_state["cleaned"] = True
-                    st.session_state["cleaning_completed_at"] = datetime.now()
-                    st.session_state["cleaning_duration"] = (
+                    st.session_state[KEY_CLEAN_DF] = clean_df
+                    st.session_state[KEY_CLEAN_LOG] = cleaner.log
+                    st.session_state[KEY_CLEANED] = True
+                    st.session_state[KEY_CLEANING_COMPLETED_AT] = datetime.now()
+                    st.session_state[KEY_CLEANING_DURATION] = (
                         cleaner.end_timestamp - cleaner.start_timestamp
                     ).total_seconds()
 
@@ -68,9 +76,9 @@ def render_preparation_tab(raw_df):
                 )
 
     with col_log:
-        if st.session_state.get("cleaned"):
+        if st.session_state.get(KEY_CLEANED):
             st.markdown("### Execution Log")
-            for msg in st.session_state["clean_log"]:
+            for msg in st.session_state[KEY_CLEAN_LOG]:
                 st.code(f">> {msg}", language="bash")
 
             # Post-Clean Metrics
@@ -78,19 +86,19 @@ def render_preparation_tab(raw_df):
             st.markdown("### Cleaning Summary")
 
             # Show timestamp and duration
-            if "cleaning_completed_at" in st.session_state:
-                time_str = st.session_state["cleaning_completed_at"].strftime("%Y-%m-%d %H:%M:%S")
+            if KEY_CLEANING_COMPLETED_AT in st.session_state:
+                time_str = st.session_state[KEY_CLEANING_COMPLETED_AT].strftime("%Y-%m-%d %H:%M:%S")
                 st.caption(f"Completed at: {time_str}")
-            if "cleaning_duration" in st.session_state:
-                st.caption(f"Duration: {st.session_state['cleaning_duration']:.3f} seconds")
+            if KEY_CLEANING_DURATION in st.session_state:
+                st.caption(f"Duration: {st.session_state[KEY_CLEANING_DURATION]:.3f} seconds")
 
             c1, c2 = st.columns(2)
             original_len = len(raw_df)
-            new_len = len(st.session_state["clean_df"])
+            new_len = len(st.session_state[KEY_CLEAN_DF])
 
             # Calculate health scores
             raw_health = DataHealthMetrics(raw_df)
-            clean_health = DataHealthMetrics(st.session_state["clean_df"])
+            clean_health = DataHealthMetrics(st.session_state[KEY_CLEAN_DF])
 
             c1.metric(
                 "Records Removed",
