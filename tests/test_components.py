@@ -18,6 +18,8 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from utils.constants import CLEANING_STEPS_DEFAULT
+
 from streamlit.testing.v1 import AppTest
 
 # ---------------------------------------------------------------------------
@@ -247,7 +249,7 @@ class TestTabPreparation:
         # and the BOB row whose email is invalid -> at most 2 rows remain.
         assert 0 < len(clean_df) < original_len
         # Cleaning log captured one entry per pipeline step.
-        assert len(at.session_state["clean_log"]) == 5
+        assert len(at.session_state["clean_log"]) == len(CLEANING_STEPS_DEFAULT)
 
         # Cleaning Summary metrics now visible.
         metric_labels = [m.label for m in at.metric]
@@ -396,11 +398,9 @@ class TestTabAnalytics:
         # before/after tab content).
         # We don't assert exact count to stay resilient to small changes —
         # only that at least three charts are present.
-        # AppTest does not surface plotly_chart directly in older versions; if
-        # the attribute is missing this assertion is skipped.
-        chart_attr = getattr(at, "plotly_chart", None)
-        if chart_attr is not None:
-            assert len(chart_attr) >= 3
+        if not hasattr(at, "plotly_chart"):
+            pytest.skip("AppTest does not surface plotly_chart in this Streamlit version")
+        assert len(at.plotly_chart) >= 3
 
 
 # ---------------------------------------------------------------------------
