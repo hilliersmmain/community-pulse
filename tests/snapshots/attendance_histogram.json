@@ -60,7 +60,7 @@
     "shapes": [
       {
         "line": {
-          "color": "#D55E00",
+          "color": "#009E73",
           "dash": "dash"
         },
         "type": "line",
@@ -73,7 +73,7 @@
       },
       {
         "line": {
-          "color": "#009E73",
+          "color": "#E69F00",
           "dash": "dot"
         },
         "type": "line",
