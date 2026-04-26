@@ -10,8 +10,7 @@ For each meaningful change:
 2. Run targeted tests when possible.
 3. Run full verification:
    - `python scripts/verify_loop.py --localhost-check`
-4. Regenerate context docs (`CLAUDE.md`) through the verification script.
-5. Commit only after the loop succeeds.
+4. Commit only after the loop succeeds.
 
 ## What `verify_loop.py` Checks
 
@@ -19,21 +18,8 @@ For each meaningful change:
 - Flake8 linting checks
 - Mypy type checks
 - Full pytest suite
-- Coverage gate (`--cov-fail-under=55`)
+- Coverage gate (`--cov-fail-under=70`)
 - Optional Streamlit localhost smoke test
-- `scripts/update_claude_md.py` to keep `CLAUDE.md` current
-
-## Cursor Hook Guardrail
-
-- Hook config: `.cursor/hooks.json`
-- Hook script: `.cursor/hooks/verify-before-commit.py`
-- Trigger: `beforeShellExecution` when command includes `git commit`
-
-If recent verification is missing/stale or the working tree changed since verification, the hook blocks commit and recommends:
-
-```bash
-python scripts/verify_loop.py --localhost-check
-```
 
 ## Subagent-Driven Delivery Pattern
 

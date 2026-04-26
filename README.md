@@ -126,8 +126,6 @@ community-pulse/
 │   ├── visualizer.py         # Plotly chart components and themes
 │   ├── health_metrics.py     # Quality scoring algorithms
 │   └── ui_helpers.py         # Reusable UI components
-├── scripts/                  # Automation scripts
-│   └── update_claude_md.py   # Auto-generate CLAUDE.md
 ├── tests/                    # 106 comprehensive unit tests
 ├── docs/                     # Technical documentation
 │   ├── API.md                # Module API reference
@@ -162,9 +160,7 @@ Use the verification loop before every commit to reduce regressions:
 python scripts/verify_loop.py --localhost-check
 ```
 
-The loop validates formatting, linting, typing, tests, coverage, localhost app health, and then regenerates `CLAUDE.md`.
-
-Project hook support is included in `.cursor/hooks.json`: when `git commit` is attempted without a fresh verification stamp for the current working tree, Cursor blocks until verification is rerun.
+The loop validates formatting, linting, typing, tests, coverage, and localhost app health.
 
 ---
 

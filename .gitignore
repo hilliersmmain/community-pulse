@@ -17,3 +17,6 @@ coverage.xml
 QUESTIONS_FOR_USER.md
 LOOP_COMPLETE.md
 .claude/
+.cursor/
+CLAUDE.md
+.mypy_cache/

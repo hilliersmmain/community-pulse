@@ -5,8 +5,7 @@ Workflow:
 1) Static quality checks
 2) Test suite and coverage
 3) Optional localhost Streamlit smoke check
-4) Regenerate CLAUDE.md
-5) Write success stamp for commit hook checks
+4) Write success stamp for commit hook checks
 """
 
 from __future__ import annotations
@@ -227,7 +226,6 @@ def main() -> None:
     )
     if args.localhost_check:
         smoke_test_streamlit(args.port, args.timeout_seconds)
-    run_step("regenerate CLAUDE.md", [sys.executable, "scripts/update_claude_md.py"])
     write_success_stamp()
     print("\n[verify] verification loop completed successfully")
 

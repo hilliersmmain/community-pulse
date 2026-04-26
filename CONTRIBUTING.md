@@ -28,16 +28,13 @@ This loop runs:
 - Full test suite
 - Coverage gate
 - Optional localhost Streamlit smoke test
-- `CLAUDE.md` regeneration via `scripts/update_claude_md.py`
-
-Cursor also includes a project hook (`.cursor/hooks.json`) that blocks `git commit` when verification is stale or when files changed since the last successful verification.
 
 ## Branch and PR Workflow
 
 1. Create a feature branch: `git checkout -b feature/<short-name>`
 2. Make focused changes in small commits.
 3. Run `python scripts/verify_loop.py --localhost-check`.
-4. Update docs when behavior changes (`README.md`, `docs/`, and generated `CLAUDE.md`).
+4. Update docs when behavior changes (`README.md`, `docs/`).
 5. Open a PR with:
    - What changed
    - Why it changed
