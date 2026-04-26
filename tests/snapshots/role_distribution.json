@@ -2,11 +2,6 @@
   "data": [
     {
       "hovertemplate": "<b>%{label}</b><br>Count: %{value}<br>Percentage: %{percent}<br><extra></extra>",
-      "labels": [
-        "Member",
-        "Guest",
-        "Admin"
-      ],
       "marker": {
         "colors": [
           "rgb(102,194,165)",
@@ -25,11 +20,7 @@
       },
       "textinfo": "label+percent",
       "textposition": "auto",
-      "type": "pie",
-      "values": {
-        "bdata": "nAAoAAoA",
-        "dtype": "i2"
-      }
+      "type": "pie"
     }
   ],
   "layout": {
