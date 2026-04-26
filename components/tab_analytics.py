@@ -81,7 +81,7 @@ def render_analytics_tab(raw_df: pd.DataFrame) -> None:
                 fig_hist = plot_attendance_histogram(filtered_df, data_state=data_state)
                 st.plotly_chart(fig_hist, use_container_width=True, config=export_config)
             st.caption(
-                "**Tip:** Red dashed line = mean attendance, green dotted line = median. Use these to identify outliers."
+                "**Tip:** Green dashed line = mean attendance, orange dotted line = median. Use these to identify outliers."
             )
 
         st.divider()
