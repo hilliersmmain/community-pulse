@@ -1,5 +1,17 @@
 """Constants and configuration values for Community Pulse."""
 
+# ---------------------------------------------------------------------------
+# Okabe-Ito colorblind-safe palette
+# Source: https://jfly.uni-koeln.de/color/
+# All chart accent colors must be drawn from this set.
+# ---------------------------------------------------------------------------
+OKABE_ITO = ["#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
+
+COLOR_PRIMARY = "#0072B2"  # Okabe-Ito blue — primary data line / bar fill
+COLOR_ACCENT_TREND = "#D55E00"  # Okabe-Ito vermillion — trend lines (dashed)
+COLOR_MEAN_LINE = "#D55E00"  # Okabe-Ito vermillion — mean reference line (warm, "warning")
+COLOR_MEDIAN_LINE = "#009E73"  # Okabe-Ito bluish green — median reference line (positive/calm)
+
 DATA_PATH = "data/messy_club_data.csv"
 DATA_DIR = "data"
 

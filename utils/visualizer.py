@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any
 
+from utils.constants import COLOR_PRIMARY, COLOR_ACCENT_TREND, COLOR_MEAN_LINE, COLOR_MEDIAN_LINE
+
 # Constants for chart configuration
 MIN_POINTS_FOR_TREND = 3
 DEFAULT_HISTOGRAM_BINS = 20
@@ -67,8 +69,8 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
             y=trend["New Members"],
             mode="lines+markers",
             name="New Members",
-            line=dict(color="#1f77b4", width=3),
-            marker=dict(size=8, color="#1f77b4"),
+            line=dict(color=COLOR_PRIMARY, width=3),
+            marker=dict(size=8, color=COLOR_PRIMARY),
             hovertemplate=(
                 "<b>Month:</b> %{x}<br>"
                 "<b>New Members:</b> %{y}<br>"
@@ -91,7 +93,7 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
                 y=trend_line,
                 mode="lines",
                 name="Trend Line",
-                line=dict(color="rgba(255, 127, 14, 0.6)", width=2, dash="dash"),
+                line=dict(color=COLOR_ACCENT_TREND, width=2, dash="dash"),
                 hovertemplate="<b>Trend:</b> %{y:.1f}<extra></extra>",
             )
         )
@@ -99,7 +101,7 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
     fig.add_hline(
         y=stats["mean"],
         line_dash="dot",
-        line_color="green",
+        line_color=COLOR_MEAN_LINE,
         annotation_text=f"Mean: {stats['mean']:.1f}",
         annotation_position="right",
     )
@@ -199,7 +201,7 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
             x=df["Event_Attendance"],
             nbinsx=DEFAULT_HISTOGRAM_BINS,
             name="Member Count",
-            marker=dict(color="#1f77b4", line=dict(color="white", width=1)),
+            marker=dict(color=COLOR_PRIMARY, line=dict(color="white", width=1)),
             hovertemplate=("<b>Events Attended:</b> %{x}<br>" "<b>Number of Members:</b> %{y}<br>" "<extra></extra>"),
         )
     )
@@ -207,7 +209,7 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
     fig.add_vline(
         x=stats["mean"],
         line_dash="dash",
-        line_color="red",
+        line_color=COLOR_MEAN_LINE,
         annotation_text=f"Mean: {stats['mean']:.1f}",
         annotation_position="top",
     )
@@ -215,7 +217,7 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
     fig.add_vline(
         x=stats["median"],
         line_dash="dot",
-        line_color="green",
+        line_color=COLOR_MEDIAN_LINE,
         annotation_text=f"Median: {stats['median']:.1f}",
         annotation_position="bottom",
     )
