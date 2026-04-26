@@ -1,0 +1,69 @@
+{
+  "data": [
+    {
+      "hovertemplate": "<b>%{label}</b><br>Count: %{value}<br>Percentage: %{percent}<br><extra></extra>",
+      "labels": [
+        "Member",
+        "Guest",
+        "Admin"
+      ],
+      "marker": {
+        "colors": [
+          "rgb(102,194,165)",
+          "rgb(252,141,98)",
+          "rgb(141,160,203)",
+          "rgb(231,138,195)",
+          "rgb(166,216,84)",
+          "rgb(255,217,47)",
+          "rgb(229,196,148)",
+          "rgb(179,179,179)"
+        ],
+        "line": {
+          "color": "white",
+          "width": 2
+        }
+      },
+      "textinfo": "label+percent",
+      "textposition": "auto",
+      "type": "pie",
+      "values": {
+        "bdata": "nAAoAAoA",
+        "dtype": "i2"
+      }
+    }
+  ],
+  "layout": {
+    "annotations": [
+      {
+        "font": {
+          "color": "gray",
+          "size": 12
+        },
+        "showarrow": false,
+        "text": "Total Members: 206<br>Unique Roles: 3",
+        "x": 0.5,
+        "xref": "paper",
+        "y": -0.1,
+        "yref": "paper"
+      }
+    ],
+    "legend": {
+      "orientation": "v",
+      "x": 1.02,
+      "xanchor": "left",
+      "y": 0.5,
+      "yanchor": "middle"
+    },
+    "modebar": {
+      "add": [
+        "toImage"
+      ]
+    },
+    "showlegend": true,
+    "title": {
+      "text": "Member Role Distribution<br><sub>Data State: Cleaned | Total Members: 206</sub>",
+      "x": 0.5,
+      "xanchor": "center"
+    }
+  }
+}
