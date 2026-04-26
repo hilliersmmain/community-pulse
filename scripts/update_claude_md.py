@@ -5,6 +5,7 @@ Discovers modules, counts tests, reads config, and produces an up-to-date
 CLAUDE.md so future Claude Code sessions have accurate context.
 """
 
+import os
 import re
 import subprocess
 import sys
@@ -17,7 +18,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 def _find_python():
     """Return the best Python executable — prefer the project venv."""
-    venv_python = PROJECT_ROOT / ".venv" / "bin" / "python"
+    # Determine venv path based on platform
+    if os.name == "nt":  # Windows
+        venv_python = PROJECT_ROOT / ".venv" / "Scripts" / "python.exe"
+    else:  # Unix-like (Linux, macOS)
+        venv_python = PROJECT_ROOT / ".venv" / "bin" / "python"
+
     if venv_python.exists():
         return str(venv_python)
     return sys.executable
