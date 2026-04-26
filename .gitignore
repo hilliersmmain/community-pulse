@@ -13,3 +13,6 @@ demo_outputs/
 coverage.xml
 .pytest_cache/
 .verification/
+.execution-state.md
+QUESTIONS_FOR_USER.md
+LOOP_COMPLETE.md
