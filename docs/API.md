@@ -364,8 +364,8 @@ Create histogram showing distribution of attendance counts.
 **Returns:**
 - `plotly.graph_objects.Figure`: Interactive histogram with:
   - Bar chart of attendance distribution
-  - Mean line (red dashed)
-  - Median line (green dotted)
+  - Mean line (green dashed)
+  - Median line (orange dotted)
   - Statistical annotations
 
 **Example:**
