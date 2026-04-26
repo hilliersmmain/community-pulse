@@ -41,7 +41,6 @@ dependencies = [
     "plotly>=6.5.0",
     "numpy==1.26.4",
     "faker>=39.0.0",
-    "python-Levenshtein>=0.26.1",
     "kaleido>=0.2.1",
 ]
 
