@@ -31,7 +31,7 @@ from utils.constants import (
 )
 
 
-def render_sidebar():
+def render_sidebar() -> None:
     """Render the complete sidebar with all controls."""
     st.sidebar.header("Data Controls")
 

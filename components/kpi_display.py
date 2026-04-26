@@ -1,9 +1,10 @@
 import streamlit as st
+from typing import Dict, Any
 from utils.ui_helpers import show_tutorial_step
 from utils.constants import SCORE_THRESHOLDS
 
 
-def render_kpi_section(metrics):
+def render_kpi_section(metrics: Dict[str, Any]) -> None:
     """Render the KPI metrics row."""
     # 1. Dynamic KPI Row with enhanced tooltips
     st.subheader("Key Performance Indicators")

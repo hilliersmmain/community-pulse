@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from datetime import datetime
 from utils.cleaner import DataCleaner
 from utils.health_metrics import DataHealthMetrics
@@ -20,7 +21,7 @@ from utils.ui_helpers import (
 )
 
 
-def render_preparation_tab(raw_df):
+def render_preparation_tab(raw_df: pd.DataFrame) -> None:
     """Render the Data Preparation tab content."""
     st.subheader("Data Hygiene Pipeline")
     st.caption("Configure and execute intelligent data cleaning operations")
@@ -62,9 +63,10 @@ def render_preparation_tab(raw_df):
                     st.session_state[KEY_CLEAN_LOG] = cleaner.log
                     st.session_state[KEY_CLEANED] = True
                     st.session_state[KEY_CLEANING_COMPLETED_AT] = datetime.now()
-                    st.session_state[KEY_CLEANING_DURATION] = (
-                        cleaner.end_timestamp - cleaner.start_timestamp
-                    ).total_seconds()
+                    if cleaner.end_timestamp is not None:
+                        st.session_state[KEY_CLEANING_DURATION] = (
+                            cleaner.end_timestamp - cleaner.start_timestamp
+                        ).total_seconds()
 
                 show_success_message(get_contextual_message("cleaning_success", records_processed=len(raw_df)))
                 # Rerun to update UI with new cleaned state
