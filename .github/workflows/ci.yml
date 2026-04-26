@@ -76,8 +76,6 @@ jobs:
           # Scan Python files for common security issues
           # Fail on confirmed high-severity findings (HIGH severity + HIGH confidence)
           bandit -r utils/ community_pulse/ -lll -iii -f json -o bandit-report.json
-          # Also report medium severity issues (non-blocking, for awareness)
-          bandit -r utils/ community_pulse/ -ll || true
 
       - name: Display test summary
         if: always()
