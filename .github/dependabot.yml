@@ -11,7 +11,7 @@ updates:
     groups:
       # Group minor and patch updates together to reduce PR volume
       python-deps:
-        dependency-types:
+        update-types:
           - "minor"
           - "patch"
 
