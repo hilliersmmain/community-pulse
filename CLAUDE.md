@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-*Auto-generated on 2026-04-23 by `scripts/update_claude_md.py`*
+*Auto-generated on 2026-04-26 by `scripts/update_claude_md.py`*
 
 ## Project Overview
 
@@ -14,7 +14,7 @@ Community Pulse is a data analytics dashboard built with Streamlit that automate
 # Run the app
 streamlit run app.py
 
-# Run all tests (108 tests collected, 60.22% coverage)
+# Run all tests (108 tests collected, 60.11% coverage)
 pytest
 
 # Run a specific test file
