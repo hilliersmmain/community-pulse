@@ -7,6 +7,47 @@ import random
 fake = Faker()
 
 
+class DataGenerator:
+    """Generate messy datasets for data cleaning demonstrations.
+
+    Parameters
+    ----------
+    seed : Optional[int], default=None
+        Random seed for reproducible data generation. When provided, seeds random,
+        numpy.random, and Faker to ensure deterministic output. When None, preserves
+        non-deterministic behavior (default).
+    """
+
+    def __init__(self, seed: Optional[int] = None):
+        """Initialize DataGenerator with optional seed for deterministic generation."""
+        self.seed = seed
+        if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
+            Faker.seed(seed)
+
+    def generate(
+        self, num_records: int = 500, messiness_level: str = "medium", save_path: Optional[str] = None
+    ) -> pd.DataFrame:
+        """Generate a messy dataset with specified parameters.
+
+        Parameters
+        ----------
+        num_records : int, default=500
+            Number of records to generate (before duplicate injection).
+        messiness_level : str, default="medium"
+            Level of messiness: 'low', 'medium', or 'high'.
+        save_path : Optional[str], default=None
+            Path to save the generated CSV file. If None, does not save.
+
+        Returns
+        -------
+        pd.DataFrame
+            Generated dataframe with messy data.
+        """
+        return generate_messy_data(num_records=num_records, messiness_level=messiness_level, save_path=save_path)
+
+
 EVENT_CHOICES = ["Spring Gala", "Summer Camp", "Fall Fundraiser", "None"]
 MESSINESS_PROFILES = {
     "low": {
