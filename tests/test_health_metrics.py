@@ -124,42 +124,6 @@ class TestDataHealthMetrics:
         # Should be lower due to invalid emails, dates, and names
         assert score < 80.0
 
-    def test_is_valid_email(self, perfect_data):
-
-        metrics = DataHealthMetrics(perfect_data)
-
-        assert metrics._is_valid_email("test@example.com") is True
-        assert metrics._is_valid_email("invalid-email") is False
-        assert metrics._is_valid_email("test at example.com") is False
-        assert metrics._is_valid_email(np.nan) is False
-        assert metrics._is_valid_email("") is False
-
-    def test_is_valid_name(self, perfect_data):
-
-        metrics = DataHealthMetrics(perfect_data)
-
-        assert metrics._is_valid_name("John Doe") is True
-        assert metrics._is_valid_name("O'Brien") is True
-        assert metrics._is_valid_name("Mary-Jane") is True
-        assert metrics._is_valid_name("123invalid") is False
-        assert metrics._is_valid_name(np.nan) is False
-        assert metrics._is_valid_name("") is False
-
-    def test_count_valid_dates(self, perfect_data):
-
-        metrics = DataHealthMetrics(perfect_data)
-
-        valid_count = metrics._count_valid_dates("Join_Date")
-        assert valid_count == 3
-
-    def test_count_valid_dates_with_invalid(self, data_with_bad_formatting):
-
-        metrics = DataHealthMetrics(data_with_bad_formatting)
-
-        valid_count = metrics._count_valid_dates("Join_Date")
-        # At least 1 should be valid (the ISO format)
-        assert valid_count >= 1
-
     def test_overall_health_score_perfect_data(self, perfect_data):
 
         metrics = DataHealthMetrics(perfect_data)

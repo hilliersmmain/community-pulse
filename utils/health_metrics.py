@@ -1,6 +1,7 @@
 """Data Health Metrics Module"""
 
 import logging
+import warnings
 import pandas as pd
 import re
 import streamlit as st
@@ -48,7 +49,10 @@ def _validate_date_series(s: pd.Series) -> float:
     if s.empty:
         return 1.0
     try:
-        parsed = pd.to_datetime(s, errors="coerce")
+        # Suppress "Could not infer format" UserWarning for non-date strings like "Unknown".
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            parsed = pd.to_datetime(s, errors="coerce")
         return float(parsed.notna().mean())
     except Exception:
         return 0.0
@@ -157,33 +161,6 @@ class DataHealthMetrics:
             scores.append(col_score)
 
         return sum(scores) / len(scores) if scores else 100.0
-
-    def _is_valid_email(self, email: str) -> bool:
-        """Check if an email is in a valid format."""
-        if pd.isna(email):
-            return False
-
-        email_str = str(email).strip()
-        pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        return bool(re.match(pattern, email_str))
-
-    def _is_valid_name(self, name: str) -> bool:
-        """Check if a name is in a reasonable format."""
-        if pd.isna(name):
-            return False
-
-        name_str = str(name).strip()
-        pattern = r"^[a-zA-Z\s\'.-]+$"
-        return bool(re.match(pattern, name_str)) and len(name_str) > 0
-
-    def _count_valid_dates(self, column: str) -> int:
-        """Count valid dates in a column."""
-        try:
-            parsed = pd.to_datetime(self.df[column], errors="coerce")
-            return parsed.notna().sum()
-        except Exception:
-            logger.warning("Health metric date validation failed for column %s", column, exc_info=True)
-            return 0
 
     def calculate_overall_health_score(self) -> float:
         """Calculate the overall health score as a weighted average."""
