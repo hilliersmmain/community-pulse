@@ -50,7 +50,6 @@ def verify_dependencies() -> Dict[str, List[Tuple[str, bool, str]]]:
         ('numpy', '1.26.4'),
         ('faker', None),
         ('pytest', None),
-        ('Levenshtein', None),
     ]
     
     optional_packages = [
