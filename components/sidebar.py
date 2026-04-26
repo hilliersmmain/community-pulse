@@ -35,10 +35,8 @@ def render_sidebar():
     """Render the complete sidebar with all controls."""
     st.sidebar.header("Data Controls")
 
-    if "num_records" not in st.session_state:
-        st.session_state["num_records"] = DEFAULT_NUM_RECORDS
-    if "messiness_level" not in st.session_state:
-        st.session_state["messiness_level"] = DEFAULT_MESSINESS
+    st.session_state.setdefault("num_records", DEFAULT_NUM_RECORDS)
+    st.session_state.setdefault("messiness_level", DEFAULT_MESSINESS)
 
     with st.sidebar.expander("Quick Stats", expanded=True):
         stats_df = None
@@ -157,8 +155,7 @@ def render_sidebar():
     st.sidebar.subheader("Cleaning Pipeline")
 
     # Initialize cleaning steps in session state
-    if KEY_CLEANING_STEPS not in st.session_state:
-        st.session_state[KEY_CLEANING_STEPS] = CLEANING_STEPS_DEFAULT.copy()
+    st.session_state.setdefault(KEY_CLEANING_STEPS, CLEANING_STEPS_DEFAULT.copy())
 
     with st.sidebar.expander("Configure Cleaning Steps", expanded=False):
         st.session_state[KEY_CLEANING_STEPS]["standardize_names"] = st.checkbox(
@@ -264,8 +261,7 @@ def render_sidebar():
         )
     else:
         st.sidebar.info("Clean data first to enable view toggle")
-        if KEY_VIEW_STATE not in st.session_state:
-            st.session_state[KEY_VIEW_STATE] = "raw"
+        st.session_state.setdefault(KEY_VIEW_STATE, "raw")
 
     # Reset to Raw Data button
     if st.session_state.get(KEY_CLEANED):
