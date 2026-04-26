@@ -1,0 +1,31 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping us improve Community Pulse! Please tell us about your feature idea.
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: What problem does this solve?
+      description: Describe the problem or need you're addressing.
+      placeholder: Users currently struggle with...
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed solution
+      description: Describe how you'd like to solve this problem.
+      placeholder: We could add a feature that...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives_considered
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider?
+      placeholder: Other options include...
