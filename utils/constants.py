@@ -9,8 +9,8 @@ OKABE_ITO = ["#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "
 
 COLOR_PRIMARY = "#0072B2"  # Okabe-Ito blue — primary data line / bar fill
 COLOR_ACCENT_TREND = "#D55E00"  # Okabe-Ito vermillion — trend lines (dashed)
-COLOR_MEAN_LINE = "#D55E00"  # Okabe-Ito vermillion — mean reference line (warm, "warning")
-COLOR_MEDIAN_LINE = "#009E73"  # Okabe-Ito bluish green — median reference line (positive/calm)
+COLOR_MEAN_LINE = "#009E73"  # Okabe-Ito bluish green — mean reference line (distinct from vermillion trend)
+COLOR_MEDIAN_LINE = "#E69F00"  # Okabe-Ito orange-yellow — median reference line (distinct from mean green)
 
 DATA_PATH = "data/messy_club_data.csv"
 DATA_DIR = "data"
