@@ -21,23 +21,10 @@ def _apply_standard_layout(fig: go.Figure, title: str, subtitle: str) -> go.Figu
     return fig
 
 
-def _attach_export(fig: go.Figure, name: str) -> go.Figure:
-    """Attach the standard download/export modebar affordance to a figure.
-
-    `name` is stored on layout.meta so per-chart export filenames can be
-    looked up by callers (e.g. components passing ``config`` to st.plotly_chart).
-    """
-    fig.update_layout(
-        modebar_add=["toImage"],
-        modebar_remove=[],
-        meta={"export_name": name},
-    )
+def _attach_export(fig: go.Figure) -> go.Figure:
+    """Attach the standard download/export modebar affordance to a figure."""
+    fig.update_layout(modebar_add=["toImage"])
     return fig
-
-
-def _add_export_button(fig: go.Figure) -> go.Figure:
-    """Add download button configuration to figure (kept for backwards compatibility)."""
-    return _attach_export(fig, name="community_pulse_chart")
 
 
 def _calculate_stats(data: pd.Series) -> Dict[str, float]:
@@ -142,7 +129,7 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
         ],
     )
 
-    fig = _attach_export(fig, name="attendance_trend")
+    fig = _attach_export(fig)
 
     return fig
 
@@ -193,7 +180,7 @@ def plot_role_distribution(df: pd.DataFrame, data_state: str = "cleaned") -> go.
         ],
     )
 
-    fig = _attach_export(fig, name="role_distribution")
+    fig = _attach_export(fig)
 
     return fig
 
@@ -258,7 +245,7 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
         ],
     )
 
-    fig = _attach_export(fig, name="attendance_histogram")
+    fig = _attach_export(fig)
 
     return fig
 
