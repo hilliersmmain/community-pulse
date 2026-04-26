@@ -20,16 +20,14 @@ class DataGenerator:
 
     def __init__(self, seed: Optional[int] = None):
         """Initialize DataGenerator with optional seed for deterministic generation."""
-        self.seed = seed
-        if seed is not None:
-            random.seed(seed)
-            np.random.seed(seed)
-            Faker.seed(seed)
+        self._seed = seed
 
     def generate(
         self, num_records: int = 500, messiness_level: str = "medium", save_path: Optional[str] = None
     ) -> pd.DataFrame:
         """Generate a messy dataset with specified parameters.
+
+        If a seed was provided to __init__, the random sources are re-seeded before each call so that repeated calls return identical results.
 
         Parameters
         ----------
@@ -45,6 +43,10 @@ class DataGenerator:
         pd.DataFrame
             Generated dataframe with messy data.
         """
+        if self._seed is not None:
+            random.seed(self._seed)
+            np.random.seed(self._seed)
+            Faker.seed(self._seed)
         return generate_messy_data(num_records=num_records, messiness_level=messiness_level, save_path=save_path)
 
 
