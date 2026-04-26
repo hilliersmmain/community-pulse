@@ -9,13 +9,35 @@ MIN_POINTS_FOR_TREND = 3
 DEFAULT_HISTOGRAM_BINS = 20
 
 
-def _add_export_button(fig: go.Figure) -> go.Figure:
-    """Add download button configuration to figure."""
+def _apply_standard_layout(fig: go.Figure, title: str, subtitle: str) -> go.Figure:
+    """Apply the project's standard centered title + subtitle layout to a figure."""
+    fig.update_layout(
+        title={
+            "text": f"{title}<br><sub>{subtitle}</sub>",
+            "x": 0.5,
+            "xanchor": "center",
+        },
+    )
+    return fig
+
+
+def _attach_export(fig: go.Figure, name: str) -> go.Figure:
+    """Attach the standard download/export modebar affordance to a figure.
+
+    `name` is stored on layout.meta so per-chart export filenames can be
+    looked up by callers (e.g. components passing ``config`` to st.plotly_chart).
+    """
     fig.update_layout(
         modebar_add=["toImage"],
         modebar_remove=[],
+        meta={"export_name": name},
     )
     return fig
+
+
+def _add_export_button(fig: go.Figure) -> go.Figure:
+    """Add download button configuration to figure (kept for backwards compatibility)."""
+    return _attach_export(fig, name="community_pulse_chart")
 
 
 def _calculate_stats(data: pd.Series) -> Dict[str, float]:
@@ -95,13 +117,12 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
         annotation_position="right",
     )
 
+    _apply_standard_layout(
+        fig,
+        title="Membership Growth Over Time",
+        subtitle=f"Data State: {data_state.title()} | Total Members: {len(df)}",
+    )
     fig.update_layout(
-        title={
-            "text": f"Membership Growth Over Time<br><sub>Data State: {data_state.title()} | "
-            f"Total Members: {len(df)}</sub>",
-            "x": 0.5,
-            "xanchor": "center",
-        },
         xaxis_title="Month (YYYY-MM)",
         yaxis_title="Number of New Members Joined",
         hovermode="x unified",
@@ -121,7 +142,7 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
         ],
     )
 
-    fig = _add_export_button(fig)
+    fig = _attach_export(fig, name="attendance_trend")
 
     return fig
 
@@ -151,12 +172,12 @@ def plot_role_distribution(df: pd.DataFrame, data_state: str = "cleaned") -> go.
         ]
     )
 
+    _apply_standard_layout(
+        fig,
+        title="Member Role Distribution",
+        subtitle=f"Data State: {data_state.title()} | Total Members: {total}",
+    )
     fig.update_layout(
-        title={
-            "text": f"Member Role Distribution<br><sub>Data State: {data_state.title()} | Total Members: {total}</sub>",
-            "x": 0.5,
-            "xanchor": "center",
-        },
         showlegend=True,
         legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.02),
         annotations=[
@@ -172,7 +193,7 @@ def plot_role_distribution(df: pd.DataFrame, data_state: str = "cleaned") -> go.
         ],
     )
 
-    fig = _add_export_button(fig)
+    fig = _attach_export(fig, name="role_distribution")
 
     return fig
 
@@ -212,13 +233,12 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
         annotation_position="bottom",
     )
 
+    _apply_standard_layout(
+        fig,
+        title="Event Attendance Distribution",
+        subtitle=f"Data State: {data_state.title()} | Total Members: {len(df)}",
+    )
     fig.update_layout(
-        title={
-            "text": f"Event Attendance Distribution<br><sub>Data State: {data_state.title()} | "
-            f"Total Members: {len(df)}</sub>",
-            "x": 0.5,
-            "xanchor": "center",
-        },
         xaxis_title="Number of Events Attended",
         yaxis_title="Number of Members",
         bargap=0.1,
@@ -238,7 +258,7 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
         ],
     )
 
-    fig = _add_export_button(fig)
+    fig = _attach_export(fig, name="attendance_histogram")
 
     return fig
 
