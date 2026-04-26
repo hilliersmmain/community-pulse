@@ -90,12 +90,12 @@ class DataHealthMetrics:
     def calculate_overall_health_score(self) -> float:
         """Calculate the overall health score as a weighted average."""
         completeness = self.calculate_completeness_score()
-        duplicates = self.calculate_duplicate_score()
+        uniqueness = self.calculate_duplicate_score()
         formatting = self.calculate_formatting_score()
 
         overall = (
             (completeness * HEALTH_SCORE_WEIGHT_COMPLETENESS)
-            + (duplicates * HEALTH_SCORE_WEIGHT_UNIQUENESS)
+            + (uniqueness * HEALTH_SCORE_WEIGHT_UNIQUENESS)
             + (formatting * HEALTH_SCORE_WEIGHT_FORMATTING)
         )
 
