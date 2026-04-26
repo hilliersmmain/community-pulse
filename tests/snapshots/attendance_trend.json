@@ -7,11 +7,11 @@
       },
       "hovertemplate": "<b>Month:</b> %{x}<br><b>New Members:</b> %{y}<br><b>Cumulative:</b> %{customdata}<br><extra></extra>",
       "line": {
-        "color": "#1f77b4",
+        "color": "#0072B2",
         "width": 3
       },
       "marker": {
-        "color": "#1f77b4",
+        "color": "#0072B2",
         "size": 8
       },
       "mode": "lines+markers",
@@ -52,7 +52,7 @@
     {
       "hovertemplate": "<b>Trend:</b> %{y:.1f}<extra></extra>",
       "line": {
-        "color": "rgba(255, 127, 14, 0.6)",
+        "color": "#D55E00",
         "dash": "dash",
         "width": 2
       },
@@ -125,7 +125,7 @@
     "shapes": [
       {
         "line": {
-          "color": "green",
+          "color": "#D55E00",
           "dash": "dot"
         },
         "type": "line",

@@ -14,7 +14,7 @@ Community Pulse is a data analytics dashboard built with Streamlit that automate
 # Run the app
 streamlit run app.py
 
-# Run all tests (188 tests collected, 79.41% coverage)
+# Run all tests (188 tests collected, 79.55% coverage)
 pytest
 
 # Run a specific test file

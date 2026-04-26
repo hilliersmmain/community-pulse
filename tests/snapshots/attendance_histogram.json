@@ -3,7 +3,7 @@
     {
       "hovertemplate": "<b>Events Attended:</b> %{x}<br><b>Number of Members:</b> %{y}<br><extra></extra>",
       "marker": {
-        "color": "#1f77b4",
+        "color": "#0072B2",
         "line": {
           "color": "white",
           "width": 1
@@ -60,7 +60,7 @@
     "shapes": [
       {
         "line": {
-          "color": "red",
+          "color": "#D55E00",
           "dash": "dash"
         },
         "type": "line",
@@ -73,7 +73,7 @@
       },
       {
         "line": {
-          "color": "green",
+          "color": "#009E73",
           "dash": "dot"
         },
         "type": "line",
