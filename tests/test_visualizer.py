@@ -11,7 +11,7 @@ from utils.visualizer import (
     plot_attendance_histogram,
     get_chart_export_config,
     _calculate_stats,
-    _add_export_button,
+    _attach_export,
 )
 
 
@@ -194,9 +194,10 @@ class TestVisualizerEnhancements:
         assert "width" in image_opts
         assert "scale" in image_opts
 
-    def test_add_export_button(self, sample_member_data):
+    def test_attach_export(self, sample_member_data):
 
         fig = plot_attendance_trend(sample_member_data)
+        fig = _attach_export(fig)
 
         # Verify modebar configuration
         assert hasattr(fig.layout, "modebar")
