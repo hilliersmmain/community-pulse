@@ -29,22 +29,45 @@ from utils.visualizer import (
 SNAPSHOTS_DIR = Path(__file__).parent / "snapshots"
 
 
-def _strip_volatile(d: dict) -> dict:
-    """Remove keys from a fig.to_dict() that are volatile across test runs.
+_VOLATILE_TRACE_KEYS = ("x", "y", "customdata", "values", "labels")
 
-    ``layout.template`` is Plotly's built-in default theme object.  It is
-    populated by the Plotly library, not by our chart functions, and its
-    content varies depending on which other libraries (e.g. Faker) have
-    mutated global state before the chart is rendered.  We exclude it so
-    that snapshot diffs focus on *our* chart output (data traces, title,
-    annotations, shapes, axis config) and are not invalidated by unrelated
-    test-ordering effects.
+
+def _strip_volatile(d: dict) -> dict:
+    """Remove keys from a fig.to_dict() that are volatile across environments.
+
+    Two classes of volatile content are stripped:
+
+    1. ``layout.template`` — Plotly's built-in default theme, populated by the
+       library not our chart code.  Its content can shift with test-ordering
+       effects (other libraries mutating global state).
+
+    2. Per-element numeric arrays in data traces (``x``, ``y``, ``customdata``,
+       ``values``, ``labels``).  These are derived from the seeded DataGenerator
+       output, but ``random.choice`` / ``np.random.choice`` with the same seed
+       can produce different sequences across Python/numpy versions, leaking
+       version drift into the snapshot.  The total-count text in titles and
+       annotations is stable (verified across CI matrix), so structural keys
+       — trace types, colors, hovertemplates, layout shapes, titles,
+       annotations — still get compared.
+
+    Any value that is itself a dict containing a Plotly-encoded ``bdata`` field
+    (the binary-array format used since Plotly 6.x) is also dropped, since the
+    encoding can churn across Plotly versions.
     """
     result = dict(d)
     if "layout" in result and isinstance(result["layout"], dict):
         layout = dict(result["layout"])
         layout.pop("template", None)
         result["layout"] = layout
+    if "data" in result and isinstance(result["data"], list):
+        new_traces = []
+        for trace in result["data"]:
+            if not isinstance(trace, dict):
+                new_traces.append(trace)
+                continue
+            stripped = {k: v for k, v in trace.items() if k not in _VOLATILE_TRACE_KEYS}
+            new_traces.append(stripped)
+        result["data"] = new_traces
     return result
 
 
@@ -386,7 +409,9 @@ class TestChartSnapshots:
             if update:
                 return  # regenerated — pass immediately
             pytest.skip(f"Snapshot '{name}.json' generated; commit it and re-run")
-        _assert_deep_equal(actual, snapshot, path=name)
+        # Re-strip the loaded snapshot so older fixtures (which still contain volatile
+        # numeric arrays) compare cleanly against the stripped `actual`.
+        _assert_deep_equal(actual, _strip_volatile(snapshot), path=name)
 
     def test_attendance_trend_snapshot(self, seeded_df):
         self._run_snapshot(plot_attendance_trend, seeded_df, "attendance_trend", data_state="cleaned")

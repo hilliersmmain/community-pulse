@@ -1,10 +1,6 @@
 {
   "data": [
     {
-      "customdata": {
-        "bdata": "AgAHABUAGgAnACwANAA/AEQAUABWAFwAaQBtAHYAfACJAJEAmQCeAKgAtAC4AMAAxwA=",
-        "dtype": "i2"
-      },
       "hovertemplate": "<b>Month:</b> %{x}<br><b>New Members:</b> %{y}<br><b>Cumulative:</b> %{customdata}<br><extra></extra>",
       "line": {
         "color": "#0072B2",
@@ -16,38 +12,7 @@
       },
       "mode": "lines+markers",
       "name": "New Members",
-      "type": "scatter",
-      "x": [
-        "2024-04",
-        "2024-05",
-        "2024-06",
-        "2024-07",
-        "2024-08",
-        "2024-09",
-        "2024-10",
-        "2024-11",
-        "2024-12",
-        "2025-01",
-        "2025-02",
-        "2025-03",
-        "2025-04",
-        "2025-05",
-        "2025-06",
-        "2025-07",
-        "2025-08",
-        "2025-09",
-        "2025-10",
-        "2025-11",
-        "2025-12",
-        "2026-01",
-        "2026-02",
-        "2026-03",
-        "2026-04"
-      ],
-      "y": {
-        "bdata": "AgUOBQ0FCAsFDAYGDQQJBg0ICAUKDAQIBw==",
-        "dtype": "i1"
-      }
+      "type": "scatter"
     },
     {
       "hovertemplate": "<b>Trend:</b> %{y:.1f}<extra></extra>",
@@ -58,38 +23,7 @@
       },
       "mode": "lines",
       "name": "Trend Line",
-      "type": "scatter",
-      "x": [
-        "2024-04",
-        "2024-05",
-        "2024-06",
-        "2024-07",
-        "2024-08",
-        "2024-09",
-        "2024-10",
-        "2024-11",
-        "2024-12",
-        "2025-01",
-        "2025-02",
-        "2025-03",
-        "2025-04",
-        "2025-05",
-        "2025-06",
-        "2025-07",
-        "2025-08",
-        "2025-09",
-        "2025-10",
-        "2025-11",
-        "2025-12",
-        "2026-01",
-        "2026-02",
-        "2026-03",
-        "2026-04"
-      ],
-      "y": {
-        "bdata": "KM8lkDWMHkDhYEFJx6ceQJryXAJZwx5AU4R4u+reHkAMFpR0fPoeQManry0OFh9AfznL5p8xH0A4y+afMU0fQPFcAlnDaB9Aqu4dElWEH0BjgDnL5p8fQBwSVYR4ux9A1aNwPQrXH0CONYz2m/IfQKTj09cWByBAgKxhtN8UIEBdde+QqCIgQDk+fW1xMCBAFgcLSjo+IEDyz5gmA0wgQM+YJgPMWSBArGG035RnIECIKkK8XXUgQGXzz5gmgyBAQbxdde+QIEA=",
-        "dtype": "f8"
-      }
+      "type": "scatter"
     }
   ],
   "layout": {
