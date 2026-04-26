@@ -219,11 +219,10 @@ def main() -> None:
             "tests",
             "-v",
             "--tb=short",
-            "--cov=utils",
-            "--cov=community_pulse",
+            "--cov",
             "--cov-report=term",
             "--cov-report=xml",
-            "--cov-fail-under=55",
+            "--cov-fail-under=70",
         ],
     )
     if args.localhost_check:

@@ -60,7 +60,7 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          pytest --cov=utils --cov=community_pulse --cov-report=term --cov-report=xml --cov-fail-under=55
+          pytest --cov --cov-report=term --cov-report=xml --cov-fail-under=70
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.11'

@@ -94,4 +94,4 @@ omit = ["*/tests/*", "*/test_*.py"]
 precision = 2
 show_missing = true
 skip_covered = false
-fail_under = 55
+fail_under = 70
