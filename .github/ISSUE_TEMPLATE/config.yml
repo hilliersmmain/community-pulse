@@ -4,5 +4,5 @@ contact_links:
     url: https://community-pulse.streamlit.app/
     about: Try the live deployment before filing a bug.
   - name: General questions
-    url: https://github.com/hilliersmmain/community_pulse/discussions
+    url: https://github.com/hilliersmmain/community-pulse/discussions
     about: Ask questions or share ideas in Discussions.
