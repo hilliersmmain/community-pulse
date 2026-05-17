@@ -1,5 +1,5 @@
 streamlit>=1.52.2
-pandas==2.2.2
+pandas==2.3.3
 plotly>=6.5.0
 numpy==1.26.4
 faker>=39.0.0
