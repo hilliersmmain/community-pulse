@@ -57,7 +57,7 @@ command grep -rn 'github.com/hilliersmmain/community_pulse' . --exclude-dir=venv
 ```
 
 Fix `pyproject.toml` first and commit that on its own. Then report what the grep found and
-ask Sam whether the other six files are in scope before touching them — `CHANGELOG.md`'s
+ask the maintainer whether the other six files are in scope before touching them — `CHANGELOG.md`'s
 release links and `docs/DEVELOPMENT.md`'s clone command are reader-facing in a different way
 from a metadata block, and `docs/GITHUB_OPTIMIZATION.md` is partly a document *about* badge
 markup rather than live links.
@@ -69,7 +69,7 @@ Working notes for this repo:
   `PYTHONDONTWRITEBYTECODE=1 ./venv/bin/pytest -q -p no:cacheprovider`.
 - `CLAUDE.md` and `.claude/` are gitignored here on purpose, so read `CLAUDE.md` for the
   project rules but expect it never to appear in a diff.
-- Commit locally on `main`. **Do not push.** This is a public repo under Sam's real name;
+- Commit locally on `main`. **Do not push.** This is a public repo under the maintainer's real name;
   pushing is outward-facing and needs his explicit say-so in the session.
 - When the job is genuinely finished, `git mv Prompts/fix-pyproject-repo-urls.md
   Prompts/Archived/` as part of finishing, and include it in the commit.
