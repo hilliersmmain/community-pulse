@@ -4,7 +4,15 @@ import os
 import tempfile
 import pytest
 import pandas as pd
-from utils.data_generator import generate_messy_data, EVENT_CHOICES
+from datetime import date, datetime, time, timedelta
+from utils.data_generator import (
+    DataGenerator,
+    generate_messy_data,
+    EVENT_CHOICES,
+    JOIN_DATE_SPAN,
+    LAST_LOGIN_SPAN,
+    REGISTRATION_DATE_SPAN,
+)
 
 
 class TestGenerateMessyData:
@@ -95,3 +103,36 @@ class TestGenerateMessyData:
         has_upper = df["Name"].str.isupper().any()
         has_lower = df["Name"].str.islower().any()
         assert has_upper or has_lower
+
+
+class TestReferenceDate:
+    """Generated dates are anchored on ``reference_date``, never on the wall clock."""
+
+    @staticmethod
+    def _date_offsets(df: pd.DataFrame, reference_date: date) -> list:
+        # Join_Date is partly messed into strings; compare only the rows left as dates.
+        return [(value - reference_date).days if isinstance(value, date) else None for value in df["Join_Date"]]
+
+    def test_dates_fall_inside_windows_ending_at_reference_date(self):
+        reference_date = date(2020, 1, 15)
+        df = DataGenerator(seed=3, reference_date=reference_date).generate(num_records=300, messiness_level="low")
+
+        join_dates = [value for value in df["Join_Date"] if isinstance(value, date)]
+        assert join_dates
+        assert all(reference_date - JOIN_DATE_SPAN <= value <= reference_date for value in join_dates)
+
+        registration_dates = df["Registration_Date"].dropna()
+        assert len(registration_dates) > 0
+        assert all(reference_date - REGISTRATION_DATE_SPAN <= value <= reference_date for value in registration_dates)
+
+        anchor = datetime.combine(reference_date, time.min)
+        last_logins = df["Last_Login"].dropna()
+        assert all(anchor - LAST_LOGIN_SPAN <= value <= anchor for value in last_logins)
+
+    def test_same_seed_gives_same_offsets_for_any_reference_date(self):
+        first, second = date(2021, 3, 10), date(2026, 4, 26)
+        df_first = DataGenerator(seed=42, reference_date=first).generate(num_records=200, messiness_level="low")
+        df_second = DataGenerator(seed=42, reference_date=second).generate(num_records=200, messiness_level="low")
+
+        assert self._date_offsets(df_first, first) == self._date_offsets(df_second, second)
+        assert df_first["Event_Attendance"].equals(df_second["Event_Attendance"])

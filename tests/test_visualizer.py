@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import plotly.utils
 
@@ -27,6 +27,9 @@ from utils.visualizer import (
 # ---------------------------------------------------------------------------
 
 SNAPSHOTS_DIR = Path(__file__).parent / "snapshots"
+# The date the committed snapshots were recorded (d390650, 2026-04-26). Seeded data is
+# generated as of this date, so the snapshots compare equal on any day they run.
+SNAPSHOT_REFERENCE_DATE = date(2026, 4, 26)
 
 
 _VOLATILE_TRACE_KEYS = ("x", "y", "customdata", "values", "labels")
@@ -45,10 +48,10 @@ def _strip_volatile(d: dict) -> dict:
        ``values``, ``labels``).  These are derived from the seeded DataGenerator
        output, but ``random.choice`` / ``np.random.choice`` with the same seed
        can produce different sequences across Python/numpy versions, leaking
-       version drift into the snapshot.  The total-count text in titles and
-       annotations is stable (verified across CI matrix), so structural keys
-       — trace types, colors, hovertemplates, layout shapes, titles,
-       annotations — still get compared.
+       version drift into the snapshot.  The summary text in titles and
+       annotations is stable once the fixture's dates are pinned (see
+       ``SNAPSHOT_REFERENCE_DATE``), so structural keys — trace types, colors,
+       hovertemplates, layout shapes, titles, annotations — still get compared.
 
     Any value that is itself a dict containing a Plotly-encoded ``bdata`` field
     (the binary-array format used since Plotly 6.x) is also dropped, since the
@@ -365,7 +368,11 @@ class TestChartSnapshots:
 
     Each test compares ``fig.to_dict()`` against a JSON fixture stored in
     ``tests/snapshots/<chart_name>.json``.  Fixtures are generated from
-    deterministic input data produced by ``DataGenerator(seed=42)``.
+    deterministic input data produced by
+    ``DataGenerator(seed=42, reference_date=SNAPSHOT_REFERENCE_DATE)``.  The seed
+    alone is not enough: generated dates count back from the reference date, and
+    with the wall clock as the reference the monthly buckets behind the
+    attendance-trend annotation shift from one day to the next.
 
     Regeneration policy
     -------------------
@@ -395,8 +402,9 @@ class TestChartSnapshots:
 
     @pytest.fixture
     def seeded_df(self):
-        """Return a reproducible 200-row DataFrame via DataGenerator(seed=42)."""
-        return DataGenerator(seed=42).generate(num_records=200, messiness_level="low")
+        """Return a reproducible 200-row DataFrame via DataGenerator(seed=42), dates pinned."""
+        generator = DataGenerator(seed=42, reference_date=SNAPSHOT_REFERENCE_DATE)
+        return generator.generate(num_records=200, messiness_level="low")
 
     def _run_snapshot(self, chart_fn, df, name: str, **kwargs):
         """Shared helper: call chart_fn, compare/write snapshot, skip if new."""
