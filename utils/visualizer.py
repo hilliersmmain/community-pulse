@@ -56,7 +56,10 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
     if len(temp_df) == 0:
         return go.Figure()
 
-    trend = temp_df.groupby(temp_df["Join_Date"].dt.to_period("M")).size().reset_index(name="New Members")
+    monthly = temp_df.groupby(temp_df["Join_Date"].dt.to_period("M")).size()
+    # Months with no joins count as zero, so the axis, the trend fit and the stats follow the calendar.
+    months = pd.period_range(monthly.index.min(), monthly.index.max(), freq="M")
+    trend = monthly.reindex(months, fill_value=0).rename_axis("Join_Date").reset_index(name="New Members")
     trend["Join_Date"] = trend["Join_Date"].astype(str)
 
     stats = _calculate_stats(trend["New Members"])
@@ -118,17 +121,16 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
         plot_bgcolor="rgba(240, 240, 240, 0.5)",
         showlegend=True,
         legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
-        annotations=[
-            dict(
-                text=f'Mean: {stats["mean"]:.1f} | Median: {stats["median"]:.1f} | Total: {trend["New Members"].sum()}',
-                xref="paper",
-                yref="paper",
-                x=0.5,
-                y=-0.15,
-                showarrow=False,
-                font=dict(size=12, color="gray"),
-            )
-        ],
+    )
+    # add_annotation, not update_layout(annotations=...), which would overwrite the mean line's label.
+    fig.add_annotation(
+        text=f'Mean: {stats["mean"]:.1f} | Median: {stats["median"]:.1f} | Total: {trend["New Members"].sum()}',
+        xref="paper",
+        yref="paper",
+        x=0.5,
+        y=-0.15,
+        showarrow=False,
+        font=dict(size=12, color="gray"),
     )
 
     fig = _attach_export(fig)
@@ -235,18 +237,17 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
         bargap=0.1,
         plot_bgcolor="rgba(240, 240, 240, 0.5)",
         hovermode="closest",
-        annotations=[
-            dict(
-                text=f'Mean: {stats["mean"]:.1f} | Median: {stats["median"]:.1f} | '
-                f'Std Dev: {stats["std"]:.1f} | Range: {stats["min"]:.0f}-{stats["max"]:.0f}',
-                xref="paper",
-                yref="paper",
-                x=0.5,
-                y=-0.15,
-                showarrow=False,
-                font=dict(size=12, color="gray"),
-            )
-        ],
+    )
+    # add_annotation, not update_layout(annotations=...), which would overwrite the line labels.
+    fig.add_annotation(
+        text=f'Mean: {stats["mean"]:.1f} | Median: {stats["median"]:.1f} | '
+        f'Std Dev: {stats["std"]:.1f} | Range: {stats["min"]:.0f}-{stats["max"]:.0f}',
+        xref="paper",
+        yref="paper",
+        x=0.5,
+        y=-0.15,
+        showarrow=False,
+        font=dict(size=12, color="gray"),
     )
 
     fig = _attach_export(fig)

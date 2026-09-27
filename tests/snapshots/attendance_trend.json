@@ -29,6 +29,16 @@
   "layout": {
     "annotations": [
       {
+        "showarrow": false,
+        "text": "Mean: 8.0",
+        "x": 1,
+        "xanchor": "left",
+        "xref": "x domain",
+        "y": 7.96,
+        "yanchor": "middle",
+        "yref": "y"
+      },
+      {
         "font": {
           "color": "gray",
           "size": 12
@@ -36,10 +46,8 @@
         "showarrow": false,
         "text": "Mean: 8.0 | Median: 8.0 | Total: 199",
         "x": 0.5,
-        "xanchor": "left",
         "xref": "paper",
         "y": -0.15,
-        "yanchor": "middle",
         "yref": "paper"
       }
     ],

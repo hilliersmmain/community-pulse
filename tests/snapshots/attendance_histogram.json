@@ -17,18 +17,24 @@
   "layout": {
     "annotations": [
       {
-        "font": {
-          "color": "gray",
-          "size": 12
-        },
         "showarrow": false,
-        "text": "Mean: 8.9 | Median: 8.0 | Std Dev: 6.0 | Range: 0-19",
-        "x": 0.5,
+        "text": "Mean: 8.9",
+        "x": 8.856435643564357,
         "xanchor": "center",
-        "xref": "paper",
-        "y": -0.15,
+        "xref": "x",
+        "y": 1,
         "yanchor": "bottom",
-        "yref": "paper"
+        "yref": "y domain"
+      },
+      {
+        "showarrow": false,
+        "text": "Median: 8.0",
+        "x": 8.0,
+        "xanchor": "center",
+        "xref": "x",
+        "y": 0,
+        "yanchor": "top",
+        "yref": "y domain"
       },
       {
         "font": {
@@ -38,10 +44,8 @@
         "showarrow": false,
         "text": "Mean: 8.9 | Median: 8.0 | Std Dev: 6.0 | Range: 0-19",
         "x": 0.5,
-        "xanchor": "center",
         "xref": "paper",
         "y": -0.15,
-        "yanchor": "top",
         "yref": "paper"
       }
     ],
