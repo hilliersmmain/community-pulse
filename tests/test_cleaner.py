@@ -211,6 +211,27 @@ class TestDataCleaner:
         cleaner.remove_duplicates()
         assert len(cleaner.clean_df) == 2
 
+    def test_remove_duplicates_keeps_every_row_missing_an_email(self):
+        """Missing emails are not a match for each other (they used to become the string 'None')."""
+        df = pd.DataFrame({"Name": ["A", "B", "C", "D"], "Email": ["a@x.com", np.nan, np.nan, "A@x.com"]})
+        cleaner = DataCleaner(df)
+        cleaner.remove_duplicates()
+        assert cleaner.clean_df["Name"].tolist() == ["A", "B", "C"]
+
+    def test_standardize_names_leaves_missing_names_missing(self):
+        df = pd.DataFrame({"Name": ["john doe", None, np.nan]})
+        cleaner = DataCleaner(df)
+        cleaner.standardize_names()
+        assert cleaner.clean_df["Name"][0] == "John Doe"
+        assert cleaner.clean_df["Name"][1:].isna().all()
+
+    def test_handle_missing_values_treats_unreadable_attendance_as_missing(self):
+        df = pd.DataFrame({"Event_Attendance": ["5", "unknown", None, 3]})
+        cleaner = DataCleaner(df)
+        cleaner.handle_missing_values()
+        assert cleaner.clean_df["Event_Attendance"].tolist() == [5, 0, 0, 3]
+        assert "Filled 2 missing" in cleaner.log[-1]
+
     def test_fix_emails_at_replacement(self):
         """Test that 'user at domain.com' becomes 'user@domain.com'."""
         df = pd.DataFrame({"Email": ["john at test.com", "valid@test.com"]})

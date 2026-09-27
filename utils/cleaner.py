@@ -44,8 +44,10 @@ class DataCleaner:
         initial_count = len(self.clean_df)
 
         if "Email" in self.clean_df.columns:
-            temp_email = self.clean_df["Email"].astype(str).str.lower()
-            self.clean_df = self.clean_df[~temp_email.duplicated(keep="first")]
+            emails = self.clean_df["Email"]
+            # A missing email matches nothing, so those rows are never dropped as duplicates.
+            temp_email = emails.astype(str).str.lower().where(emails.notna())
+            self.clean_df = self.clean_df[~(temp_email.duplicated(keep="first") & temp_email.notna())]
         else:
             self.clean_df = self.clean_df.drop_duplicates()
 
@@ -55,7 +57,8 @@ class DataCleaner:
     def standardize_names(self) -> None:
         """Converts names to Title Case."""
         if "Name" in self.clean_df.columns:
-            self.clean_df["Name"] = self.clean_df["Name"].astype(str).str.title()
+            names = self.clean_df["Name"]
+            self.clean_df["Name"] = names.astype(str).str.title().where(names.notna(), names)
             self.log.append("Standardized Names to Title Case.")
 
     def fix_emails(self) -> None:
@@ -99,10 +102,11 @@ class DataCleaner:
             self.log.append("Standardized Dates. No missing values found or mode undefined.")
 
     def handle_missing_values(self) -> None:
-        """Fills missing numeric values."""
+        """Fills missing numeric values; a value that isn't a number counts as missing."""
         if "Event_Attendance" in self.clean_df.columns:
-            n_att = self.clean_df["Event_Attendance"].isna().sum()
-            self.clean_df["Event_Attendance"] = self.clean_df["Event_Attendance"].fillna(0)
+            attendance = pd.to_numeric(self.clean_df["Event_Attendance"], errors="coerce")
+            n_att = attendance.isna().sum()
+            self.clean_df["Event_Attendance"] = attendance.fillna(0)
             self.log.append(f"Filled {n_att} missing Attendance records with 0.")
 
 

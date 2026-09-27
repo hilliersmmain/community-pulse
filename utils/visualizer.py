@@ -192,13 +192,15 @@ def plot_attendance_histogram(df: pd.DataFrame, data_state: str = "cleaned") -> 
     if "Event_Attendance" not in df.columns:
         return go.Figure()
 
-    stats = _calculate_stats(df["Event_Attendance"])
+    # Uploaded data can hold text here; plot only the values that are numbers.
+    attendance = pd.to_numeric(df["Event_Attendance"], errors="coerce").dropna()
+    stats = _calculate_stats(attendance)
 
     fig = go.Figure()
 
     fig.add_trace(
         go.Histogram(
-            x=df["Event_Attendance"],
+            x=attendance,
             nbinsx=DEFAULT_HISTOGRAM_BINS,
             name="Member Count",
             marker=dict(color=COLOR_PRIMARY, line=dict(color="white", width=1)),

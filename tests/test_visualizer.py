@@ -284,6 +284,13 @@ class TestVisualizerEnhancements:
         annotation_text = " ".join([ann.text for ann in fig.layout.annotations])
         assert any(stat in annotation_text.lower() for stat in ["mean", "median", "std"])
 
+    def test_plot_attendance_histogram_ignores_unreadable_attendance(self):
+        # An uploaded CSV can carry text in Event_Attendance; it used to raise TypeError.
+        df = pd.DataFrame({"Event_Attendance": ["5", "unknown", 3]})
+        fig = plot_attendance_histogram(df, data_state="raw")
+        assert list(fig.data[0].x) == [5, 3]
+        assert "Mean: 4.0" in fig.layout.annotations[-1].text
+
     def test_plot_attendance_histogram_tooltips(self, sample_member_data):
 
         fig = plot_attendance_histogram(sample_member_data, data_state="cleaned")
