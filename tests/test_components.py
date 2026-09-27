@@ -495,5 +495,17 @@ class TestSidebar:
         assert records == [{"Name": "Ann", "Join_Date": "2025-06-01T00:00:00.000"}]
 
 
+def test_no_deprecated_use_container_width():
+    """Streamlit deprecated use_container_width for width= and schedules its removal;
+    a release without it would raise TypeError on the first render that passes it."""
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    sources = [os.path.join(root, "app.py")]
+    for package in ("components", "utils", "community_pulse"):
+        package_dir = os.path.join(root, package)
+        sources += [os.path.join(package_dir, name) for name in os.listdir(package_dir) if name.endswith(".py")]
+    offenders = [path for path in sources if "use_container_width" in open(path, encoding="utf-8").read()]
+    assert offenders == []
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

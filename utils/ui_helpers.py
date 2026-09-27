@@ -101,19 +101,19 @@ def show_welcome_modal():
         col_dismiss, col_tutorial, col_start = st.columns([1, 1, 1])
 
         with col_dismiss:
-            if st.button("Dismiss", use_container_width=True):
+            if st.button("Dismiss", width="stretch"):
                 st.session_state["show_welcome"] = False
                 st.rerun()
 
         with col_tutorial:
-            if st.button("Start Tutorial", type="secondary", use_container_width=True):
+            if st.button("Start Tutorial", type="secondary", width="stretch"):
                 st.session_state["show_welcome"] = False
                 st.session_state["tutorial_mode"] = True
                 st.session_state["tutorial_step"] = 0
                 st.rerun()
 
         with col_start:
-            if st.button("Get Started", type="primary", use_container_width=True):
+            if st.button("Get Started", type="primary", width="stretch"):
                 st.session_state["show_welcome"] = False
                 st.rerun()
 
@@ -152,7 +152,7 @@ def show_empty_state(
     if action_label and action_callback:
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
-            if st.button(action_label, type="primary", use_container_width=True):
+            if st.button(action_label, type="primary", width="stretch"):
                 action_callback()
 
 

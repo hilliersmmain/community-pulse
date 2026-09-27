@@ -17,4 +17,4 @@ def render_explorer_tab(active_df: pd.DataFrame, state_label: str, metrics: Dict
     metric_col4.metric("Overall Health", f"{metrics['overall_score']}%", help="Composite health score")
 
     st.divider()
-    st.dataframe(active_df, use_container_width=True)
+    st.dataframe(active_df, width="stretch")
