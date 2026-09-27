@@ -18,6 +18,7 @@ from utils.ui_helpers import (
     show_success_message,
     show_error_message,
     get_contextual_message,
+    format_score_delta,
 )
 
 
@@ -112,7 +113,7 @@ def render_preparation_tab(raw_df: pd.DataFrame) -> None:
             c2.metric(
                 "Data Health Score",
                 f"{clean_score}%",
-                delta=f"+{improvement:.1f}%",
+                delta=format_score_delta(improvement),
                 help="Overall data quality improvement after cleaning",
             )
 

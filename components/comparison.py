@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from utils.health_metrics import get_health_metrics
+from utils.ui_helpers import format_score_delta
 
 
 def render_comparison(raw_df: pd.DataFrame) -> None:
@@ -23,6 +24,9 @@ def render_comparison(raw_df: pd.DataFrame) -> None:
             "After",
             clean_metrics["total_records"],
             delta=f"{delta_records}" if delta_records != 0 else "No change",
+            # "No change" is text, which Streamlit would draw as a green rise.
+            delta_color="normal" if delta_records != 0 else "off",
+            delta_arrow="auto" if delta_records != 0 else "off",
             help="Total records after cleaning",
         )
 
@@ -57,6 +61,6 @@ def render_comparison(raw_df: pd.DataFrame) -> None:
         st.metric(
             "After",
             f"{clean_metrics['overall_score']}%",
-            delta=f"+{improvement:.1f}%",
+            delta=format_score_delta(improvement),
             help="Overall health score after cleaning",
         )

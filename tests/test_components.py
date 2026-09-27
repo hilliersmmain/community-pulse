@@ -193,6 +193,41 @@ class TestComparison:
         assert str(records_pairs[0].value) == "4"
         assert str(records_pairs[1].value) == "3"
 
+    WORSE_SCAFFOLD = textwrap.dedent("""
+        import pandas as pd
+        import streamlit as st
+        from components.comparison import render_comparison
+
+        raw_df = pd.DataFrame({
+            "Name": ["Alice", "Bob", "Carol"],
+            "Email": ["a@x.com", "b@x.com", "c@x.com"],
+            "Join_Date": ["2024-01-01", "2024-01-02", "2024-02-15"],
+        })
+        st.session_state["clean_df"] = raw_df.assign(Email=["a at x", "b at x", "c@x.com"])
+        render_comparison(raw_df)
+        """)
+
+    def test_comparison_shows_a_lower_score_as_a_drop(self):
+        from streamlit.proto.Metric_pb2 import Metric as MetricProto
+
+        at = AppTest.from_string(self.WORSE_SCAFFOLD)
+        at.run()
+        assert at.exception == []
+        health_after = [m for m in at.metric if m.label == "After"][-1]
+        # Used to render as "+-7.0%", which Streamlit draws as a green up arrow.
+        assert health_after.delta.startswith("-")
+        assert health_after.proto.direction == MetricProto.MetricDirection.DOWN
+
+    def test_comparison_unchanged_record_count_shows_no_arrow(self):
+        from streamlit.proto.Metric_pb2 import Metric as MetricProto
+
+        at = AppTest.from_string(self.WORSE_SCAFFOLD)
+        at.run()
+        records_after = [m for m in at.metric if m.label == "After"][0]
+        assert records_after.delta == "No change"
+        assert records_after.proto.direction == MetricProto.MetricDirection.NONE
+        assert records_after.proto.color == MetricProto.MetricColor.GRAY
+
 
 # ---------------------------------------------------------------------------
 # components/tab_preparation.py — the headline component test for this task

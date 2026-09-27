@@ -156,6 +156,11 @@ def show_empty_state(
                 action_callback()
 
 
+def format_score_delta(change: float) -> str:
+    """Format a health-score change as a signed percentage: "+1.5%", "-0.2%"."""
+    return f"{change:+.1f}%"
+
+
 def show_info_tooltip(text: str, tooltip: str) -> str:
     """Create inline text with a tooltip icon."""
     return f"{text} :gray[ⓘ]"
