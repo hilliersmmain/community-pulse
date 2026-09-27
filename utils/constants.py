@@ -46,6 +46,10 @@ HEALTH_SCORE_WEIGHT_COMPLETENESS = 0.4
 HEALTH_SCORE_WEIGHT_UNIQUENESS = 0.3
 HEALTH_SCORE_WEIGHT_FORMATTING = 0.3
 
+# Date formats tried in order when parsing a date column: ISO first, then the two formats
+# the data generator writes. Slash dates are read month-first, dash dates day-first.
+DATE_FORMATS = ["ISO8601", "%m/%d/%Y", "%d-%m-%Y"]
+
 CUSTOM_CSS = """
 <style>
     .main h1 {
