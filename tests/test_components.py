@@ -451,6 +451,14 @@ class TestSidebar:
         all_text = " ".join(c.value for c in at.caption)
         assert "5 step(s)" in all_text or any("5 step(s)" in c for c in captions)
 
+    def test_json_export_writes_dates_as_iso_strings(self):
+        import json
+        from components.sidebar import export_json
+
+        df = pd.DataFrame({"Name": ["Ann"], "Join_Date": pd.to_datetime(["2025-06-01"])})
+        records = json.loads(export_json(df))
+        assert records == [{"Name": "Ann", "Join_Date": "2025-06-01T00:00:00.000"}]
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

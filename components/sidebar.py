@@ -31,6 +31,11 @@ from utils.constants import (
 )
 
 
+def export_json(df: pd.DataFrame) -> str:
+    """Serialize data for the JSON download, with dates as ISO 8601 strings rather than epoch ms."""
+    return df.to_json(orient="records", indent=2, date_format="iso")
+
+
 def render_sidebar() -> None:
     """Render the complete sidebar with all controls."""
     st.sidebar.header("Data Controls")
@@ -234,7 +239,7 @@ def render_sidebar() -> None:
         )
 
         # JSON Export
-        json_data = export_df.to_json(orient="records", indent=2)
+        json_data = export_json(export_df)
         st.sidebar.download_button(
             label=f"Download JSON ({export_label})",
             data=json_data,
