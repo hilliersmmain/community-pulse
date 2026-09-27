@@ -13,6 +13,7 @@ KEY_DATA_LOADED_AT = "data_loaded_at"
 KEY_DATA_GENERATED_AT = "data_generated_at"
 KEY_CLEANING_COMPLETED_AT = "cleaning_completed_at"
 KEY_CLEANING_DURATION = "cleaning_duration"
+KEY_UPLOADED_FILE_ID = "uploaded_file_id"
 
 
 def reset_clean_state() -> None:

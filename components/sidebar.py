@@ -15,6 +15,7 @@ from utils.session_keys import (
     KEY_DATA_LOADED_AT,
     KEY_DATA_GENERATED_AT,
     KEY_CLEANING_COMPLETED_AT,
+    KEY_UPLOADED_FILE_ID,
     reset_clean_state,
 )
 from utils.constants import (
@@ -30,6 +31,29 @@ from utils.constants import (
     MAX_UPLOAD_SIZE_MB,
 )
 
+CLEANING_STEP_CHECKBOXES = (
+    ("standardize_names", "Standardize Names", "Convert names to Title Case (e.g., 'john doe' → 'John Doe')"),
+    ("fix_emails", "Fix Email Formats", "Fix invalid emails (e.g., 'user at domain.com' → 'user@domain.com')"),
+    ("remove_duplicates", "Remove Duplicates", "Remove duplicate rows based on Email and Name"),
+    ("clean_dates", "Clean Dates", "Standardize date formats to YYYY-MM-DD"),
+    ("handle_missing_values", "Handle Missing Values", "Fill missing attendance values with 0"),
+)
+
+
+def _store_upload(file_id: str, upload_df: pd.DataFrame) -> None:
+    """Make a validated upload the raw data, once per uploaded file.
+
+    The uploader hands back the same file on every rerun while it stays in the widget;
+    saving it again each time would clear the cleaned state after every interaction.
+    """
+    if st.session_state.get(KEY_UPLOADED_FILE_ID) == file_id:
+        return
+    ensure_data_dir()
+    save_csv(upload_df, DATA_PATH)
+    reset_clean_state()
+    st.session_state[KEY_DATA_LOADED_AT] = datetime.now()
+    st.session_state[KEY_UPLOADED_FILE_ID] = file_id
+
 
 def export_json(df: pd.DataFrame) -> str:
     """Serialize data for the JSON download, with dates as ISO 8601 strings rather than epoch ms."""
@@ -40,8 +64,10 @@ def render_sidebar() -> None:
     """Render the complete sidebar with all controls."""
     st.sidebar.header("Data Controls")
 
-    st.session_state.setdefault("num_records", DEFAULT_NUM_RECORDS)
-    st.session_state.setdefault("messiness_level", DEFAULT_MESSINESS)
+    # Both are widget keys. Streamlit drops a widget's key on any run that doesn't render the
+    # widget (while "Upload CSV" is selected), so write them back each run to keep the choice.
+    st.session_state["num_records"] = st.session_state.get("num_records", DEFAULT_NUM_RECORDS)
+    st.session_state["messiness_level"] = st.session_state.get("messiness_level", DEFAULT_MESSINESS)
 
     with st.sidebar.expander("Quick Stats", expanded=True):
         stats_df = None
@@ -83,6 +109,7 @@ def render_sidebar() -> None:
         options=["Generate Sample", "Upload CSV"],
         help="Choose how to load data into the dashboard",
         horizontal=True,
+        key="data_source",
     )
 
     if data_source == "Generate Sample":
@@ -92,19 +119,17 @@ def render_sidebar() -> None:
             "Number of Records",
             min_value=MIN_RECORDS,
             max_value=MAX_RECORDS,
-            value=st.session_state["num_records"],
             step=RECORDS_STEP,
+            key="num_records",
             help="Select how many sample records to generate. More records = more realistic analysis, but slower processing.",
         )
-        st.session_state["num_records"] = num_records
 
         messiness_level = st.sidebar.selectbox(
             "Messiness Level",
             options=MESSINESS_OPTIONS,
-            index=MESSINESS_OPTIONS.index(st.session_state["messiness_level"]),
+            key="messiness_level",
             help="Control data quality simulation:\n\u2022 Low: 3% duplicates, 2% errors (clean CRM)\n\u2022 Medium: 10% duplicates, 5% errors (typical export)\n\u2022 High: 20% duplicates, 15% errors (legacy system)",
         )
-        st.session_state["messiness_level"] = messiness_level
 
         if st.sidebar.button("Generate New Data", type="primary", help="Create fresh sample data"):
             with show_loading_message(get_contextual_message("loading_data")):
@@ -143,10 +168,7 @@ def render_sidebar() -> None:
                         for error in validation.errors:
                             st.sidebar.error(error)
                     else:
-                        ensure_data_dir()
-                        save_csv(upload_df, DATA_PATH)
-                        reset_clean_state()
-                        st.session_state[KEY_DATA_LOADED_AT] = datetime.now()
+                        _store_upload(uploaded_file.file_id, upload_df)
                         st.sidebar.success(f"Uploaded {len(upload_df)} records successfully to `{DATA_DIR}`.")
             except Exception as e:
                 st.sidebar.error("Error reading file. Please ensure it is a valid CSV.")
@@ -163,35 +185,13 @@ def render_sidebar() -> None:
     st.session_state.setdefault(KEY_CLEANING_STEPS, CLEANING_STEPS_DEFAULT.copy())
 
     with st.sidebar.expander("Configure Cleaning Steps", expanded=False):
-        st.session_state[KEY_CLEANING_STEPS]["standardize_names"] = st.checkbox(
-            "Standardize Names",
-            value=st.session_state[KEY_CLEANING_STEPS]["standardize_names"],
-            help="Convert names to Title Case (e.g., 'john doe' \u2192 'John Doe')",
-        )
-
-        st.session_state[KEY_CLEANING_STEPS]["fix_emails"] = st.checkbox(
-            "Fix Email Formats",
-            value=st.session_state[KEY_CLEANING_STEPS]["fix_emails"],
-            help="Fix invalid emails (e.g., 'user at domain.com' \u2192 'user@domain.com')",
-        )
-
-        st.session_state[KEY_CLEANING_STEPS]["remove_duplicates"] = st.checkbox(
-            "Remove Duplicates",
-            value=st.session_state[KEY_CLEANING_STEPS]["remove_duplicates"],
-            help="Remove duplicate rows based on Email and Name",
-        )
-
-        st.session_state[KEY_CLEANING_STEPS]["clean_dates"] = st.checkbox(
-            "Clean Dates",
-            value=st.session_state[KEY_CLEANING_STEPS]["clean_dates"],
-            help="Standardize date formats to YYYY-MM-DD",
-        )
-
-        st.session_state[KEY_CLEANING_STEPS]["handle_missing_values"] = st.checkbox(
-            "Handle Missing Values",
-            value=st.session_state[KEY_CLEANING_STEPS]["handle_missing_values"],
-            help="Fill missing attendance values with 0",
-        )
+        steps = st.session_state[KEY_CLEANING_STEPS]
+        for step, label, help_text in CLEANING_STEP_CHECKBOXES:
+            # A keyed checkbox seeded once; passing value= each run would make every
+            # change give the widget a new identity, and the next change would be lost.
+            widget_key = f"cleaning_step_{step}"
+            st.session_state.setdefault(widget_key, steps[step])
+            steps[step] = st.checkbox(label, key=widget_key, help=help_text)
 
     # Show preview of selected steps
     selected_steps = [k for k, v in st.session_state[KEY_CLEANING_STEPS].items() if v]
@@ -270,10 +270,14 @@ def render_sidebar() -> None:
 
     # Reset to Raw Data button
     if st.session_state.get(KEY_CLEANED):
-        if st.sidebar.button("Reset to Raw Data", help="Clear cleaned data and return to raw state"):
-            reset_clean_state()
-            st.sidebar.success("Reset to raw data!")
-            st.rerun()
+        # A callback runs before the next script run, so it can set view_state before the
+        # radio above claims that key; writing it after the radio renders raises.
+        st.sidebar.button(
+            "Reset to Raw Data",
+            help="Clear cleaned data and return to raw state",
+            key="reset_to_raw",
+            on_click=reset_clean_state,
+        )
 
     st.sidebar.divider()
 

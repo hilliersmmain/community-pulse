@@ -486,6 +486,73 @@ class TestSidebar:
         all_text = " ".join(c.value for c in at.caption)
         assert "5 step(s)" in all_text or any("5 step(s)" in c for c in captions)
 
+    def test_reset_to_raw_data_does_not_raise(self):
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.session_state["cleaned"] = True
+        at.session_state["clean_df"] = _sample_dataframe()
+        at.run()
+        at.button(key="reset_to_raw").click().run()
+        # Used to raise: `st.session_state.view_state` cannot be modified after the
+        # widget with key `view_state` is instantiated.
+        assert at.exception == []
+        assert at.session_state["cleaned"] is False
+        assert at.session_state["view_state"] == "raw"
+
+    def test_every_generation_setting_change_sticks(self):
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        # Keyless widgets used to drop every second change.
+        for records in (600, 700, 800):
+            at.slider(key="num_records").set_value(records).run()
+            assert at.session_state["num_records"] == records
+        for level in ("high", "low", "medium"):
+            at.selectbox(key="messiness_level").set_value(level).run()
+            assert at.session_state["messiness_level"] == level
+        for enabled in (False, True, False):
+            at.checkbox(key="cleaning_step_fix_emails").set_value(enabled).run()
+            assert at.session_state["cleaning_steps"]["fix_emails"] is enabled
+        assert at.exception == []
+
+    def test_generation_settings_survive_a_trip_to_upload_mode(self):
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        at.slider(key="num_records").set_value(700).run()
+        at.selectbox(key="messiness_level").set_value("high").run()
+        at.radio(key="data_source").set_value("Upload CSV").run()
+        at.radio(key="data_source").set_value("Generate Sample").run()
+        assert at.slider(key="num_records").value == 700
+        assert at.selectbox(key="messiness_level").value == "high"
+
+    def test_rerun_with_a_file_in_the_uploader_keeps_cleaned_state(self, tmp_path):
+        # AppTest cannot drive st.file_uploader, so the scaffold stands one in that returns
+        # the same upload on every run, as the real widget does while the file sits there.
+        script = textwrap.dedent(f"""
+            import io
+            import streamlit as st
+            import components.sidebar as sidebar
+            import utils.data_access as data_access
+
+            sidebar.DATA_PATH = {str(tmp_path / "data.csv")!r}
+            data_access.DATA_DIR = {str(tmp_path)!r}
+
+            class StubUpload(io.BytesIO):
+                file_id = "upload-1"
+                size = 100
+
+            CSV = b"Name,Email,Role,Join_Date,Event_Attendance\\nAnn,a@x.com,Member,2025-01-01,3\\n"
+            st.sidebar.file_uploader = lambda *args, **kwargs: StubUpload(CSV)
+            sidebar.render_sidebar()
+            """)
+        at = AppTest.from_string(script)
+        at.run()
+        at.radio(key="data_source").set_value("Upload CSV").run()
+        assert (tmp_path / "data.csv").exists()
+        at.session_state["cleaned"] = True  # as if "Run Cleaning Algorithms" was clicked
+        at.session_state["clean_df"] = _sample_dataframe()
+        at.run()
+        assert at.exception == []
+        assert at.session_state["cleaned"] is True
+
     def test_json_export_writes_dates_as_iso_strings(self):
         import json
         from components.sidebar import export_json
