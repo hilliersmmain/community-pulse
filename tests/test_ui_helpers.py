@@ -507,5 +507,13 @@ class TestNotificationHelpers:
         assert any("Try regenerating data" in m for m in info_messages)
 
 
+class TestFormatScoreDelta:
+    def test_signs_follow_the_change(self):
+        from utils.ui_helpers import format_score_delta
+
+        assert format_score_delta(1.5) == "+1.5%"
+        assert format_score_delta(-0.2) == "-0.2%"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
