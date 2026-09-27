@@ -284,6 +284,30 @@ class TestVisualizerEnhancements:
         annotation_text = " ".join([ann.text for ann in fig.layout.annotations])
         assert any(stat in annotation_text.lower() for stat in ["mean", "median", "std"])
 
+    def test_reference_line_labels_survive_the_stats_caption(self, sample_member_data):
+        # The caption used to be set with update_layout(annotations=[...]), which overwrote
+        # the Mean/Median line labels that add_hline/add_vline had just added.
+        trend = plot_attendance_trend(sample_member_data, data_state="cleaned")
+        trend_texts = [ann.text for ann in trend.layout.annotations]
+        assert len(trend_texts) == 2
+        assert trend_texts[0].startswith("Mean: ") and "|" not in trend_texts[0]
+        assert trend_texts[1].startswith("Mean: ") and "| Total: " in trend_texts[1]
+
+        histogram = plot_attendance_histogram(sample_member_data, data_state="cleaned")
+        histogram_texts = [ann.text for ann in histogram.layout.annotations]
+        assert len(histogram_texts) == 3
+        assert histogram_texts[0].startswith("Mean: ") and "|" not in histogram_texts[0]
+        assert histogram_texts[1].startswith("Median: ") and "|" not in histogram_texts[1]
+        assert "| Std Dev: " in histogram_texts[2]
+
+    def test_attendance_trend_counts_months_with_no_joins(self):
+        df = pd.DataFrame({"Join_Date": ["2025-01-10", "2025-01-20", "2025-04-05", "2025-05-01"]})
+        fig = plot_attendance_trend(df, data_state="cleaned")
+        # February and March had no joins; they used to vanish from the axis and the stats.
+        assert list(fig.data[0].x) == ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05"]
+        assert list(fig.data[0].y) == [2, 0, 0, 1, 1]
+        assert "Mean: 0.8 | Median: 1.0 | Total: 4" == fig.layout.annotations[-1].text
+
     def test_plot_attendance_histogram_ignores_unreadable_attendance(self):
         # An uploaded CSV can carry text in Event_Attendance; it used to raise TypeError.
         df = pd.DataFrame({"Event_Attendance": ["5", "unknown", 3]})
