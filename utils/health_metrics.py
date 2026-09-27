@@ -1,7 +1,6 @@
 """Data Health Metrics Module"""
 
 import logging
-import warnings
 import pandas as pd
 import re
 import streamlit as st
@@ -13,6 +12,7 @@ from utils.constants import (
     HEALTH_SCORE_WEIGHT_FORMATTING,
     HEALTH_SCORE_WEIGHT_UNIQUENESS,
 )
+from utils.date_parsing import parse_dates
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +49,7 @@ def _validate_date_series(s: pd.Series) -> float:
     if s.empty:
         return 1.0
     try:
-        # Suppress "Could not infer format" UserWarning for non-date strings like "Unknown".
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            parsed = pd.to_datetime(s, errors="coerce")
+        parsed = parse_dates(s)
         return float(parsed.notna().mean())
     except Exception:
         return 0.0

@@ -104,6 +104,36 @@ class TestDataCleaner:
         valid_dates = cleaner.clean_df["Join_Date"].dropna()
         assert len(valid_dates) >= 1
 
+    def test_clean_dates_reads_every_format_whatever_comes_first(self):
+        # As read back from the CSV: strings in the generator's three formats. pandas used
+        # to infer one format from the first value and turn the other two into NaT.
+        df = pd.DataFrame({"Join_Date": ["06/02/2025", "2025-01-15", "15-03-2025", "Unknown", "2024-12-01"]})
+        cleaner = DataCleaner(df)
+        cleaner.clean_dates()
+
+        parsed = cleaner.clean_df["Join_Date"]
+        assert parsed[0] == pd.Timestamp("2025-06-02")
+        assert parsed[1] == pd.Timestamp("2025-01-15")
+        assert parsed[2] == pd.Timestamp("2025-03-15")
+        assert parsed[4] == pd.Timestamp("2024-12-01")
+        assert "Imputed 1 missing/bad dates" in cleaner.log[-1]
+
+    def test_clean_dates_after_csv_round_trip_imputes_only_unknowns(self, tmp_path):
+        from datetime import date
+        from utils.data_generator import DataGenerator
+
+        path = tmp_path / "generated.csv"
+        DataGenerator(seed=7, reference_date=date(2026, 9, 1)).generate(
+            num_records=500, messiness_level="medium", save_path=str(path)
+        )
+        df = pd.read_csv(path)
+        n_unknown = int((df["Join_Date"] == "Unknown").sum())
+
+        cleaner = DataCleaner(df)
+        cleaner.clean_dates()
+
+        assert f"Imputed {n_unknown} missing/bad dates" in cleaner.log[-1]
+
     def test_handle_missing_values(self, sample_data_with_missing_values):
         cleaner = DataCleaner(sample_data_with_missing_values)
         cleaner.handle_missing_values()

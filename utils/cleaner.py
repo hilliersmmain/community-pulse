@@ -3,6 +3,8 @@ import re
 from typing import Optional, List
 from datetime import datetime
 
+from utils.date_parsing import parse_dates
+
 
 class DataCleaner:
     def __init__(self, df: pd.DataFrame):
@@ -83,7 +85,7 @@ class DataCleaner:
         if "Join_Date" not in self.clean_df.columns:
             return
 
-        self.clean_df["Join_Date"] = pd.to_datetime(self.clean_df["Join_Date"], errors="coerce")
+        self.clean_df["Join_Date"] = parse_dates(self.clean_df["Join_Date"])
 
         join_dates = self.clean_df["Join_Date"].copy()
         n_fixed = join_dates.isna().sum()

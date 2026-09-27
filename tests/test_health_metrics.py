@@ -251,6 +251,12 @@ class TestDateValidator:
         s = pd.Series(["Unknown", "not-a-date", "nope"])
         assert _validate_date_series(s) == 0.0
 
+    def test_mixed_formats_do_not_depend_on_first_value(self):
+        # pandas used to infer "%m/%d/%Y" from the first value and reject the other two formats.
+        s = pd.Series(["06/02/2025", "2025-01-15", "15-03-2025", "Unknown"])
+        assert _validate_date_series(s) == pytest.approx(0.75)
+        assert _validate_date_series(s.iloc[::-1].reset_index(drop=True)) == pytest.approx(0.75)
+
     def test_empty_series(self):
         assert _validate_date_series(pd.Series([], dtype=str)) == 1.0
 
