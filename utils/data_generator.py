@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from datetime import date, datetime, time, timedelta
 from typing import Optional
 from faker import Faker
 import random
@@ -16,11 +17,16 @@ class DataGenerator:
         Random seed for reproducible data generation. When provided, seeds random,
         numpy.random, and Faker to ensure deterministic output. When None, preserves
         non-deterministic behavior (default).
+    reference_date : Optional[date], default=None
+        The "today" that every generated date is measured back from. When None, the
+        current date is used, so a seed alone reproduces the same dates only on the
+        same day; pass both for output that never changes.
     """
 
-    def __init__(self, seed: Optional[int] = None):
-        """Initialize DataGenerator with optional seed for deterministic generation."""
+    def __init__(self, seed: Optional[int] = None, reference_date: Optional[date] = None):
+        """Initialize DataGenerator with optional seed and reference date for deterministic generation."""
         self._seed = seed
+        self._reference_date = reference_date
 
     def generate(
         self, num_records: int = 500, messiness_level: str = "medium", save_path: Optional[str] = None
@@ -47,10 +53,22 @@ class DataGenerator:
             random.seed(self._seed)
             np.random.seed(self._seed)
             Faker.seed(self._seed)
-        return generate_messy_data(num_records=num_records, messiness_level=messiness_level, save_path=save_path)
+        return generate_messy_data(
+            num_records=num_records,
+            messiness_level=messiness_level,
+            save_path=save_path,
+            reference_date=self._reference_date,
+        )
 
 
 EVENT_CHOICES = ["Spring Gala", "Summer Camp", "Fall Fundraiser", "None"]
+# How far back each generated date can fall from the reference date. These reproduce exactly
+# what Faker's wall-clock strings "-2y", "-6m" and "-1y" used to give: "-2y" is 730.48 days,
+# which a date floors to 731; "-6m" is six *minutes* to Faker (months are "M"), which a date
+# floors to one day; "-1y" keeps its fractional 365.24 days on a datetime.
+JOIN_DATE_SPAN = timedelta(days=731)
+REGISTRATION_DATE_SPAN = timedelta(days=1)
+LAST_LOGIN_SPAN = timedelta(days=365.24)
 MESSINESS_PROFILES = {
     "low": {
         "duplicate_rate": 0.03,
@@ -83,10 +101,10 @@ def _validate_inputs(num_records: int, messiness_level: str) -> None:
         raise ValueError(f"messiness_level must be 'low', 'medium', or 'high', got '{messiness_level}'")
 
 
-def _build_record() -> dict:
+def _build_record(today: date, now: datetime) -> dict:
     event_registered = np.random.choice(EVENT_CHOICES, p=[0.25, 0.25, 0.25, 0.25])
     reg_date = (
-        fake.date_between(start_date="-6m", end_date="today")
+        fake.date_between(start_date=today - REGISTRATION_DATE_SPAN, end_date=today)
         if event_registered != "None" and random.random() > 0.4
         else None
     )
@@ -94,8 +112,8 @@ def _build_record() -> dict:
         "ID": fake.uuid4(),
         "Name": fake.name(),
         "Email": fake.email(),
-        "Join_Date": fake.date_between(start_date="-2y", end_date="today"),
-        "Last_Login": fake.date_time_between(start_date="-1y", end_date="now"),
+        "Join_Date": fake.date_between(start_date=today - JOIN_DATE_SPAN, end_date=today),
+        "Last_Login": fake.date_time_between(start_date=now - LAST_LOGIN_SPAN, end_date=now),
         "Event_Attendance": np.random.randint(0, 20),
         "Role": np.random.choice(["Member", "Admin", "Guest"], p=[0.8, 0.05, 0.15]),
         "Event_Registered": event_registered,
@@ -151,12 +169,22 @@ def _apply_messiness(df: pd.DataFrame, profile: dict) -> pd.DataFrame:
 
 
 def generate_messy_data(
-    num_records: int = 500, save_path: Optional[str] = None, messiness_level: str = "medium"
+    num_records: int = 500,
+    save_path: Optional[str] = None,
+    messiness_level: str = "medium",
+    reference_date: Optional[date] = None,
 ) -> pd.DataFrame:
-    """Generates a dataset with intentional messiness for cleaning demonstration."""
+    """Generates a dataset with intentional messiness for cleaning demonstration.
+
+    Dates are measured back from ``reference_date`` (midnight of it, for ``Last_Login``),
+    or from the current date and time when it is None.
+    """
     _validate_inputs(num_records, messiness_level)
     profile = MESSINESS_PROFILES[messiness_level]
-    df = pd.DataFrame([_build_record() for _ in range(num_records)])
+    # Read the clock once, so a run that straddles midnight still shares one "today".
+    now = datetime.combine(reference_date, time.min) if reference_date is not None else datetime.now()
+    today = now.date()
+    df = pd.DataFrame([_build_record(today, now) for _ in range(num_records)])
     df = _apply_messiness(df, profile)
 
     if save_path:
