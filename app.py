@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 from datetime import datetime
+from typing import Dict, cast
 from utils.ui_helpers import initialize_session_state, show_welcome_modal, show_empty_state, MESSAGES
 from utils.health_metrics import get_health_metrics
 from utils.constants import DATA_PATH, CUSTOM_CSS
@@ -45,10 +46,11 @@ if os.path.exists(DATA_PATH):
     if KEY_DATA_LOADED_AT not in st.session_state:
         st.session_state[KEY_DATA_LOADED_AT] = datetime.now()
 else:
+    no_data_message = cast(Dict[str, str], MESSAGES["no_data_generated"])
     show_empty_state(
-        icon=MESSAGES["no_data_generated"]["icon"],
-        title=MESSAGES["no_data_generated"]["title"],
-        message=MESSAGES["no_data_generated"]["message"],
+        icon=no_data_message["icon"],
+        title=no_data_message["title"],
+        message=no_data_message["message"],
     )
     st.info("""
     **Getting Started:**

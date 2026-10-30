@@ -18,6 +18,7 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
+from http.client import HTTPException
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
@@ -87,7 +88,9 @@ def check_localhost(url: str, timeout_seconds: int) -> bool:
             with urlopen(url, timeout=2) as response:
                 if 200 <= response.status < 400:
                     return True
-        except URLError:
+        except (URLError, OSError, HTTPException):
+            # URLError: refused/unreachable (HTTPError for 4xx/5xx is a subclass). OSError: read timeout or reset by
+            # a port that accepts but does not answer. HTTPException: answers something that is not HTTP.
             time.sleep(1)
     return False
 

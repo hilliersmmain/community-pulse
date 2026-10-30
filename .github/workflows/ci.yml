@@ -40,19 +40,21 @@ jobs:
 
       - name: Code formatting check with Black
         run: |
-          black --check --line-length=120 utils/ community_pulse/ tests/
+          black --check --line-length=120 utils/ community_pulse/ components/ tests/ app.py verify_setup.py scripts/
 
       - name: Lint with Flake8
         run: |
           # Stop the build if there are Python syntax errors or undefined names
-          flake8 utils/ community_pulse/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 utils/ community_pulse/ components/ app.py verify_setup.py scripts/ --count --select=E9,F63,F7,F82 --show-source --statistics
           # General linting should block CI on violations while honoring project line-length/formatting policy.
-          flake8 utils/ community_pulse/ --count --max-complexity=10 --max-line-length=120 --ignore=E203,W503,E501 --statistics
+          # Known complexity exceptions (not refactored here): components/sidebar.py render_sidebar (28) and
+          # verify_setup.py main (11). Any other file over 10 still fails.
+          flake8 utils/ community_pulse/ components/ app.py verify_setup.py scripts/ --count --max-complexity=10 --max-line-length=120 --ignore=E203,W503,E501 --per-file-ignores=components/sidebar.py:C901,verify_setup.py:C901 --statistics
 
       - name: Type check with mypy
         run: |
           pip install mypy
-          mypy utils/ community_pulse/ --ignore-missing-imports
+          mypy utils/ community_pulse/ components/ app.py verify_setup.py scripts/ --ignore-missing-imports
 
       - name: Run tests with pytest
         run: |
@@ -73,9 +75,11 @@ jobs:
       - name: Security scan with Bandit
         run: |
           pip install bandit
-          # Scan Python files for common security issues
-          # Fail on confirmed high-severity findings (HIGH severity + HIGH confidence)
-          bandit -r utils/ community_pulse/ -lll -iii -f json -o bandit-report.json
+          # Scan all application code for common security issues (not tests/ or the virtualenv).
+          # Advisory: print every finding, of any severity, to the log. Never fails the build.
+          bandit -r utils/ community_pulse/ components/ app.py verify_setup.py scripts/ -f txt || true
+          # Gate: fail only on confirmed high-severity findings (HIGH severity + HIGH confidence).
+          bandit -r utils/ community_pulse/ components/ app.py verify_setup.py scripts/ -lll -iii -f txt
 
       - name: Display test summary
         if: always()

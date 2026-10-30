@@ -3,15 +3,15 @@
 
 import sys
 import importlib
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Optional
 
 # ANSI color codes for terminal output
-GREEN = '\033[92m'
-RED = '\033[91m'
-YELLOW = '\033[93m'
-BLUE = '\033[94m'
-RESET = '\033[0m'
-BOLD = '\033[1m'
+GREEN = "\033[92m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+BLUE = "\033[94m"
+RESET = "\033[0m"
+BOLD = "\033[1m"
 
 
 def check_python_version() -> Tuple[bool, str]:
@@ -22,105 +22,106 @@ def check_python_version() -> Tuple[bool, str]:
     return False, f"Python {version.major}.{version.minor}.{version.micro} (requires 3.9+)"
 
 
-def check_package(package_name: str, min_version: str = None) -> Tuple[bool, str]:
+def check_package(package_name: str, min_version: Optional[str] = None) -> Tuple[bool, str]:
     """Check if a package is installed and optionally verify minimum version."""
     try:
         module = importlib.import_module(package_name)
-        version = getattr(module, '__version__', 'unknown')
-        
-        if min_version and version != 'unknown':
+        version = getattr(module, "__version__", "unknown")
+
+        if min_version and version != "unknown":
             try:
                 from packaging import version as pkg_version
+
                 if pkg_version.parse(version) < pkg_version.parse(min_version):
                     return False, f"{package_name} {version} (requires {min_version}+)"
             except Exception:
                 pass
-        
+
         return True, f"{package_name} {version}"
     except ImportError:
         return False, f"{package_name} not installed"
+    except Exception as e:
+        # A broken native dependency or numpy/pandas binary mismatch raises OSError, ValueError, ... not ImportError.
+        return False, f"{package_name} failed to import: {e}"
 
 
 def verify_dependencies() -> Dict[str, List[Tuple[str, bool, str]]]:
     """Verify all required and optional dependencies."""
     required_packages = [
-        ('streamlit', '1.52.2'),
-        ('pandas', '2.2.2'),
-        ('plotly', '6.5.0'),
-        ('numpy', '1.26.4'),
-        ('faker', None),
-        ('pytest', None),
+        ("streamlit", "1.52.2"),
+        ("pandas", "2.2.2"),
+        ("plotly", "6.5.0"),
+        ("numpy", "1.26.4"),
+        ("faker", None),
+        ("pytest", None),
     ]
-    
+
     optional_packages = [
-        ('kaleido', None),
+        ("kaleido", None),
     ]
-    
-    results = {
-        'required': [],
-        'optional': []
-    }
-    
+
+    results: Dict[str, List[Tuple[str, bool, str]]] = {"required": [], "optional": []}
+
     for package_name, min_version in required_packages:
         success, message = check_package(package_name, min_version)
-        results['required'].append((package_name, success, message))
-    
+        results["required"].append((package_name, success, message))
+
     for package_name, min_version in optional_packages:
         success, message = check_package(package_name, min_version)
-        results['optional'].append((package_name, success, message))
-    
+        results["optional"].append((package_name, success, message))
+
     return results
 
 
 def check_project_structure() -> List[Tuple[str, bool, str]]:
     """Check if project directories and files exist."""
     import os
-    
+
     required_items = [
-        ('app.py', 'file'),
-        ('requirements.txt', 'file'),
-        ('utils/', 'directory'),
-        ('utils/cleaner.py', 'file'),
-        ('utils/data_generator.py', 'file'),
-        ('utils/health_metrics.py', 'file'),
-        ('utils/visualizer.py', 'file'),
-        ('utils/ui_helpers.py', 'file'),
-        ('tests/', 'directory'),
+        ("app.py", "file"),
+        ("requirements.txt", "file"),
+        ("utils/", "directory"),
+        ("utils/cleaner.py", "file"),
+        ("utils/data_generator.py", "file"),
+        ("utils/health_metrics.py", "file"),
+        ("utils/visualizer.py", "file"),
+        ("utils/ui_helpers.py", "file"),
+        ("tests/", "directory"),
     ]
-    
+
     results = []
-    
+
     for item, item_type in required_items:
-        if item_type == 'file':
+        if item_type == "file":
             exists = os.path.isfile(item)
         else:
             exists = os.path.isdir(item)
-        
+
         message = f"{item} ({'✓' if exists else '✗'})"
         results.append((item, exists, message))
-    
+
     return results
 
 
 def test_imports() -> List[Tuple[str, bool, str]]:
     """Test importing project modules."""
     modules = [
-        'utils.cleaner',
-        'utils.data_generator',
-        'utils.health_metrics',
-        'utils.visualizer',
-        'utils.ui_helpers',
+        "utils.cleaner",
+        "utils.data_generator",
+        "utils.health_metrics",
+        "utils.visualizer",
+        "utils.ui_helpers",
     ]
-    
+
     results = []
-    
+
     for module in modules:
         try:
             importlib.import_module(module)
             results.append((module, True, f"{module} imports successfully"))
         except Exception as e:
             results.append((module, False, f"{module} failed: {str(e)}"))
-    
+
     return results
 
 
@@ -141,31 +142,31 @@ def main():
     """Run all verification checks."""
     print(f"\n{BOLD}Community Pulse - Setup Verification{RESET}")
     print(f"{BOLD}{'=' * 60}{RESET}")
-    
+
     all_checks_passed = True
-    
+
     # Check Python version
     print_section("Python Version")
     success, message = check_python_version()
     print_result("Python", success, message)
     if not success:
         all_checks_passed = False
-    
+
     # Check dependencies
     print_section("Required Dependencies")
     dep_results = verify_dependencies()
-    
-    for package, success, message in dep_results['required']:
+
+    for package, success, message in dep_results["required"]:
         print_result(package, success, message)
         if not success:
             all_checks_passed = False
-    
+
     print_section("Optional Dependencies")
-    for package, success, message in dep_results['optional']:
+    for package, success, message in dep_results["optional"]:
         print_result(package, success, message)
         if not success:
             print(f"    {YELLOW}Note: Optional dependency. Some features may not work.{RESET}")
-    
+
     # Check project structure
     print_section("Project Structure")
     structure_results = check_project_structure()
@@ -173,7 +174,7 @@ def main():
         print_result(item, success, message)
         if not success:
             all_checks_passed = False
-    
+
     # Test module imports
     print_section("Module Imports")
     import_results = test_imports()
@@ -181,7 +182,7 @@ def main():
         print_result(module, success, message)
         if not success:
             all_checks_passed = False
-    
+
     # Final summary
     print_section("Summary")
     if all_checks_passed:
@@ -193,8 +194,8 @@ def main():
         print(f"  {RED}{BOLD}✗ Some checks failed. Please fix the issues above.{RESET}\n")
         print(f"  {YELLOW}Common fixes:{RESET}")
         print(f"  - Install missing packages: {BOLD}pip install -r requirements.txt{RESET}")
-        print(f"  - Ensure Python 3.9+ is installed")
-        print(f"  - Run from the project root directory\n")
+        print("  - Ensure Python 3.9+ is installed")
+        print("  - Run from the project root directory\n")
         return 1
 
 
