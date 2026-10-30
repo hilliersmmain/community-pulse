@@ -194,15 +194,32 @@ class TestDataHealthMetrics:
         assert 0 <= metrics.calculate_overall_health_score() <= 100
 
     def test_dataframe_copy(self, perfect_data):
-
-        original_len = len(perfect_data)
+        """The metrics object works on its own copy: edits on either side never reach the other."""
         metrics = DataHealthMetrics(perfect_data)
+        scores_before = (
+            metrics.calculate_completeness_score(),
+            metrics.calculate_duplicate_score(),
+            metrics.calculate_formatting_score(),
+            metrics.calculate_overall_health_score(),
+        )
 
-        # Modify the internal df
-        metrics.df = metrics.df.head(1)
+        # Caller edits its own frame after construction: a duplicate row, a missing cell, a bad date.
+        perfect_data.loc[2] = perfect_data.loc[0]
+        perfect_data.loc[1, "Name"] = None
+        perfect_data.loc[1, "Join_Date"] = "not a date"
 
-        # Original should be unchanged
-        assert len(perfect_data) == original_len
+        scores_after = (
+            metrics.calculate_completeness_score(),
+            metrics.calculate_duplicate_score(),
+            metrics.calculate_formatting_score(),
+            metrics.calculate_overall_health_score(),
+        )
+        assert scores_after == scores_before
+
+        # The other direction: editing the metrics object's frame in place leaves the caller's frame alone.
+        caller_after_edit = perfect_data.copy()
+        metrics.df.loc[1, "Name"] = "Changed In Place"
+        pd.testing.assert_frame_equal(perfect_data, caller_after_edit)
 
 
 # ---------------------------------------------------------------------------

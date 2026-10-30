@@ -164,6 +164,21 @@ class TestDataCleaner:
         assert result["Event_Attendance"].isna().sum() == 0
         assert pd.api.types.is_datetime64_any_dtype(result["Join_Date"])
 
+    def test_clean_all_dedups_after_email_fix(self):
+        """Duplicates that differ only in email formatting must collapse: fix_emails has to run before
+        remove_duplicates, because remove_duplicates only lower-cases and never rewrites ' at ' to '@'."""
+        df = pd.DataFrame(
+            {
+                "Name": ["Ann Lee", "Ann Lee"],
+                "Email": ["ann@test.com", "ann at test.com"],
+            }
+        )
+
+        result = DataCleaner(df).clean_all()
+
+        assert len(result) == 1
+        assert result["Email"].tolist() == ["ann@test.com"]
+
     def test_clean_all_empty_dataframe(self):
         """Test clean_all handles empty DataFrame gracefully."""
         empty_df = pd.DataFrame(columns=["Name", "Email", "Join_Date", "Event_Attendance"])
