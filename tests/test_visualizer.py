@@ -75,22 +75,30 @@ def _strip_volatile(d: dict) -> dict:
 
 
 def _load_or_write_snapshot(name: str, data: dict) -> dict | None:
-    """Load a JSON snapshot or write one if missing/UPDATE_SNAPSHOTS is set.
+    """Load a JSON snapshot, or write it when UPDATE_SNAPSHOTS=1.
 
     The ``data`` dict should already have volatile keys stripped (via
     ``_strip_volatile``) before being passed here.
 
     Returns the loaded snapshot dict, or None when the snapshot was just
-    written for the first time (caller should pytest.skip in that case).
+    (re)written under ``UPDATE_SNAPSHOTS=1``. A missing snapshot without that
+    variable raises FileNotFoundError and writes nothing: a deleted or renamed
+    fixture must fail the suite, not quietly regenerate itself.
     """
-    SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
     path = SNAPSHOTS_DIR / f"{name}.json"
     update = os.environ.get("UPDATE_SNAPSHOTS", "").strip() == "1"
 
-    if update or not path.exists():
+    if update:
+        SNAPSHOTS_DIR.mkdir(parents=True, exist_ok=True)
         serialized = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder, indent=2, sort_keys=True)
         path.write_text(serialized, encoding="utf-8")
-        return None  # caller should skip or just return in update mode
+        return None
+
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Snapshot '{name}.json' is missing from {SNAPSHOTS_DIR}; restore it from version control, "
+            "or run with UPDATE_SNAPSHOTS=1 to regenerate it and commit the result."
+        )
 
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -394,6 +402,48 @@ class TestVisualizerEnhancements:
         assert len(fig_hist.data) > 0
 
 
+class TestChartDataValues:
+    """Explicit assertions on the data the charts plot.
+
+    The snapshot tests below drop every data array (``_VOLATILE_TRACE_KEYS``), so a chart
+    could plot the wrong numbers and still match its snapshot.  These pin the values for
+    a tiny hand-checked fixture.
+    """
+
+    def test_trend_line_y_values(self):
+        # Joins per month, January to May: [2, 0, 0, 1, 1].  A least-squares line through
+        # those has slope -0.1 and intercept 1.0, so it runs 1.0, 0.9, 0.8, 0.7, 0.6.
+        df = pd.DataFrame({"Join_Date": ["2025-01-10", "2025-01-20", "2025-04-05", "2025-05-01"]})
+        fig = plot_attendance_trend(df, data_state="cleaned")
+        trend = next(t for t in fig.data if t.name == "Trend Line")
+        assert list(trend.x) == ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05"]
+        assert list(trend.y) == pytest.approx([1.0, 0.9, 0.8, 0.7, 0.6])
+
+    def test_role_pie_labels_match_their_values(self):
+        df = pd.DataFrame({"Role": ["Member"] * 5 + ["Guest"] * 3 + ["Admin"]})
+        fig = plot_role_distribution(df, data_state="cleaned")
+        pie = fig.data[0]
+        assert dict(zip(pie.labels, pie.values)) == {"Member": 5, "Guest": 3, "Admin": 1}
+
+
+class TestSnapshotHelper:
+    """A missing snapshot fails, instead of being regenerated and skipped."""
+
+    def test_missing_snapshot_raises_and_writes_nothing(self, tmp_path, monkeypatch):
+        missing_dir = tmp_path / "snapshots"
+        monkeypatch.setitem(globals(), "SNAPSHOTS_DIR", missing_dir)
+        monkeypatch.delenv("UPDATE_SNAPSHOTS", raising=False)
+        with pytest.raises(FileNotFoundError, match="UPDATE_SNAPSHOTS=1"):
+            _load_or_write_snapshot("x", {"data": []})
+        assert not missing_dir.exists()
+
+    def test_update_snapshots_writes_the_file(self, tmp_path, monkeypatch):
+        monkeypatch.setitem(globals(), "SNAPSHOTS_DIR", tmp_path / "snapshots")
+        monkeypatch.setenv("UPDATE_SNAPSHOTS", "1")
+        assert _load_or_write_snapshot("x", {"data": []}) is None
+        assert json.loads((tmp_path / "snapshots" / "x.json").read_text(encoding="utf-8")) == {"data": []}
+
+
 class TestChartSnapshots:
     """Snapshot / regression tests for chart output.
 
@@ -421,11 +471,12 @@ class TestChartSnapshots:
     output (data traces, title, annotations, shapes, axis titles, colors) is
     still captured.
 
-    First-run / missing-fixture behaviour
-    --------------------------------------
-    If a fixture file does not exist the test writes it and is *skipped* with a
-    message "snapshot generated; commit it and re-run".  This makes the initial
-    setup ergonomic: run once, commit fixtures, then run again to verify.
+    Missing-fixture behaviour
+    -------------------------
+    If a fixture file does not exist the test *fails*, naming the file.  A deleted
+    or renamed ``tests/snapshots/`` must not leave the suite green.  To create a
+    fixture for a new chart, run once with ``UPDATE_SNAPSHOTS=1`` and commit the
+    JSON file.
 
     Under ``UPDATE_SNAPSHOTS=1`` tests regenerate fixtures and pass immediately
     (no comparison is performed).
@@ -438,16 +489,13 @@ class TestChartSnapshots:
         return generator.generate(num_records=200, messiness_level="low")
 
     def _run_snapshot(self, chart_fn, df, name: str, **kwargs):
-        """Shared helper: call chart_fn, compare/write snapshot, skip if new."""
+        """Shared helper: call chart_fn, then compare to its snapshot (or rewrite it under UPDATE_SNAPSHOTS=1)."""
         fig = chart_fn(df, **kwargs)
         raw = json.loads(json.dumps(fig.to_dict(), cls=plotly.utils.PlotlyJSONEncoder, sort_keys=True))
         actual = _strip_volatile(raw)
         snapshot = _load_or_write_snapshot(name, actual)
         if snapshot is None:
-            update = os.environ.get("UPDATE_SNAPSHOTS", "").strip() == "1"
-            if update:
-                return  # regenerated — pass immediately
-            pytest.skip(f"Snapshot '{name}.json' generated; commit it and re-run")
+            return  # regenerated under UPDATE_SNAPSHOTS=1 — pass immediately
         # Re-strip the loaded snapshot so older fixtures (which still contain volatile
         # numeric arrays) compare cleanly against the stripped `actual`.
         _assert_deep_equal(actual, _strip_volatile(snapshot), path=name)

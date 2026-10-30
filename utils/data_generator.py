@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import numpy as np
 from datetime import date, datetime, time, timedelta
@@ -188,6 +190,7 @@ def generate_messy_data(
     df = _apply_messiness(df, profile)
 
     if save_path:
+        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
         df.to_csv(save_path, index=False)
         print(f"Generated messy data at {save_path} with {len(df)} rows.")
 
@@ -195,8 +198,6 @@ def generate_messy_data(
 
 
 if __name__ == "__main__":
-    import os
-
     if not os.path.exists("../data"):
         os.makedirs("../data", exist_ok=True)
 

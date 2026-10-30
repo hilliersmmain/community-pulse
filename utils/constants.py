@@ -50,6 +50,9 @@ HEALTH_SCORE_WEIGHT_FORMATTING = 0.3
 # the data generator writes. Slash dates are read month-first, dash dates day-first.
 DATE_FORMATS = ["ISO8601", "%m/%d/%Y", "%d-%m-%Y"]
 
+# A date cell longer than this is never a date; parse_dates leaves it NaT (the "mixed" parser is quadratic).
+MAX_DATE_CHARS = 64
+
 CUSTOM_CSS = """
 <style>
     .main h1 {

@@ -61,6 +61,18 @@ class TestGenerateMessyData:
             loaded = pd.read_csv(path)
             assert len(loaded) == len(df)
 
+    def test_save_creates_missing_parent_directory(self, tmp_path):
+        target = tmp_path / "data" / "sample.csv"
+        assert not target.parent.exists()
+        df = generate_messy_data(num_records=10, save_path=str(target))
+        assert target.exists()
+        assert len(pd.read_csv(target)) == len(df)
+
+    def test_save_to_bare_filename_in_current_directory(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        generate_messy_data(num_records=10, save_path="sample.csv")
+        assert (tmp_path / "sample.csv").exists()
+
     def test_invalid_num_records_raises(self):
         with pytest.raises(ValueError):
             generate_messy_data(num_records=-1)
