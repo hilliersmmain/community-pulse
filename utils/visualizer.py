@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any
 
-from utils.constants import COLOR_PRIMARY, COLOR_ACCENT_TREND, COLOR_MEAN_LINE, COLOR_MEDIAN_LINE
+from utils.constants import COLOR_PRIMARY, COLOR_ACCENT_TREND, COLOR_MEAN_LINE, COLOR_MEDIAN_LINE, MAX_DATE_CHARS
 
 # Constants for chart configuration
 MIN_POINTS_FOR_TREND = 3
@@ -49,7 +49,9 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
         return go.Figure()
 
     temp_df = df.copy()
-    temp_df["Join_Date"] = pd.to_datetime(temp_df["Join_Date"], errors="coerce")
+    # A cell longer than MAX_DATE_CHARS is never a date, and pandas' fallback parser is quadratic in cell length.
+    join = temp_df["Join_Date"]
+    temp_df["Join_Date"] = pd.to_datetime(join.mask(join.astype(str).str.len() > MAX_DATE_CHARS), errors="coerce")
 
     temp_df = temp_df.dropna(subset=["Join_Date"])
 

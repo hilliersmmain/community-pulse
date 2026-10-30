@@ -60,7 +60,7 @@ def export_json(df: pd.DataFrame) -> str:
     return df.to_json(orient="records", indent=2, date_format="iso")
 
 
-def render_sidebar() -> None:
+def render_sidebar() -> None:  # noqa: C901
     """Render the complete sidebar with all controls."""
     st.sidebar.header("Data Controls")
 

@@ -1,11 +1,21 @@
 """Guard: every option in .streamlit/config.toml must be a real Streamlit option."""
 
-import tomllib
 from pathlib import Path
 
 import streamlit.config as st_config
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / ".streamlit" / "config.toml"
+
+
+def _parse_toml(text: str) -> dict:
+    """Parse TOML: tomllib on Python 3.11+, the `toml` package (a Streamlit dependency) on 3.10."""
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        import toml
+
+        return toml.loads(text)
+    return tomllib.loads(text)
 
 
 def _flatten(table: dict, prefix: str = "") -> list[str]:
@@ -20,11 +30,34 @@ def _flatten(table: dict, prefix: str = "") -> list[str]:
     return names
 
 
-def test_config_toml_only_sets_valid_streamlit_options():
-    """Streamlit warns on every run about an unknown option; get_option raises for one."""
-    if not CONFIG_PATH.exists():
-        return  # no file, nothing can be invalid
-    options = _flatten(tomllib.loads(CONFIG_PATH.read_text()))
-    for name in options:
-        # Unknown keys raise RuntimeError ('Config key "..." not defined').
-        st_config.get_option(name)
+def unknown_options(config_path: Path) -> list[str]:
+    """Return the dotted keys in a config file that Streamlit does not define.
+
+    Streamlit warns on every run about an unknown option, and get_option raises RuntimeError
+    ('Config key "..." not defined') for one.
+    """
+    unknown = []
+    for name in _flatten(_parse_toml(config_path.read_text())):
+        try:
+            st_config.get_option(name)
+        except RuntimeError:
+            unknown.append(name)
+    return unknown
+
+
+def test_checker_flags_an_option_streamlit_does_not_define(tmp_path):
+    """The check can fail: server.pythonVersion is the invalid option the project once shipped."""
+    bad = tmp_path / "config.toml"
+    bad.write_text('[server]\npythonVersion = "3.11"\n')
+    assert unknown_options(bad) == ["server.pythonVersion"]
+
+
+def test_checker_accepts_a_real_streamlit_option(tmp_path):
+    good = tmp_path / "config.toml"
+    good.write_text("[server]\nmaxUploadSize = 5\n")
+    assert unknown_options(good) == []
+
+
+def test_config_toml_exists_and_only_sets_valid_streamlit_options():
+    assert CONFIG_PATH.is_file(), f"{CONFIG_PATH} is missing; docs/CONFIGURATION.md and docs/DEVELOPMENT.md list it"
+    assert unknown_options(CONFIG_PATH) == []

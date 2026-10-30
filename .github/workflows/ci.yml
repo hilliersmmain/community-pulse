@@ -48,8 +48,8 @@ jobs:
           flake8 utils/ community_pulse/ components/ app.py verify_setup.py scripts/ --count --select=E9,F63,F7,F82 --show-source --statistics
           # General linting should block CI on violations while honoring project line-length/formatting policy.
           # Known complexity exceptions (not refactored here): components/sidebar.py render_sidebar (28) and
-          # verify_setup.py main (11). Any other file over 10 still fails.
-          flake8 utils/ community_pulse/ components/ app.py verify_setup.py scripts/ --count --max-complexity=10 --max-line-length=120 --ignore=E203,W503,E501 --per-file-ignores=components/sidebar.py:C901,verify_setup.py:C901 --statistics
+          # verify_setup.py main (11). Those two functions carry a `# noqa: C901`; anything else over 10 still fails.
+          flake8 utils/ community_pulse/ components/ app.py verify_setup.py scripts/ --count --max-complexity=10 --max-line-length=120 --ignore=E203,W503,E501 --statistics
 
       - name: Type check with mypy
         run: |

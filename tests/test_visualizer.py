@@ -12,6 +12,7 @@ from datetime import date, datetime, timedelta
 
 import plotly.utils
 
+from utils.constants import MAX_DATE_CHARS
 from utils.data_generator import DataGenerator
 from utils.visualizer import (
     plot_attendance_trend,
@@ -424,6 +425,30 @@ class TestChartDataValues:
         fig = plot_role_distribution(df, data_state="cleaned")
         pie = fig.data[0]
         assert dict(zip(pie.labels, pie.values)) == {"Member": 5, "Guest": 3, "Admin": 1}
+
+
+class TestTrendOverLongDateCell:
+    """One huge Join_Date cell must not reach pandas' date parser (its "mixed" fallback is quadratic in cell length)."""
+
+    def test_over_long_cell_never_reaches_to_datetime(self, monkeypatch):
+        seen_lengths: list[int] = []
+        real_to_datetime = pd.to_datetime
+
+        def spy(arg, *args, **kwargs):
+            values = arg if isinstance(arg, (pd.Series, list, np.ndarray)) else [arg]
+            seen_lengths.extend(len(str(v)) for v in values)
+            return real_to_datetime(arg, *args, **kwargs)
+
+        monkeypatch.setattr(pd, "to_datetime", spy)
+        df = pd.DataFrame({"Join_Date": ["1" * 5000, "2025-01-10", "2025-02-10"]})
+
+        fig = plot_attendance_trend(df, data_state="cleaned")
+
+        assert seen_lengths, "plot_attendance_trend never called pd.to_datetime, so this test checks nothing"
+        assert max(seen_lengths) <= MAX_DATE_CHARS, f"a {max(seen_lengths)}-character cell reached pd.to_datetime"
+        line = next(t for t in fig.data if t.name == "New Members")
+        assert list(line.x) == ["2025-01", "2025-02"]
+        assert list(line.y) == [1, 1]
 
 
 class TestSnapshotHelper:

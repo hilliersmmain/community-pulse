@@ -44,11 +44,42 @@ def test_check_package_reports_non_import_errors(broken_import, exc):
 
 
 def test_check_package_missing_package_still_says_not_installed(broken_import):
-    broken_import("kaleido", ImportError("No module named 'kaleido'"))
+    broken_import("kaleido", ModuleNotFoundError("No module named 'kaleido'", name="kaleido"))
 
     ok, message = verify_setup.check_package("kaleido")
 
     assert (ok, message) == (False, "kaleido not installed")
+
+
+def test_check_package_really_missing_package_says_not_installed():
+    """No fake: the real importlib raises ModuleNotFoundError with name set for an absent package."""
+    ok, message = verify_setup.check_package("no_such_package_for_verify_setup_test")
+
+    assert (ok, message) == (False, "no_such_package_for_verify_setup_test not installed")
+
+
+def test_check_package_installed_but_missing_native_library_is_not_called_not_installed(broken_import):
+    """An ImportError that is not 'this package is absent' (here a missing shared library) is a broken install."""
+    broken_import("kaleido", ImportError("libnss3.so: cannot open shared object file"))
+
+    ok, message = verify_setup.check_package("kaleido")
+
+    assert ok is False
+    assert "failed to import" in message
+    assert "libnss3" in message
+    assert "not installed" not in message
+
+
+def test_check_package_missing_transitive_import_is_not_called_not_installed(broken_import):
+    """plotly is installed, but it needs tenacity: the missing module is tenacity, not plotly."""
+    broken_import("plotly", ModuleNotFoundError("No module named 'tenacity'", name="tenacity"))
+
+    ok, message = verify_setup.check_package("plotly")
+
+    assert ok is False
+    assert "plotly failed to import" in message
+    assert "tenacity" in message
+    assert "not installed" not in message
 
 
 def test_main_still_prints_summary_when_an_optional_import_crashes(broken_import, capsys):

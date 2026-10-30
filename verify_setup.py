@@ -38,10 +38,15 @@ def check_package(package_name: str, min_version: Optional[str] = None) -> Tuple
                 pass
 
         return True, f"{package_name} {version}"
-    except ImportError:
-        return False, f"{package_name} not installed"
+    except ModuleNotFoundError as e:
+        # Only "not installed" when the module that is missing is this package (or a parent of a dotted name). A
+        # package that is installed but needs another absent module raises the same class, with that module's name.
+        if e.name is not None and (e.name == package_name or package_name.startswith(f"{e.name}.")):
+            return False, f"{package_name} not installed"
+        return False, f"{package_name} failed to import: {e}"
     except Exception as e:
-        # A broken native dependency or numpy/pandas binary mismatch raises OSError, ValueError, ... not ImportError.
+        # A plain ImportError (a missing native library), or a numpy/pandas binary mismatch raising OSError,
+        # ValueError, ... : the package is there but broken.
         return False, f"{package_name} failed to import: {e}"
 
 
@@ -138,7 +143,7 @@ def print_result(name: str, success: bool, message: str):
     print(f"  {status} {message}")
 
 
-def main():
+def main():  # noqa: C901
     """Run all verification checks."""
     print(f"\n{BOLD}Community Pulse - Setup Verification{RESET}")
     print(f"{BOLD}{'=' * 60}{RESET}")

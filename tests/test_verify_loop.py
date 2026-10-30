@@ -1,8 +1,8 @@
-"""Tests for scripts/verify_loop.py::check_localhost.
+"""Tests for scripts/verify_loop.py.
 
-scripts/ is not a package, so the script is loaded by path. The tests talk to throwaway servers on 127.0.0.1 over
-real sockets (no Streamlit): a port that never answers, one that resets the connection, one that answers with
-garbage, and one that answers 500.
+scripts/ is not a package, so the script is loaded by path. The check_localhost tests talk to throwaway servers on
+127.0.0.1 over real sockets (no Streamlit): a port that never answers, one that resets the connection, one that
+answers with garbage, and one that answers 500. The lint-step tests compare the script with .github/workflows/ci.yml.
 """
 
 import contextlib
@@ -15,6 +15,11 @@ from pathlib import Path
 import pytest
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "verify_loop.py"
+CI_PATH = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "ci.yml"
+
+# The flags that change what a lint step accepts. Reporting-only flags (--count, --statistics) are left out.
+COMPARED_FLAGS = ("--check", "--line-length=", "--max-line-length=", "--max-complexity=", "--ignore=")
+COMPARED_FLAGS += ("--ignore-missing-imports",)
 
 
 @pytest.fixture(scope="module")
@@ -122,3 +127,48 @@ def test_a_500_is_retried_with_a_pause_not_in_a_busy_loop(verify_loop):
     with listener(reply_with("500 Internal Server Error")) as (url, hits):
         assert verify_loop.check_localhost(url, timeout_seconds=2) is False
     assert 1 <= len(hits) <= 4
+
+
+def ci_args(tool, must_contain=None):
+    """The arguments after `tool` on the one ci.yml line that runs it (and contains `must_contain`)."""
+    lines = [raw.strip().split() for raw in CI_PATH.read_text().splitlines()]
+    matches = [t for t in lines if t[:1] == [tool] and (must_contain is None or any(must_contain in x for x in t))]
+    assert len(matches) == 1, f"expected one {tool} line with {must_contain!r} in ci.yml, found {len(matches)}"
+    return matches[0][1:]
+
+
+def script_args(verify_loop, label, strict=False):
+    """The arguments after `python -m <tool>` of the verify_loop step whose label starts with `label`."""
+    [command] = [cmd for step, cmd in verify_loop.lint_steps(strict) if step.startswith(label)]
+    return command[3:]
+
+
+def lint_paths(args):
+    """The paths a lint command covers: its non-flag arguments, minus any trailing slash."""
+    return {a.rstrip("/") for a in args if not a.startswith("-")}
+
+
+def compared_flags(args):
+    return {a for a in args if a.startswith(COMPARED_FLAGS)}
+
+
+@pytest.mark.parametrize(
+    "tool, ci_marker",
+    [("black", "--check"), ("flake8", "--max-complexity"), ("mypy", None)],
+)
+def test_default_lint_steps_cover_what_ci_covers(verify_loop, tool, ci_marker):
+    """The documented pre-PR gate must not pass what CI rejects: same paths and same rule flags per tool."""
+    ci = ci_args(tool, ci_marker)
+    local = script_args(verify_loop, tool)
+
+    assert lint_paths(ci), f"no paths parsed from the ci.yml {tool} line"
+    assert lint_paths(local) == lint_paths(ci)
+    assert compared_flags(local) == compared_flags(ci)
+
+
+def test_strict_also_lints_tests(verify_loop):
+    for tool in ("flake8", "mypy"):
+        default = lint_paths(script_args(verify_loop, tool))
+        strict = lint_paths(script_args(verify_loop, tool, strict=True))
+        assert "tests" not in default
+        assert strict == default | {"tests"}

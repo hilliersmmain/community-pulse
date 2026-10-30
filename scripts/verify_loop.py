@@ -26,6 +26,12 @@ from urllib.request import urlopen
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 VERIFY_STATE_PATH = PROJECT_ROOT / ".verification" / "last_verify_success.json"
 
+# The paths each lint step covers. tests/test_verify_loop.py compares these with .github/workflows/ci.yml.
+BLACK_PATHS = ["utils", "community_pulse", "components", "tests", "app.py", "verify_setup.py", "scripts"]
+LINT_PATHS = ["utils", "community_pulse", "components", "app.py", "verify_setup.py", "scripts"]
+STRICT_EXTRA_LINT_PATHS = ["tests"]
+FLAKE8_OPTIONS = ["--max-complexity=10", "--max-line-length=120", "--ignore=E203,W503,E501"]
+
 
 def run_step(label: str, command: list[str]) -> None:
     """Run one verification step and fail fast on error."""
@@ -170,48 +176,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Expand lint/type checks to tests, app, and scripts.",
+        help="Also run flake8 and mypy on tests/ (the default already matches the CI lint paths).",
     )
     return parser.parse_args()
 
 
+def lint_steps(strict: bool) -> list[tuple[str, list[str]]]:
+    """Return the (label, command) of the black, flake8 and mypy steps."""
+    lint_paths = [*LINT_PATHS, *(STRICT_EXTRA_LINT_PATHS if strict else [])]
+    return [
+        ("black --check", [sys.executable, "-m", "black", "--check", "--line-length=120", *BLACK_PATHS]),
+        ("flake8", [sys.executable, "-m", "flake8", *lint_paths, *FLAKE8_OPTIONS]),
+        ("mypy", [sys.executable, "-m", "mypy", *lint_paths, "--ignore-missing-imports"]),
+    ]
+
+
 def main() -> None:
     args = parse_args()
-    lint_paths = ["utils", "community_pulse", "components"]
-    if args.strict:
-        lint_paths.extend(["tests", "app.py", "scripts"])
-
-    run_step(
-        "black --check",
-        [
-            sys.executable,
-            "-m",
-            "black",
-            "--check",
-            "--line-length=120",
-            "utils",
-            "community_pulse",
-            "components",
-            "tests",
-            "app.py",
-            "scripts",
-        ],
-    )
-    run_step(
-        "flake8",
-        [
-            sys.executable,
-            "-m",
-            "flake8",
-            *lint_paths,
-            "--max-line-length=120",
-            "--ignore=E203,W503,E501",
-        ],
-    )
-    run_step(
-        "mypy",
-        [sys.executable, "-m", "mypy", *lint_paths, "--ignore-missing-imports"],
-    )
+    for label, command in lint_steps(args.strict):
+        run_step(label, command)
     run_step(
         "pytest + coverage",
         [
