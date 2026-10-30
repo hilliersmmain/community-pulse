@@ -82,6 +82,38 @@ def sample_df() -> pd.DataFrame:
     return _sample_dataframe()
 
 
+VALID_UPLOAD_CSV = b"Name,Email,Role,Join_Date,Event_Attendance\nAnn,a@x.com,Member,2025-01-01,3\n"
+
+
+def _sidebar_script(tmp_path, upload: bytes | None = None, upload_size: int = 100) -> str:
+    """A script that renders the sidebar with ``tmp_path`` as its data folder.
+
+    AppTest cannot drive st.file_uploader, so given ``upload`` (CSV bytes) the script stands one in
+    that returns the same upload on every run, as the real widget does while the file sits there.
+    """
+    lines = [
+        "import io",
+        "import streamlit as st",
+        "import components.sidebar as sidebar",
+        "import utils.data_access as data_access",
+        "",
+        f"sidebar.DATA_PATH = {str(tmp_path / 'data.csv')!r}",
+        f"data_access.DATA_DIR = {str(tmp_path)!r}",
+    ]
+    if upload is not None:
+        lines += [
+            "",
+            "class StubUpload(io.BytesIO):",
+            '    file_id = "upload-1"',
+            f"    size = {upload_size}",
+            "",
+            f"CSV = {upload!r}",
+            "st.sidebar.file_uploader = lambda *args, **kwargs: StubUpload(CSV)",
+        ]
+    lines += ["", "sidebar.render_sidebar()"]
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # components/kpi_display.py
 # ---------------------------------------------------------------------------
@@ -129,15 +161,40 @@ class TestKPIDisplay:
         assert str(by_label["Unique Records"].value) == "2"
         assert str(by_label["Duplicate Records"].value) == "1"
 
-    def test_kpi_health_score_uses_threshold_label(self):
-        # The health score on this fixture is ~90% (excellent threshold). The
-        # help text encodes the label, so we check it's present.
-        at = AppTest.from_string(self.SCAFFOLD)
+    # The help text ends with a static legend ("90%+ = Excellent | 70-89% = Good | ..."), so a bare
+    # "Excellent" or "Good" matches for any score. Only the "assessment: <label>" line is dynamic.
+    @pytest.mark.parametrize(
+        ("score", "label"),
+        [
+            (95.0, "Excellent"),
+            (90.0, "Excellent"),
+            (89.9, "Good"),
+            (75.0, "Good"),
+            (70.0, "Good"),
+            (69.9, "Needs Work"),
+            (50.0, "Needs Work"),
+        ],
+    )
+    def test_kpi_health_score_uses_threshold_label(self, score, label):
+        script = textwrap.dedent(f"""
+            from components.kpi_display import render_kpi_section
+
+            render_kpi_section({{
+                "total_records": 10,
+                "unique_records": 10,
+                "duplicate_records": 0,
+                "null_cells": 0,
+                "completeness_score": 100.0,
+                "duplicate_score": 100.0,
+                "formatting_score": 100.0,
+                "overall_score": {score!r},
+            }})
+            """)
+        at = AppTest.from_string(script)
         at.run()
-        by_label = {m.label: m for m in at.metric}
-        score_metric = by_label["Data Health Score"]
-        assert score_metric.help is not None
-        assert "Excellent" in score_metric.help or "Good" in score_metric.help
+        assert at.exception == []
+        score_metric = {m.label: m for m in at.metric}["Data Health Score"]
+        assert f"assessment: {label}" in score_metric.help
 
 
 # ---------------------------------------------------------------------------
@@ -192,6 +249,20 @@ class TestComparison:
         # (Streamlit renders metric values as strings).
         assert str(records_pairs[0].value) == "4"
         assert str(records_pairs[1].value) == "3"
+        assert records_pairs[1].delta == "-1"
+
+    def test_comparison_fewer_duplicates_is_drawn_as_an_improvement(self):
+        from streamlit.proto.Metric_pb2 import Metric as MetricProto
+
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        assert at.exception == []
+        # "After" tiles come in section order: Records, Duplicates, Missing Values, Health Score.
+        # The fixture goes from one duplicate to none, and fewer duplicates is the good direction.
+        duplicates_after = [m for m in at.metric if m.label == "After"][1]
+        assert str(duplicates_after.value) == "0"
+        assert duplicates_after.delta == "-1"
+        assert duplicates_after.proto.color == MetricProto.MetricColor.GREEN
 
     WORSE_SCAFFOLD = textwrap.dedent("""
         import pandas as pd
@@ -296,6 +367,40 @@ class TestTabPreparation:
         records_removed = int(by_label["Records Removed"].value)
         assert records_removed == original_len - len(clean_df)
         assert records_removed >= 1
+
+    def test_prep_tab_shows_a_health_gain_as_a_rise(self):
+        from streamlit.proto.Metric_pb2 import Metric as MetricProto
+
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        next(b for b in at.button if b.label == "Run Cleaning Algorithms").click()
+        at.run()
+        assert at.exception == []
+
+        # Cleaning the fixture raises its health score, so the tile must read as a gain.
+        health = {m.label: m for m in at.metric}["Data Health Score"]
+        assert health.delta.startswith("+")
+        assert health.proto.direction == MetricProto.MetricDirection.UP
+
+    @pytest.mark.parametrize(
+        ("step", "log", "rows"),
+        [
+            # Only the ticked step may run: names are title-cased and all four rows stay ...
+            ("standardize_names", ["Standardized Names to Title Case."], 4),
+            # ... and the only duplicate pair (alice twice) goes, leaving three.
+            ("remove_duplicates", ["Removed 1 duplicate rows."], 3),
+        ],
+    )
+    def test_prep_tab_runs_only_the_selected_steps(self, step, log, rows):
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.session_state["cleaning_steps"] = {name: name == step for name in CLEANING_STEPS_DEFAULT}
+        at.run()
+        next(b for b in at.button if b.label == "Run Cleaning Algorithms").click()
+        at.run()
+        assert at.exception == []
+
+        assert at.session_state["clean_log"] == log
+        assert len(at.session_state["clean_df"]) == rows
 
     def test_prep_tab_no_steps_disables_run_button(self):
         # When the user disables every cleaning step, the Run button should be
@@ -455,6 +560,19 @@ class TestSidebar:
         render_sidebar()
         """)
 
+    @pytest.fixture(autouse=True)
+    def _undo_script_patches(self, monkeypatch):
+        # AppTest runs scripts in this process, so what _sidebar_script assigns (the data paths on
+        # the sidebar modules, a stand-in file_uploader on st.sidebar) would outlive its test.
+        import streamlit as st
+        import components.sidebar as sidebar
+        import utils.data_access as data_access
+
+        monkeypatch.setattr(sidebar, "DATA_PATH", sidebar.DATA_PATH)
+        monkeypatch.setattr(data_access, "DATA_DIR", data_access.DATA_DIR)
+        yield
+        st.sidebar.__dict__.pop("file_uploader", None)
+
     def test_sidebar_renders_without_exception(self):
         at = AppTest.from_string(self.SCAFFOLD)
         at.run()
@@ -524,26 +642,7 @@ class TestSidebar:
         assert at.selectbox(key="messiness_level").value == "high"
 
     def test_rerun_with_a_file_in_the_uploader_keeps_cleaned_state(self, tmp_path):
-        # AppTest cannot drive st.file_uploader, so the scaffold stands one in that returns
-        # the same upload on every run, as the real widget does while the file sits there.
-        script = textwrap.dedent(f"""
-            import io
-            import streamlit as st
-            import components.sidebar as sidebar
-            import utils.data_access as data_access
-
-            sidebar.DATA_PATH = {str(tmp_path / "data.csv")!r}
-            data_access.DATA_DIR = {str(tmp_path)!r}
-
-            class StubUpload(io.BytesIO):
-                file_id = "upload-1"
-                size = 100
-
-            CSV = b"Name,Email,Role,Join_Date,Event_Attendance\\nAnn,a@x.com,Member,2025-01-01,3\\n"
-            st.sidebar.file_uploader = lambda *args, **kwargs: StubUpload(CSV)
-            sidebar.render_sidebar()
-            """)
-        at = AppTest.from_string(script)
+        at = AppTest.from_string(_sidebar_script(tmp_path, upload=VALID_UPLOAD_CSV))
         at.run()
         at.radio(key="data_source").set_value("Upload CSV").run()
         assert (tmp_path / "data.csv").exists()
@@ -552,6 +651,51 @@ class TestSidebar:
         at.run()
         assert at.exception == []
         assert at.session_state["cleaned"] is True
+
+    def test_oversize_upload_is_refused_and_not_saved(self, tmp_path):
+        at = AppTest.from_string(_sidebar_script(tmp_path, upload=VALID_UPLOAD_CSV, upload_size=6 * 1024 * 1024))
+        at.run()
+        at.radio(key="data_source").set_value("Upload CSV").run()
+        assert at.exception == []
+        assert any("File too large" in e.value for e in at.sidebar.error)
+        assert len(at.sidebar.success) == 0
+        assert not (tmp_path / "data.csv").exists()
+
+    def test_upload_missing_required_columns_is_refused_and_not_saved(self, tmp_path):
+        at = AppTest.from_string(_sidebar_script(tmp_path, upload=b"Name,Foo\nAnn,1\n"))
+        at.run()
+        at.radio(key="data_source").set_value("Upload CSV").run()
+        assert at.exception == []
+        assert any("Missing required columns" in e.value for e in at.sidebar.error)
+        assert len(at.sidebar.success) == 0
+        assert not (tmp_path / "data.csv").exists()
+
+    def test_export_radio_switches_between_raw_and_cleaned_downloads(self, tmp_path):
+        _sample_dataframe().to_csv(tmp_path / "data.csv", index=False)
+        at = AppTest.from_string(_sidebar_script(tmp_path))
+        at.session_state["cleaned"] = True
+        at.session_state["clean_df"] = _sample_dataframe().iloc[[0, 3]]
+        at.run()
+        assert at.exception == []
+
+        def download_labels():
+            return [b.label for b in at.sidebar.download_button]
+
+        # The label is the only thing AppTest shows of a download button, and it names the dataset.
+        assert download_labels() == ["Download CSV (Raw)", "Download JSON (Raw)"]
+        next(r for r in at.sidebar.radio if r.label == "Export data:").set_value("cleaned").run()
+        assert at.exception == []
+        assert download_labels() == ["Download CSV (Cleaned)", "Download JSON (Cleaned)"]
+
+    def test_generate_button_honours_the_record_slider(self, tmp_path):
+        at = AppTest.from_string(_sidebar_script(tmp_path))
+        at.run()
+        at.slider(key="num_records").set_value(700).run()
+        next(b for b in at.sidebar.button if b.label == "Generate New Data").click()
+        at.run()
+        assert at.exception == []
+        # The default medium messiness adds duplicate rows on top of the requested count.
+        assert len(pd.read_csv(tmp_path / "data.csv")) >= 700
 
     def test_json_export_writes_dates_as_iso_strings(self):
         import json

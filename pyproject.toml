@@ -86,7 +86,8 @@ extend-exclude = '''
 '''
 
 [tool.coverage.run]
-source = ["utils", "community_pulse", "components"]
+# "app" is app.py, which tests/test_app.py runs; a run without that file warns "Module app was never imported".
+source = ["utils", "community_pulse", "components", "app"]
 omit = ["*/tests/*", "*/test_*.py"]
 
 [tool.coverage.report]
