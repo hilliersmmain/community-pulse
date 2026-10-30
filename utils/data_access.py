@@ -14,7 +14,8 @@ def ensure_data_dir() -> None:
     os.makedirs(DATA_DIR, exist_ok=True)
 
 
-@st.cache_data(show_spinner=False)
+# Bounded: 'Generate New Data' rewrites the CSV (new mtime, new key) without calling save_csv's clear().
+@st.cache_data(max_entries=2, show_spinner=False)
 def _read_csv_cached(path: str, mtime: float) -> pd.DataFrame:
     """Read CSV with cache invalidated by file modified time."""
     _ = mtime
