@@ -3,7 +3,9 @@ import re
 from typing import Optional, List
 from datetime import datetime
 
+from utils.constants import EMAIL_PATTERN
 from utils.date_parsing import parse_dates
+from utils.duplicates import duplicate_mask
 
 
 class DataCleaner:
@@ -40,25 +42,19 @@ class DataCleaner:
         return self.clean_df
 
     def remove_duplicates(self) -> None:
-        """Removes duplicates based on Email and Name."""
+        """Removes repeat rows: the same Email, ignoring case and surrounding spaces (see utils.duplicates)."""
         initial_count = len(self.clean_df)
-
-        if "Email" in self.clean_df.columns:
-            emails = self.clean_df["Email"]
-            # A missing email matches nothing, so those rows are never dropped as duplicates.
-            temp_email = emails.astype(str).str.lower().where(emails.notna())
-            self.clean_df = self.clean_df[~(temp_email.duplicated(keep="first") & temp_email.notna())]
-        else:
-            self.clean_df = self.clean_df.drop_duplicates()
-
+        self.clean_df = self.clean_df[~duplicate_mask(self.clean_df)]
         final_count = len(self.clean_df)
         self.log.append(f"Removed {initial_count - final_count} duplicate rows.")
 
     def standardize_names(self) -> None:
-        """Converts names to Title Case."""
+        """Title-cases names that are all upper or all lower; mixed-case names (McDonald, Jo Smith MD) are left alone."""
         if "Name" in self.clean_df.columns:
             names = self.clean_df["Name"]
-            self.clean_df["Name"] = names.astype(str).str.title().where(names.notna(), names)
+            text = names.astype(str)
+            needs_title_case = names.notna() & (text.str.isupper() | text.str.islower())
+            self.clean_df["Name"] = text.str.title().where(needs_title_case, names)
             self.log.append("Standardized Names to Title Case.")
 
     def fix_emails(self) -> None:
@@ -71,7 +67,7 @@ class DataCleaner:
                 return None
             email = str(email).lower().strip()
             email = email.replace(" at ", "@")
-            if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            if not re.fullmatch(EMAIL_PATTERN, email):
                 return None
             return email
 

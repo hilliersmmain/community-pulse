@@ -32,7 +32,7 @@ def render_kpi_section(metrics: Dict[str, Any]) -> None:
             metrics["duplicate_records"],
             delta=f"-{metrics['duplicate_records']}" if metrics["duplicate_records"] > 0 else None,
             delta_color="inverse",
-            help="Records that appear more than once, based on email and name matching (lower is better)",
+            help="Records whose email address already appears above them, ignoring case and spaces (lower is better)",
         )
         col2.metric(
             "Missing Values",

@@ -34,7 +34,11 @@ from utils.constants import (
 CLEANING_STEP_CHECKBOXES = (
     ("standardize_names", "Standardize Names", "Convert names to Title Case (e.g., 'john doe' → 'John Doe')"),
     ("fix_emails", "Fix Email Formats", "Fix invalid emails (e.g., 'user at domain.com' → 'user@domain.com')"),
-    ("remove_duplicates", "Remove Duplicates", "Remove duplicate rows based on Email and Name"),
+    (
+        "remove_duplicates",
+        "Remove Duplicates",
+        "Remove duplicate rows that share an Email address (case and spacing ignored)",
+    ),
     ("clean_dates", "Clean Dates", "Standardize date formats to YYYY-MM-DD"),
     ("handle_missing_values", "Handle Missing Values", "Fill missing attendance values with 0"),
 )
@@ -333,7 +337,7 @@ def render_sidebar() -> None:  # noqa: C901
 
     - **Standardize Names:** Fixes capitalization (e.g., "john doe" \u2192 "John Doe")
     - **Fix Emails:** Corrects format issues and removes invalid entries
-    - **Remove Duplicates:** Eliminates duplicate records based on email/name
+    - **Remove Duplicates:** Eliminates duplicate records that share an email address
     - **Clean Dates:** Standardizes date formats to YYYY-MM-DD
     - **Handle Missing:** Fills missing attendance values with 0
 

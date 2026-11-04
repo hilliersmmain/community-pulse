@@ -233,6 +233,13 @@ class TestDataCleaner:
         cleaner.remove_duplicates()
         assert cleaner.clean_df["Name"].tolist() == ["A", "B", "C"]
 
+    def test_remove_duplicates_ignores_case_and_surrounding_spaces_in_emails(self):
+        """The shared duplicate key is the lower-cased, stripped Email (remove_duplicates used to skip the strip)."""
+        df = pd.DataFrame({"Name": ["A", "B", "C"], "Email": ["a@x.com", " A@x.com ", "c@x.com"]})
+        cleaner = DataCleaner(df)
+        cleaner.remove_duplicates()
+        assert cleaner.clean_df["Name"].tolist() == ["A", "C"]
+
     def test_standardize_names_leaves_missing_names_missing(self):
         df = pd.DataFrame({"Name": ["john doe", None, np.nan]})
         cleaner = DataCleaner(df)
@@ -254,6 +261,41 @@ class TestDataCleaner:
         cleaner.fix_emails()
         emails = cleaner.clean_df["Email"].tolist()
         assert "john@test.com" in emails
+
+    @pytest.mark.parametrize("bad", ["ann@x.com; bob@y.com", "ann smith@x.com", "a@b.c"])
+    def test_fix_emails_drops_what_the_validator_rejects(self, bad):
+        """fix_emails and the Formatting validator share EMAIL_PATTERN, so nothing it keeps scores as malformed (W05)."""
+        cleaner = DataCleaner(pd.DataFrame({"Name": ["A"], "Email": [bad]}))
+        cleaner.fix_emails()
+        assert cleaner.clean_df.empty
+
+    def test_every_email_fix_emails_keeps_is_valid_to_the_validator(self):
+        from utils.health_metrics import _validate_email_series
+
+        raw = ["Ann at X.com", " bob@y.org ", "c@d.e", "no at sign", "ok@x.com", "a@b@c.com", "x y@z.com", "q@z.co.uk"]
+        cleaner = DataCleaner(pd.DataFrame({"Name": list("ABCDEFGH"), "Email": raw}))
+        cleaner.fix_emails()
+        kept = cleaner.clean_df["Email"]
+        assert kept.tolist() == ["ann@x.com", "bob@y.org", "ok@x.com", "q@z.co.uk"]
+        assert _validate_email_series(kept) == 1.0
+
+    def test_one_email_pattern_lives_in_constants(self):
+        import inspect
+
+        from utils import cleaner, constants, health_metrics
+
+        assert isinstance(constants.EMAIL_PATTERN, str)
+        for module in (cleaner, health_metrics):
+            assert "EMAIL_PATTERN" in inspect.getsource(module)
+            assert "@[a-zA-Z0-9.-]+" not in inspect.getsource(module), f"{module.__name__} carries its own email regex"
+
+    def test_standardize_names_leaves_mixed_case_alone(self):
+        """Only all-upper or all-lower names are re-cased; credentials and Mc/De prefixes survive (W06)."""
+        names = ["Jimmy Freeman MD", "Brenda Hardin PhD", "jane doe", "JOHN ROE", "McDonald", "John Smith III"]
+        cleaner = DataCleaner(pd.DataFrame({"Name": names}))
+        cleaner.standardize_names()
+        expected = ["Jimmy Freeman MD", "Brenda Hardin PhD", "Jane Doe", "John Roe", "McDonald", "John Smith III"]
+        assert cleaner.clean_df["Name"].tolist() == expected
 
     def test_timestamps_are_set(self):
         messy_data = pd.DataFrame(

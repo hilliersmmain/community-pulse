@@ -8,11 +8,14 @@ from datetime import datetime
 from typing import Callable, Dict, Any, List, Optional, Tuple
 
 from utils.constants import (
+    EMAIL_PATTERN,
     HEALTH_SCORE_WEIGHT_COMPLETENESS,
     HEALTH_SCORE_WEIGHT_FORMATTING,
     HEALTH_SCORE_WEIGHT_UNIQUENESS,
+    NAME_PATTERN,
 )
 from utils.date_parsing import parse_dates
+from utils.duplicates import duplicate_mask
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +42,7 @@ def _validate_email_series(s: pd.Series) -> float:
     """Return fraction of values that look like valid e-mail addresses."""
     if s.empty:
         return 1.0
-    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    valid = s.apply(lambda v: bool(re.match(pattern, str(v).strip())))
+    valid = s.apply(lambda v: bool(re.fullmatch(EMAIL_PATTERN, str(v).strip())))
     return float(valid.mean())
 
 
@@ -56,11 +58,10 @@ def _validate_date_series(s: pd.Series) -> float:
 
 
 def _validate_name_series(s: pd.Series) -> float:
-    """Return fraction of values that look like human names (letters/spaces/hyphens/apostrophes)."""
+    """Return fraction of values that look like human names (letters of any script, spaces, hyphens, apostrophes)."""
     if s.empty:
         return 1.0
-    pattern = r"^[a-zA-Z\s\'.-]+$"
-    valid = s.apply(lambda v: bool(re.match(pattern, str(v).strip())) and len(str(v).strip()) > 0)
+    valid = s.apply(lambda v: bool(re.fullmatch(NAME_PATTERN, str(v).strip())) and len(str(v).strip()) > 0)
     return float(valid.mean())
 
 
@@ -124,12 +125,16 @@ class DataHealthMetrics:
         return (non_null_cells / total_cells) * 100
 
     def calculate_duplicate_score(self) -> float:
-        """Calculate the duplicate score based on unique records."""
+        """Calculate the duplicate score: the percentage of rows that are not repeats.
+
+        A repeat is a row whose Email (lower-cased, stripped) already appeared above it, the
+        same rule ``DataCleaner.remove_duplicates`` uses; see ``utils.duplicates``.
+        """
         if len(self.df) == 0:
             return 100.0
 
-        unique_rows = len(self.df.drop_duplicates())
         total_rows = len(self.df)
+        unique_rows = total_rows - int(duplicate_mask(self.df).sum())
 
         return (unique_rows / total_rows) * 100
 
@@ -188,7 +193,7 @@ class DataHealthMetrics:
         total_records = len(self.df)
         total_cells = self.df.size
         null_cells = self.df.isna().sum().sum()
-        duplicates = total_records - len(self.df.drop_duplicates())
+        duplicates = int(duplicate_mask(self.df).sum())
 
         return {
             "total_records": total_records,

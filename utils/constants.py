@@ -50,6 +50,14 @@ HEALTH_SCORE_WEIGHT_FORMATTING = 0.3
 # the data generator writes. Slash dates are read month-first, dash dates day-first.
 DATE_FORMATS = ["ISO8601", "%m/%d/%Y", "%d-%m-%Y"]
 
+# One email shape for the whole app: DataCleaner.fix_emails keeps only what matches and the Formatting validator
+# scores against it, so cleaning can reach 100% Formatting. Use it with re.fullmatch.
+EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
+# A name is Unicode letters, spaces, apostrophes, full stops and hyphens: [^\W\d_] is "a word character that is not
+# a digit or underscore", i.e. any letter in any script. Use it with re.fullmatch.
+NAME_PATTERN = r"^(?:[^\W\d_]|[\s'.-])+$"
+
 # A date cell longer than this is never a date; parse_dates leaves it NaT (the "mixed" parser is quadratic).
 MAX_DATE_CHARS = 64
 

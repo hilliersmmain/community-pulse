@@ -7,6 +7,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from utils.cleaner import DataCleaner
 from utils.health_metrics import (
     DataHealthMetrics,
     FORMATTING_VALIDATORS,
@@ -298,6 +299,15 @@ class TestNameValidator:
         s = pd.Series(["123", "456abc", "!!!"])
         assert _validate_name_series(s) == 0.0
 
+    def test_name_validator_accepts_accented_letters(self):
+        """Names with non-ASCII letters are names (W04); they used to hold the Formatting score down for good."""
+        s = pd.Series(["José García", "Zoë Müller", "Nguyễn Văn An", "Ann Lee"])
+        assert _validate_name_series(s) == 1.0
+
+    def test_digits_and_underscores_still_fail_with_unicode_letters_allowed(self):
+        s = pd.Series(["R2D2", "Ann3", "José_García", "José García"])
+        assert _validate_name_series(s) == pytest.approx(0.25)
+
     def test_empty_series(self):
         assert _validate_name_series(pd.Series([], dtype=str)) == 1.0
 
@@ -466,3 +476,50 @@ class TestFormattingPenaltyOnNewColumns:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestOneDefinitionOfADuplicate:
+    """The Duplicate Records KPI, the Duplicate Score and the cleaner count the same rows (review W01, W57, L4)."""
+
+    @staticmethod
+    def case_variant_frame():
+        return pd.DataFrame(
+            {
+                "ID": [1, 2],
+                "Name": ["Ann", "ANN"],
+                "Email": ["ann@x.com", "ANN@x.com"],
+                "Role": ["Member"] * 2,
+                "Join_Date": ["2024-01-01"] * 2,
+                "Event_Attendance": [1, 1],
+            }
+        )
+
+    def test_duplicate_count_matches_what_the_cleaner_removes(self):
+        df = self.case_variant_frame()
+        removed = len(df) - len(DataCleaner(df).clean_all(["fix_emails", "remove_duplicates"]))
+        metrics = DataHealthMetrics(df).get_detailed_metrics()
+
+        assert removed == 1
+        assert metrics["duplicate_records"] == 1
+        assert metrics["unique_records"] == 1
+        assert metrics["duplicate_score"] == 50.0
+
+    def test_duplicate_score_uses_the_email_key(self):
+        assert DataHealthMetrics(self.case_variant_frame()).calculate_duplicate_score() == 50.0
+
+    def test_duplicate_count_uses_email_as_documented(self):
+        """KPI_DEFINITIONS.md says duplicates are found by email address matching: rows differing elsewhere count."""
+        df = pd.DataFrame({"Name": ["Ann", "Annie"], "Email": [" a@x.com", "A@X.COM "], "Role": ["Member", "Admin"]})
+        assert DataHealthMetrics(df).get_detailed_metrics()["duplicate_records"] == 1
+
+    def test_missing_emails_are_never_duplicates_of_each_other(self):
+        df = pd.DataFrame({"Name": ["A", "B", "C"], "Email": [np.nan, np.nan, "c@x.com"]})
+        metrics = DataHealthMetrics(df).get_detailed_metrics()
+        assert metrics["duplicate_records"] == 0
+        assert metrics["duplicate_score"] == 100.0
+
+    def test_without_an_email_column_whole_rows_are_compared(self):
+        df = pd.DataFrame({"Name": ["Ann", "Ann", "Ann"], "Role": ["Member", "Member", "Admin"]})
+        metrics = DataHealthMetrics(df).get_detailed_metrics()
+        assert metrics["duplicate_records"] == 1
+        assert round(metrics["duplicate_score"], 1) == 66.7

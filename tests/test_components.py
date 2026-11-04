@@ -161,6 +161,14 @@ class TestKPIDisplay:
         assert str(by_label["Unique Records"].value) == "2"
         assert str(by_label["Duplicate Records"].value) == "1"
 
+    def test_duplicate_records_help_says_email_not_name(self):
+        """Duplicates are found by Email alone (case and spacing ignored); the help text used to say email and name."""
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        help_text = {m.label: m.help for m in at.metric}["Duplicate Records"].lower()
+        assert "email" in help_text
+        assert "name" not in help_text
+
     # The help text ends with a static legend ("90%+ = Excellent | 70-89% = Good | ..."), so a bare
     # "Excellent" or "Good" matches for any score. Only the "assessment: <label>" line is dynamic.
     @pytest.mark.parametrize(
@@ -593,6 +601,17 @@ class TestSidebar:
             "clean_dates",
             "handle_missing_values",
         }
+
+    def test_duplicate_step_help_says_email_not_name(self):
+        """The checkbox tooltip and the Help & Guide text both describe the Email-only duplicate key."""
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        checkbox_help = at.checkbox(key="cleaning_step_remove_duplicates").help.lower()
+        guide = next(m.value for m in at.sidebar.markdown if "Remove Duplicates:" in m.value)
+        line = next(row for row in guide.splitlines() if "Remove Duplicates:" in row).lower()
+        for text in (checkbox_help, line):
+            assert "email" in text
+            assert "name" not in text
 
     def test_sidebar_cleaning_step_count_caption_present(self):
         # 5 steps default to True, so the caption should reflect "5 step(s)".
