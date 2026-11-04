@@ -3,7 +3,6 @@ venv/
 *.pyc
 .DS_Store
 data/messy_club_data.csv
-bandit-report.json
 .env
 .ai_archive/
 demo_outputs/
