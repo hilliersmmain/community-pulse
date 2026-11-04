@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+KEY_RAW_DF = "raw_df"
 KEY_CLEANED = "cleaned"
 KEY_CLEAN_DF = "clean_df"
 KEY_CLEAN_LOG = "clean_log"

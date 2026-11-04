@@ -9,16 +9,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pandas as pd
-
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from streamlit.testing.v1 import AppTest
-
-import components.sidebar as sidebar
-import utils.constants as constants
-import utils.data_access as data_access
 
 
 def _click(at: AppTest, label: str) -> None:
@@ -28,18 +22,14 @@ def _click(at: AppTest, label: str) -> None:
 
 
 def test_cleaned_view_shows_the_cleaned_rows(tmp_path, monkeypatch):
-    # The generated CSV lands at the relative DATA_PATH, so run from a scratch directory. Other tests
-    # point the sidebar's module globals at their own tmp dirs, so pin them back to the real paths.
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(sidebar, "DATA_PATH", constants.DATA_PATH)
-    monkeypatch.setattr(data_access, "DATA_DIR", constants.DATA_DIR)
+    monkeypatch.chdir(tmp_path)  # any stray relative write lands here, not in the repo
 
     at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60)
     at.run()
     assert at.exception == []
 
     _click(at, "Generate New Data")
-    raw_rows = len(pd.read_csv(tmp_path / constants.DATA_PATH))
+    raw_rows = len(at.session_state["raw_df"])
 
     _click(at, "Run Cleaning Algorithms")
     clean_rows = len(at.session_state["clean_df"])

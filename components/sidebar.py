@@ -1,13 +1,13 @@
+import io
 import streamlit as st
 import pandas as pd
-import os
 from datetime import datetime
 from utils.data_generator import generate_messy_data
 from utils.health_metrics import DataHealthMetrics
 from utils.ui_helpers import show_loading_message, show_success_message, show_error_message, get_contextual_message
-from utils.data_access import load_csv, save_csv, ensure_data_dir
 from utils.upload_validation import validate_upload_dataframe
 from utils.session_keys import (
+    KEY_RAW_DF,
     KEY_CLEANED,
     KEY_CLEAN_DF,
     KEY_VIEW_STATE,
@@ -19,8 +19,6 @@ from utils.session_keys import (
     reset_clean_state,
 )
 from utils.constants import (
-    DATA_PATH,
-    DATA_DIR,
     DEFAULT_NUM_RECORDS,
     DEFAULT_MESSINESS,
     MESSINESS_OPTIONS,
@@ -44,6 +42,26 @@ CLEANING_STEP_CHECKBOXES = (
 )
 
 
+def _as_read_back_from_csv(df: pd.DataFrame) -> pd.DataFrame:
+    """Return *df* exactly as it reads back after a CSV write, the form the dashboard analyses.
+
+    Raw data is kept in memory, but it still takes the CSV round trip it always took, so column
+    types (dates as text, for one) and every score derived from them are the same for generated
+    and uploaded data.
+    """
+    return pd.read_csv(io.StringIO(df.to_csv(index=False)))
+
+
+def _set_raw_data(df: pd.DataFrame) -> None:
+    """Make *df* this browser session's raw data.
+
+    It lives in session state, never in a file on the server: one Streamlit server runs every
+    visitor's session in one process, so a file there would be read, downloaded and
+    overwritten by every other visitor.
+    """
+    st.session_state[KEY_RAW_DF] = _as_read_back_from_csv(df)
+
+
 def _store_upload(file_id: str, upload_df: pd.DataFrame) -> None:
     """Make a validated upload the raw data, once per uploaded file.
 
@@ -52,8 +70,7 @@ def _store_upload(file_id: str, upload_df: pd.DataFrame) -> None:
     """
     if st.session_state.get(KEY_UPLOADED_FILE_ID) == file_id:
         return
-    ensure_data_dir()
-    save_csv(upload_df, DATA_PATH)
+    _set_raw_data(upload_df)
     reset_clean_state()
     st.session_state[KEY_DATA_LOADED_AT] = datetime.now()
     st.session_state[KEY_UPLOADED_FILE_ID] = file_id
@@ -78,12 +95,9 @@ def render_sidebar() -> None:  # noqa: C901
         if st.session_state.get(KEY_CLEANED) and KEY_CLEAN_DF in st.session_state:
             stats_df = st.session_state[KEY_CLEAN_DF]
             is_cleaned = True
-        elif os.path.exists(DATA_PATH):
-            try:
-                stats_df = load_csv(DATA_PATH)
-                is_cleaned = False
-            except Exception:
-                st.caption("Unable to load quick stats.")
+        elif KEY_RAW_DF in st.session_state:
+            stats_df = st.session_state[KEY_RAW_DF]
+            is_cleaned = False
 
         if stats_df is not None:
             health = DataHealthMetrics(stats_df)
@@ -138,8 +152,7 @@ def render_sidebar() -> None:  # noqa: C901
         if st.sidebar.button("Generate New Data", type="primary", help="Create fresh sample data"):
             with show_loading_message(get_contextual_message("loading_data")):
                 try:
-                    ensure_data_dir()
-                    generate_messy_data(num_records=num_records, save_path=DATA_PATH, messiness_level=messiness_level)
+                    _set_raw_data(generate_messy_data(num_records=num_records, messiness_level=messiness_level))
                     show_success_message(
                         get_contextual_message("data_generated", num_records=num_records, messiness=messiness_level)
                     )
@@ -173,7 +186,7 @@ def render_sidebar() -> None:  # noqa: C901
                             st.sidebar.error(error)
                     else:
                         _store_upload(uploaded_file.file_id, upload_df)
-                        st.sidebar.success(f"Uploaded {len(upload_df)} records successfully to `{DATA_DIR}`.")
+                        st.sidebar.success(f"Uploaded {len(upload_df)} records successfully.")
             except Exception as e:
                 st.sidebar.error("Error reading file. Please ensure it is a valid CSV.")
                 st.sidebar.caption(f"Details: {e}")
@@ -224,12 +237,12 @@ def render_sidebar() -> None:  # noqa: C901
             export_df = st.session_state[KEY_CLEAN_DF]
             export_label = "Cleaned"
         else:
-            if os.path.exists(DATA_PATH):
-                export_df = load_csv(DATA_PATH)
+            if KEY_RAW_DF in st.session_state:
+                export_df = st.session_state[KEY_RAW_DF]
                 export_label = "Raw"
     else:
-        if os.path.exists(DATA_PATH):
-            export_df = load_csv(DATA_PATH)
+        if KEY_RAW_DF in st.session_state:
+            export_df = st.session_state[KEY_RAW_DF]
             export_label = "Raw"
 
     if export_df is not None:

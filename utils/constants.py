@@ -12,9 +12,6 @@ COLOR_ACCENT_TREND = "#D55E00"  # Okabe-Ito vermillion — trend lines (dashed)
 COLOR_MEAN_LINE = "#009E73"  # Okabe-Ito bluish green — mean reference line (distinct from vermillion trend)
 COLOR_MEDIAN_LINE = "#E69F00"  # Okabe-Ito orange-yellow — median reference line (distinct from mean green)
 
-DATA_PATH = "data/messy_club_data.csv"
-DATA_DIR = "data"
-
 DEFAULT_NUM_RECORDS = 500
 DEFAULT_MESSINESS = "medium"
 MESSINESS_OPTIONS = ["low", "medium", "high"]

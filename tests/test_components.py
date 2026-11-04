@@ -85,8 +85,8 @@ def sample_df() -> pd.DataFrame:
 VALID_UPLOAD_CSV = b"Name,Email,Role,Join_Date,Event_Attendance\nAnn,a@x.com,Member,2025-01-01,3\n"
 
 
-def _sidebar_script(tmp_path, upload: bytes | None = None, upload_size: int = 100) -> str:
-    """A script that renders the sidebar with ``tmp_path`` as its data folder.
+def _sidebar_script(upload: bytes | None = None, upload_size: int = 100) -> str:
+    """A script that renders the sidebar.
 
     AppTest cannot drive st.file_uploader, so given ``upload`` (CSV bytes) the script stands one in
     that returns the same upload on every run, as the real widget does while the file sits there.
@@ -95,10 +95,6 @@ def _sidebar_script(tmp_path, upload: bytes | None = None, upload_size: int = 10
         "import io",
         "import streamlit as st",
         "import components.sidebar as sidebar",
-        "import utils.data_access as data_access",
-        "",
-        f"sidebar.DATA_PATH = {str(tmp_path / 'data.csv')!r}",
-        f"data_access.DATA_DIR = {str(tmp_path)!r}",
     ]
     if upload is not None:
         lines += [
@@ -636,8 +632,7 @@ class TestSidebar:
     """The sidebar exercises the most surface area: data source toggle, the
     cleaning-step expander, the reset button, and the help expander.
 
-    We only verify the pieces that are deterministic without an on-disk CSV
-    and without triggering ``st.rerun``-protected button paths."""
+    A visitor's raw data lives in session state (``raw_df``), so a test seeds or reads that key."""
 
     SCAFFOLD = textwrap.dedent("""
         from components.sidebar import render_sidebar
@@ -645,15 +640,11 @@ class TestSidebar:
         """)
 
     @pytest.fixture(autouse=True)
-    def _undo_script_patches(self, monkeypatch):
-        # AppTest runs scripts in this process, so what _sidebar_script assigns (the data paths on
-        # the sidebar modules, a stand-in file_uploader on st.sidebar) would outlive its test.
+    def _undo_script_patches(self):
+        # AppTest runs scripts in this process, so the stand-in file_uploader that _sidebar_script
+        # assigns on st.sidebar would outlive its test.
         import streamlit as st
-        import components.sidebar as sidebar
-        import utils.data_access as data_access
 
-        monkeypatch.setattr(sidebar, "DATA_PATH", sidebar.DATA_PATH)
-        monkeypatch.setattr(data_access, "DATA_DIR", data_access.DATA_DIR)
         yield
         st.sidebar.__dict__.pop("file_uploader", None)
 
@@ -736,38 +727,38 @@ class TestSidebar:
         assert at.slider(key="num_records").value == 700
         assert at.selectbox(key="messiness_level").value == "high"
 
-    def test_rerun_with_a_file_in_the_uploader_keeps_cleaned_state(self, tmp_path):
-        at = AppTest.from_string(_sidebar_script(tmp_path, upload=VALID_UPLOAD_CSV))
+    def test_rerun_with_a_file_in_the_uploader_keeps_cleaned_state(self):
+        at = AppTest.from_string(_sidebar_script(upload=VALID_UPLOAD_CSV))
         at.run()
         at.radio(key="data_source").set_value("Upload CSV").run()
-        assert (tmp_path / "data.csv").exists()
+        assert len(at.session_state["raw_df"]) == 1
         at.session_state["cleaned"] = True  # as if "Run Cleaning Algorithms" was clicked
         at.session_state["clean_df"] = _sample_dataframe()
         at.run()
         assert at.exception == []
         assert at.session_state["cleaned"] is True
 
-    def test_oversize_upload_is_refused_and_not_saved(self, tmp_path):
-        at = AppTest.from_string(_sidebar_script(tmp_path, upload=VALID_UPLOAD_CSV, upload_size=6 * 1024 * 1024))
+    def test_oversize_upload_is_refused_and_not_stored(self):
+        at = AppTest.from_string(_sidebar_script(upload=VALID_UPLOAD_CSV, upload_size=6 * 1024 * 1024))
         at.run()
         at.radio(key="data_source").set_value("Upload CSV").run()
         assert at.exception == []
         assert any("File too large" in e.value for e in at.sidebar.error)
         assert len(at.sidebar.success) == 0
-        assert not (tmp_path / "data.csv").exists()
+        assert "raw_df" not in at.session_state
 
-    def test_upload_missing_required_columns_is_refused_and_not_saved(self, tmp_path):
-        at = AppTest.from_string(_sidebar_script(tmp_path, upload=b"Name,Foo\nAnn,1\n"))
+    def test_upload_missing_required_columns_is_refused_and_not_stored(self):
+        at = AppTest.from_string(_sidebar_script(upload=b"Name,Foo\nAnn,1\n"))
         at.run()
         at.radio(key="data_source").set_value("Upload CSV").run()
         assert at.exception == []
         assert any("Missing required columns" in e.value for e in at.sidebar.error)
         assert len(at.sidebar.success) == 0
-        assert not (tmp_path / "data.csv").exists()
+        assert "raw_df" not in at.session_state
 
-    def test_export_radio_switches_between_raw_and_cleaned_downloads(self, tmp_path):
-        _sample_dataframe().to_csv(tmp_path / "data.csv", index=False)
-        at = AppTest.from_string(_sidebar_script(tmp_path))
+    def test_export_radio_switches_between_raw_and_cleaned_downloads(self):
+        at = AppTest.from_string(_sidebar_script())
+        at.session_state["raw_df"] = _sample_dataframe()
         at.session_state["cleaned"] = True
         at.session_state["clean_df"] = _sample_dataframe().iloc[[0, 3]]
         at.run()
@@ -782,15 +773,35 @@ class TestSidebar:
         assert at.exception == []
         assert download_labels() == ["Download CSV (Cleaned)", "Download JSON (Cleaned)"]
 
-    def test_generate_button_honours_the_record_slider(self, tmp_path):
-        at = AppTest.from_string(_sidebar_script(tmp_path))
+    def test_generate_button_honours_the_record_slider(self):
+        at = AppTest.from_string(_sidebar_script())
         at.run()
         at.slider(key="num_records").set_value(700).run()
         next(b for b in at.sidebar.button if b.label == "Generate New Data").click()
         at.run()
         assert at.exception == []
         # The default medium messiness adds duplicate rows on top of the requested count.
-        assert len(pd.read_csv(tmp_path / "data.csv")) >= 700
+        assert len(at.session_state["raw_df"]) >= 700
+
+    def test_an_upload_is_invisible_to_every_other_session(self, tmp_path, monkeypatch):
+        # One Streamlit server runs every visitor's session in one process, as these two AppTests
+        # share this one. An upload used to go to one server-wide file, which every other session
+        # showed in Quick Stats and offered for download.
+        monkeypatch.chdir(tmp_path)  # any stray relative write lands here, not in the repo
+        uploader = AppTest.from_string(_sidebar_script(upload=VALID_UPLOAD_CSV))
+        uploader.run()
+        uploader.radio(key="data_source").set_value("Upload CSV").run()
+        assert uploader.exception == []
+        assert len(uploader.download_button) == 2
+
+        other = AppTest.from_string(self.SCAFFOLD)
+        other.run()
+        assert other.exception == []
+        assert len(other.download_button) == 0
+        assert "No data available" in [c.value for c in other.caption]
+        assert "raw_df" not in other.session_state
+        # The uploader's own session keeps what it uploaded.
+        assert len(uploader.session_state["raw_df"]) == 1
 
     def test_json_export_writes_dates_as_iso_strings(self):
         import json
@@ -799,6 +810,28 @@ class TestSidebar:
         df = pd.DataFrame({"Name": ["Ann"], "Join_Date": pd.to_datetime(["2025-06-01"])})
         records = json.loads(export_json(df))
         assert records == [{"Name": "Ann", "Join_Date": "2025-06-01T00:00:00.000"}]
+
+
+def test_generated_data_is_invisible_to_every_other_session(tmp_path, monkeypatch):
+    """The whole app, in two sessions of one process: data one visitor generates must not
+    reach another visitor's main page, Quick Stats or export buttons."""
+    app_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "app.py"))
+    monkeypatch.chdir(tmp_path)  # any stray relative write lands here, not in the repo
+    generator = AppTest.from_file(app_path, default_timeout=60)
+    generator.run()
+    next(b for b in generator.button if b.label == "Generate New Data").click().run()
+    assert generator.exception == []
+    assert len(generator.dataframe) == 1
+
+    other = AppTest.from_file(app_path, default_timeout=60)
+    other.run()
+    assert other.exception == []
+    assert len(other.dataframe) == 0
+    assert len(other.download_button) == 0
+    assert any("Getting Started" in i.value for i in other.info)
+    assert "raw_df" not in other.session_state
+    # Kept as it reads back from CSV, as the old file round trip left it: timestamps as text.
+    assert generator.session_state["raw_df"]["Last_Login"].dtype == object
 
 
 def test_no_deprecated_use_container_width():

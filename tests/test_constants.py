@@ -1,7 +1,6 @@
 """Tests for constants module."""
 
 from utils.constants import (
-    DATA_PATH,
     DEFAULT_NUM_RECORDS,
     DEFAULT_MESSINESS,
     MESSINESS_OPTIONS,
@@ -15,10 +14,6 @@ from utils.constants import (
 
 
 class TestConstants:
-    def test_data_path_is_string(self):
-        assert isinstance(DATA_PATH, str)
-        assert DATA_PATH.endswith(".csv")
-
     def test_defaults_are_valid(self):
         assert DEFAULT_NUM_RECORDS == 500
         assert DEFAULT_MESSINESS in MESSINESS_OPTIONS

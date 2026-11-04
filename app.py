@@ -1,12 +1,17 @@
 import streamlit as st
-import os
 from datetime import datetime
 from typing import Dict, cast
 from utils.ui_helpers import initialize_session_state, show_welcome_modal, show_empty_state, MESSAGES
 from utils.health_metrics import get_health_metrics
-from utils.constants import DATA_PATH, CUSTOM_CSS
-from utils.data_access import load_csv
-from utils.session_keys import KEY_DATA_LOADED_AT, KEY_VIEW_STATE, KEY_CLEANED, KEY_CLEAN_DF, KEY_CLEANING_COMPLETED_AT
+from utils.constants import CUSTOM_CSS
+from utils.session_keys import (
+    KEY_RAW_DF,
+    KEY_DATA_LOADED_AT,
+    KEY_VIEW_STATE,
+    KEY_CLEANED,
+    KEY_CLEAN_DF,
+    KEY_CLEANING_COMPLETED_AT,
+)
 from components.sidebar import render_sidebar
 from components.kpi_display import render_kpi_section
 from components.comparison import render_comparison
@@ -40,9 +45,9 @@ st.markdown(
 
 render_sidebar()
 
-# Load Data
-if os.path.exists(DATA_PATH):
-    raw_df = load_csv(DATA_PATH)
+# Load Data: this session's own, from session state; never a file shared with other visitors
+if KEY_RAW_DF in st.session_state:
+    raw_df = st.session_state[KEY_RAW_DF]
     if KEY_DATA_LOADED_AT not in st.session_state:
         st.session_state[KEY_DATA_LOADED_AT] = datetime.now()
 else:
