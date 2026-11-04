@@ -116,9 +116,10 @@ class TestDataCleaner:
         assert parsed[1] == pd.Timestamp("2025-01-15")
         assert parsed[2] == pd.Timestamp("2025-03-15")
         assert parsed[4] == pd.Timestamp("2024-12-01")
-        assert "Imputed 1 missing/bad dates" in cleaner.log[-1]
+        assert pd.isna(parsed[3])  # "Unknown" stays blank; it is not given the most common date
+        assert "Left 1 unreadable dates blank" in cleaner.log[-1]
 
-    def test_clean_dates_after_csv_round_trip_imputes_only_unknowns(self, tmp_path):
+    def test_clean_dates_after_csv_round_trip_blanks_only_unknowns(self, tmp_path):
         from datetime import date
         from utils.data_generator import DataGenerator
 
@@ -132,7 +133,70 @@ class TestDataCleaner:
         cleaner = DataCleaner(df)
         cleaner.clean_dates()
 
-        assert f"Imputed {n_unknown} missing/bad dates" in cleaner.log[-1]
+        assert n_unknown > 0
+        assert cleaner.clean_df["Join_Date"].isna().sum() == n_unknown
+        assert f"Left {n_unknown} unreadable dates blank" in cleaner.log[-1]
+
+    def test_clean_dates_does_not_pile_unreadable_dates_onto_one_day(self):
+        """W10: every unreadable date used to be filled with the single most common date, a fake spike."""
+        dates = [f"2024-{m:02d}-{d:02d}" for m in range(1, 7) for d in range(1, 11)] + ["Unknown"] * 10
+        cleaner = DataCleaner(pd.DataFrame({"Join_Date": dates}))
+        cleaner.clean_dates()
+        joined = cleaner.clean_df["Join_Date"]
+        assert joined.value_counts().max() == 1
+        assert joined.isna().sum() == 10
+        assert pd.api.types.is_datetime64_any_dtype(joined)
+
+    def test_clean_dates_counts_unreadable_and_already_missing_dates_separately(self):
+        df = pd.DataFrame({"Join_Date": ["2024-01-05", "Unknown", None, "01/06/2024"]})
+        cleaner = DataCleaner(df)
+        cleaner.clean_dates()
+        assert cleaner.clean_df["Join_Date"].isna().tolist() == [False, True, True, False]
+        assert (
+            cleaner.log[-1]
+            == "Standardized Dates. Left 1 unreadable dates blank (not guessed); 1 were already missing."
+        )
+
+    def test_clean_dates_with_nothing_to_blank_says_so(self):
+        cleaner = DataCleaner(pd.DataFrame({"Join_Date": ["2024-01-05", "01/06/2024"]}))
+        cleaner.clean_dates()
+        assert cleaner.log[-1] == "Standardized Dates. Every date was readable."
+
+    def test_dates_left_blank_flow_through_the_chart_metrics_and_exports(self):
+        """Every consumer of Join_Date copes with NaT: the chart plots the dated rows, completeness takes the hit."""
+        from components.sidebar import export_json
+        from utils.health_metrics import DataHealthMetrics
+        from utils.visualizer import plot_attendance_trend
+
+        df = pd.DataFrame(
+            {
+                "Name": ["A", "B", "C", "D"],
+                "Email": ["a@x.com", "b@x.com", "c@x.com", "d@x.com"],
+                "Role": ["Member"] * 4,
+                "Join_Date": ["2024-01-05", "Unknown", "2024-03-02", "Unknown"],
+                "Event_Attendance": [1, 2, 3, 4],
+            }
+        )
+        cleaned = DataCleaner(df).clean_all()
+
+        metrics = DataHealthMetrics(cleaned).get_detailed_metrics()
+        assert metrics["null_cells"] == 2
+        assert metrics["completeness_score"] == 90.0
+        assert metrics["formatting_score"] == 100.0
+
+        line = next(t for t in plot_attendance_trend(cleaned).data if t.name == "New Members")
+        assert list(line.x) == ["2024-01", "2024-02", "2024-03"]
+        assert sum(line.y) == 2
+
+        assert export_json(cleaned).count('"Join_Date":null') == 2
+        assert cleaned.to_csv(index=False).splitlines()[2] == "B,b@x.com,Member,,2"
+
+    def test_a_cleaned_frame_with_no_readable_date_still_plots_as_an_empty_chart(self):
+        from utils.visualizer import plot_attendance_trend
+
+        cleaned = DataCleaner(pd.DataFrame({"Join_Date": ["Unknown", "n/a"]})).clean_all(["clean_dates"])
+        assert cleaned["Join_Date"].isna().all()
+        assert len(plot_attendance_trend(cleaned).data) == 0
 
     def test_handle_missing_values(self, sample_data_with_missing_values):
         cleaner = DataCleaner(sample_data_with_missing_values)

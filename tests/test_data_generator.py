@@ -148,3 +148,38 @@ class TestReferenceDate:
 
         assert self._date_offsets(df_first, first) == self._date_offsets(df_second, second)
         assert df_first["Event_Attendance"].equals(df_second["Event_Attendance"])
+
+
+class TestEventRegistrationColumns:
+    """Review items L5 and W03: the registration window and the 'no event' marker survive a CSV round trip."""
+
+    REFERENCE = date(2026, 10, 1)
+
+    def test_event_registered_survives_csv_round_trip(self, tmp_path):
+        """W03: 'None' is one of pandas' default NA tokens, so read_csv turned a quarter of the column into NaN."""
+        path = tmp_path / "d.csv"
+        df = DataGenerator(seed=5, reference_date=self.REFERENCE).generate(num_records=200, save_path=str(path))
+        back = pd.read_csv(path)
+        assert df["Event_Registered"].isna().sum() == 0
+        assert back["Event_Registered"].isna().sum() == 0
+        assert sorted(back["Event_Registered"].unique()) == sorted(EVENT_CHOICES)
+
+    def test_no_event_rows_have_no_registration_date(self):
+        df = DataGenerator(seed=5, reference_date=self.REFERENCE).generate(num_records=400, messiness_level="low")
+        no_event = df[df["Event_Registered"] == "No Event"]
+        assert len(no_event) > 0
+        assert no_event["Registration_Date"].isna().all()
+        assert df[df["Event_Registered"] != "No Event"]["Registration_Date"].notna().any()
+
+    def test_registration_dates_span_about_six_months(self):
+        """L5: Faker's old "-6m" meant six minutes, so every registration fell on the day before the reference."""
+        df = DataGenerator(seed=5, reference_date=self.REFERENCE).generate(num_records=500, messiness_level="low")
+        registered = pd.to_datetime(df["Registration_Date"].dropna())
+        assert 150 <= (registered.max() - registered.min()).days <= 183
+        assert registered.max() <= pd.Timestamp(self.REFERENCE)
+        assert registered.min() >= pd.Timestamp(self.REFERENCE - REGISTRATION_DATE_SPAN)
+
+    def test_registration_span_is_a_whole_number_of_days(self):
+        """date - timedelta floors a fractional day count and date + (-timedelta) does not; whole days cannot differ."""
+        assert REGISTRATION_DATE_SPAN.seconds == 0 and REGISTRATION_DATE_SPAN.microseconds == 0
+        assert 150 <= REGISTRATION_DATE_SPAN.days <= 190

@@ -63,13 +63,18 @@ class DataGenerator:
         )
 
 
-EVENT_CHOICES = ["Spring Gala", "Summer Camp", "Fall Fundraiser", "None"]
-# How far back each generated date can fall from the reference date. These reproduce exactly
-# what Faker's wall-clock strings "-2y", "-6m" and "-1y" used to give: "-2y" is 730.48 days,
-# which a date floors to 731; "-6m" is six *minutes* to Faker (months are "M"), which a date
-# floors to one day; "-1y" keeps its fractional 365.24 days on a datetime.
+# The marker for "no event" must not be a word pandas reads back as missing: "None" is one of read_csv's default
+# NA tokens, so the old value became NaN on load and counted as a missing cell nobody could clean.
+NO_EVENT = "No Event"
+EVENT_CHOICES = ["Spring Gala", "Summer Camp", "Fall Fundraiser", NO_EVENT]
+# How far back each generated date can fall from the reference date. Join_Date reproduces what Faker's
+# wall-clock string "-2y" gave: 730.48 days, which a date floors to 731. Last_Login keeps the fractional
+# 365.24 days of "-1y" on a datetime. Registration_Date is six months (183 days): the old "-6m" meant six
+# *minutes* to Faker (months are "M"), so every registration fell on the day before the reference. It is a
+# whole number of days because `date - timedelta` floors a fractional day count and `date + (-timedelta)`
+# does not, so a fractional span would shift the window by a day depending on how the sum is written.
 JOIN_DATE_SPAN = timedelta(days=731)
-REGISTRATION_DATE_SPAN = timedelta(days=1)
+REGISTRATION_DATE_SPAN = timedelta(days=183)
 LAST_LOGIN_SPAN = timedelta(days=365.24)
 MESSINESS_PROFILES = {
     "low": {
@@ -107,7 +112,7 @@ def _build_record(today: date, now: datetime) -> dict:
     event_registered = np.random.choice(EVENT_CHOICES, p=[0.25, 0.25, 0.25, 0.25])
     reg_date = (
         fake.date_between(start_date=today - REGISTRATION_DATE_SPAN, end_date=today)
-        if event_registered != "None" and random.random() > 0.4
+        if event_registered != NO_EVENT and random.random() > 0.4
         else None
     )
     return {

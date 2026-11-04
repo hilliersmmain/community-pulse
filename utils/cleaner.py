@@ -80,22 +80,23 @@ class DataCleaner:
         self.log.append(f"Fixed email formatting. Removed {n_dropped} invalid emails.")
 
     def clean_dates(self) -> None:
-        """Standardizes Join_Date to datetime objects."""
+        """Standardizes Join_Date to datetime objects; a date nothing can read stays blank (NaT), never guessed."""
         if "Join_Date" not in self.clean_df.columns:
             return
 
-        self.clean_df["Join_Date"] = parse_dates(self.clean_df["Join_Date"])
+        original = self.clean_df["Join_Date"]
+        parsed = parse_dates(original)
+        n_unreadable = int((parsed.isna() & original.notna()).sum())
+        n_missing = int(original.isna().sum())
+        self.clean_df["Join_Date"] = parsed
 
-        join_dates = self.clean_df["Join_Date"].copy()
-        n_fixed = join_dates.isna().sum()
-
-        if n_fixed > 0 and not join_dates.mode().empty:
-            mode_date = join_dates.mode()[0]
-            join_dates = join_dates.fillna(mode_date)
-            self.clean_df["Join_Date"] = join_dates
-            self.log.append(f"Standardized Dates. Imputed {n_fixed} missing/bad dates with mode.")
-        else:
-            self.log.append("Standardized Dates. No missing values found or mode undefined.")
+        if n_unreadable == 0 and n_missing == 0:
+            self.log.append("Standardized Dates. Every date was readable.")
+            return
+        message = f"Standardized Dates. Left {n_unreadable} unreadable dates blank (not guessed)"
+        if n_missing:
+            message += f"; {n_missing} were already missing"
+        self.log.append(message + ".")
 
     def handle_missing_values(self) -> None:
         """Fills missing numeric values; a value that isn't a number counts as missing."""

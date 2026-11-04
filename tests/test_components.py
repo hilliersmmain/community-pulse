@@ -272,6 +272,42 @@ class TestComparison:
         assert duplicates_after.delta == "-1"
         assert duplicates_after.proto.color == MetricProto.MetricColor.GREEN
 
+    MORE_MISSING_SCAFFOLD = textwrap.dedent("""
+        import pandas as pd
+        import streamlit as st
+        from components.comparison import render_comparison
+
+        raw_df = pd.DataFrame({"Name": ["Alice", "Bob"], "Email": ["a@x.com", "b@x.com"]})
+        st.session_state["clean_df"] = raw_df.assign(Email=["a@x.com", None])
+        render_comparison(raw_df)
+        """)
+
+    def test_comparison_fewer_missing_values_is_drawn_as_an_improvement(self):
+        """Guard: the Missing Values tile uses an inverse delta, so fewer missing cells after cleaning read as good."""
+        from streamlit.proto.Metric_pb2 import Metric as MetricProto
+
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        assert at.exception == []
+        # The fixture's raw frame has one empty cell (Event_Attendance) and the cleaned frame has none.
+        missing_before, missing_after = [m for m in at.metric if m.label in ("Before", "After")][4:6]
+        assert str(missing_before.value) == "1"
+        assert str(missing_after.value) == "0"
+        assert missing_after.delta == "-1"
+        assert missing_after.proto.direction == MetricProto.MetricDirection.DOWN
+        assert missing_after.proto.color == MetricProto.MetricColor.GREEN
+
+    def test_comparison_more_missing_values_is_drawn_as_a_regression(self):
+        from streamlit.proto.Metric_pb2 import Metric as MetricProto
+
+        at = AppTest.from_string(self.MORE_MISSING_SCAFFOLD)
+        at.run()
+        assert at.exception == []
+        missing_after = [m for m in at.metric if m.label == "After"][2]
+        assert missing_after.delta == "1"
+        assert missing_after.proto.direction == MetricProto.MetricDirection.UP
+        assert missing_after.proto.color == MetricProto.MetricColor.RED
+
     WORSE_SCAFFOLD = textwrap.dedent("""
         import pandas as pd
         import streamlit as st
@@ -549,6 +585,46 @@ class TestTabAnalytics:
         if not hasattr(at, "plotly_chart"):
             pytest.skip("AppTest does not surface plotly_chart in this Streamlit version")
         assert len(at.plotly_chart) >= 3
+
+    def test_analytics_info_does_not_promise_sidebar_toggle(self):
+        """W11: the sidebar view toggle never changed the Analytics charts; the info text said it did."""
+        at = AppTest.from_string(self.POPULATED_SCAFFOLD)
+        at.run()
+        assert at.exception == []
+        info = " ".join(i.value for i in at.info)
+        assert "Toggle to 'Raw Data' in the sidebar" not in info
+        assert "sidebar" not in info.lower()
+        # The raw-versus-cleaned comparison it should point at is the section further down this page.
+        assert "Before/After Cleaning Visual Comparison" in info
+        assert "Before/After Cleaning Visual Comparison" in " ".join(h.value for h in at.subheader)
+
+    EMPTY_CLEANED_SCAFFOLD = textwrap.dedent("""
+        import pandas as pd
+        import streamlit as st
+        from components.tab_analytics import render_analytics_tab
+
+        raw_df = pd.DataFrame({
+            "Name": ["Alice", "Bob"],
+            "Email": ["not an email 1", "not an email 2"],
+            "Role": ["member", "admin"],
+            "Join_Date": ["2024-01-01", "2024-01-02"],
+            "Event_Attendance": [5, 3],
+        })
+        st.session_state["cleaned"] = True
+        st.session_state["clean_df"] = raw_df.iloc[0:0]
+        render_analytics_tab(raw_df)
+        """)
+
+    def test_analytics_tab_explains_an_empty_cleaned_frame(self):
+        """W27: when cleaning removed every row the tab blamed the role filter, which had nothing to select."""
+        at = AppTest.from_string(self.EMPTY_CLEANED_SCAFFOLD)
+        at.run()
+        assert at.exception == []
+        assert not any("Select at least one role" in i.value for i in at.info)
+        warnings = [w.value for w in at.warning]
+        assert any("removed every record" in w for w in warnings)
+        assert any("Fix Email Formats" in w for w in warnings)
+        assert len(at.multiselect) == 0
 
 
 # ---------------------------------------------------------------------------

@@ -14,7 +14,8 @@ def parse_dates(values: pd.Series) -> pd.Series:
     another format into NaT, so the result would depend on row order. Instead each
     format gets its own pass over whatever the earlier passes left unparsed, then a
     last per-value pass (``format="mixed"``) reads anything else it can. Values
-    nothing can read, such as ``"Unknown"``, become NaT. A cell longer than
+    nothing can read, such as ``"Unknown"``, become NaT. Timestamps that carry a UTC offset are
+    converted to UTC and returned without a zone, so the result is always ``datetime64[ns]``. A cell longer than
     ``MAX_DATE_CHARS`` is not tried at all and stays NaT: the ``"mixed"`` pass takes time
     quadratic in cell length, so one huge cell would stall the app.
     """
@@ -26,5 +27,9 @@ def parse_dates(values: pd.Series) -> pd.Series:
         pending = parsed.isna() & readable
         if not pending.any():
             break
-        parsed[pending] = pd.to_datetime(values[pending], format=date_format, errors="coerce")
+        # utc=True turns every offset into UTC, so one pass never yields a column of mixed zones (pandas would
+        # give an object column of tz-aware Timestamps); tz_localize(None) then drops the zone. Cells with no
+        # offset are read as UTC and come back unchanged.
+        read = pd.to_datetime(values[pending], format=date_format, errors="coerce", utc=True)
+        parsed[pending] = read.dt.tz_localize(None)
     return parsed

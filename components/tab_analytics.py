@@ -26,9 +26,17 @@ def render_analytics_tab(raw_df: pd.DataFrame) -> None:
         st.subheader("Member Insights & Analytics")
         st.caption("Explore your cleaned data with interactive visualizations")
 
-        # Show which data state is being visualized
+        if clean_df.empty:
+            st.warning(
+                "Cleaning removed every record, so there is nothing to chart. "
+                'Try turning off "Fix Email Formats" in the sidebar, or check the Email column.'
+            )
+            return
+
+        # Show which data state is being visualized. The sidebar view toggle does not change these charts.
         st.info(
-            "Viewing analytics for **cleaned data**. Toggle to 'Raw Data' in the sidebar to compare quality before cleaning."
+            "Viewing analytics for **cleaned data**. The **Before/After Cleaning Visual Comparison** "
+            "section further down puts the raw and cleaned charts side by side."
         )
 
         # Role Filter

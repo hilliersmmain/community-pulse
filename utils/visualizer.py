@@ -1,10 +1,13 @@
+import html
+
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 from typing import Dict, Any
 
-from utils.constants import COLOR_PRIMARY, COLOR_ACCENT_TREND, COLOR_MEAN_LINE, COLOR_MEDIAN_LINE, MAX_DATE_CHARS
+from utils.constants import COLOR_PRIMARY, COLOR_ACCENT_TREND, COLOR_MEAN_LINE, COLOR_MEDIAN_LINE
+from utils.date_parsing import parse_dates
 
 # Constants for chart configuration
 MIN_POINTS_FOR_TREND = 3
@@ -37,7 +40,8 @@ def _calculate_stats(data: pd.Series) -> Dict[str, float]:
     return {
         "mean": float(data.mean()),
         "median": float(data.median()),
-        "std": float(data.std()),
+        # A sample standard deviation needs two values; pandas gives NaN for one.
+        "std": float(data.std()) if len(data) > 1 else 0.0,
         "min": float(data.min()),
         "max": float(data.max()),
     }
@@ -49,9 +53,9 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
         return go.Figure()
 
     temp_df = df.copy()
-    # A cell longer than MAX_DATE_CHARS is never a date, and pandas' fallback parser is quadratic in cell length.
-    join = temp_df["Join_Date"]
-    temp_df["Join_Date"] = pd.to_datetime(join.mask(join.astype(str).str.len() > MAX_DATE_CHARS), errors="coerce")
+    # parse_dates reads every date format whatever the first row looks like, and skips cells longer than
+    # MAX_DATE_CHARS (pandas' fallback parser is quadratic in cell length). Unreadable dates stay NaT and drop out.
+    temp_df["Join_Date"] = parse_dates(temp_df["Join_Date"])
 
     temp_df = temp_df.dropna(subset=["Join_Date"])
 
@@ -153,7 +157,9 @@ def plot_role_distribution(df: pd.DataFrame, data_state: str = "cleaned") -> go.
     fig = go.Figure(
         data=[
             go.Pie(
-                labels=counts["Role"],
+                # Plotly draws <a>, <b> and <span> in a label as markup, and Role comes from uploaded data.
+                # It decodes &lt; &gt; &amp; back to the literal characters, so the visitor still reads the text.
+                labels=[html.escape(str(role), quote=False) for role in counts["Role"]],
                 values=counts["Count"],
                 textposition="auto",
                 textinfo="label+percent",

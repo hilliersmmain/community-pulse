@@ -451,6 +451,65 @@ class TestTrendOverLongDateCell:
         assert list(line.y) == [1, 1]
 
 
+class TestDateColumnsAndLabels:
+    """Review items L6, W02, W12 and W16: the charts read every date format, escape labels and never print nan."""
+
+    OFFSET_DATES = [
+        "2023-01-05T10:30:00-05:00",
+        "2023-02-05T09:00:00-05:00",
+        "2023-07-05T09:00:00-04:00",
+        "2023-08-05T09:00:00-04:00",
+        "2023-09-05T09:00:00-04:00",
+    ]
+
+    def test_trend_reads_every_date_format_whatever_comes_first(self):
+        """L6: the trend chart inferred one format from the first value and dropped every row in another format."""
+        df = pd.DataFrame({"Join_Date": ["2025-01-10", "02/05/2025", "20-03-2025", "2025-04-02", "Unknown"]})
+        fig = plot_attendance_trend(df, data_state="raw")
+        line = next(t for t in fig.data if t.name == "New Members")
+        assert list(line.x) == ["2025-01", "2025-02", "2025-03", "2025-04"]
+        assert list(line.y) == [1, 1, 1, 1]
+        assert "Total: 4" in fig.layout.annotations[-1].text
+
+    def test_trend_counts_every_member_across_utc_offsets(self):
+        """W02, through the cleaner: the chart used to keep only the rows sharing the first row's offset."""
+        from utils.cleaner import DataCleaner
+
+        cleaned = DataCleaner(pd.DataFrame({"Join_Date": self.OFFSET_DATES})).clean_all(["clean_dates"])
+        fig = plot_attendance_trend(cleaned, data_state="cleaned")
+        line = next(t for t in fig.data if t.name == "New Members")
+        assert sum(line.y) == 5
+        assert fig.layout.annotations[-1].text.endswith("Total: 5")
+
+    def test_trend_reads_offset_timestamps_straight_from_the_upload(self):
+        fig = plot_attendance_trend(pd.DataFrame({"Join_Date": self.OFFSET_DATES}), data_state="raw")
+        assert sum(next(t for t in fig.data if t.name == "New Members").y) == 5
+
+    def test_histogram_single_value_has_no_nan_annotation(self):
+        """W12: a one-value sample has no sample standard deviation; the caption printed 'Std Dev: nan'."""
+        fig = plot_attendance_histogram(pd.DataFrame({"Event_Attendance": [7.0]}), data_state="cleaned")
+        text = " ".join(a.text for a in fig.layout.annotations)
+        assert "nan" not in text
+        assert "Std Dev: 0.0" in text
+
+    def test_calculate_stats_std_is_zero_for_one_value_and_real_for_two(self):
+        assert _calculate_stats(pd.Series([7.0]))["std"] == 0.0
+        assert _calculate_stats(pd.Series([1.0, 3.0]))["std"] == pytest.approx(1.4142, abs=1e-4)
+
+    def test_role_labels_are_not_rendered_as_markup(self):
+        """W16: Plotly draws <a href=...> in a label as a real link, and the data file is uploaded by visitors."""
+        df = pd.DataFrame({"Role": ['<a href="https://evil.example">x</a>', "Member", "R&D"]})
+        fig = plot_role_distribution(df, data_state="cleaned")
+        labels = [str(label) for label in fig.data[0].labels]
+        assert all("<" not in label and ">" not in label for label in labels)
+        assert "Member" in labels
+        assert "R&amp;D" in labels  # plotly decodes &amp; back to a literal ampersand
+
+    def test_role_labels_with_quotes_are_left_readable(self):
+        fig = plot_role_distribution(pd.DataFrame({"Role": ["Admin's"]}), data_state="cleaned")
+        assert list(fig.data[0].labels) == ["Admin's"]
+
+
 class TestSnapshotHelper:
     """A missing snapshot fails, instead of being regenerated and skipped."""
 
