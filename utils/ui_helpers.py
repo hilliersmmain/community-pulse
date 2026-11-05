@@ -3,6 +3,8 @@
 import streamlit as st
 from typing import Callable, Optional
 
+from utils.session_keys import KEY_FLASH, KEY_RAW_DF
+
 
 def initialize_session_state():
     """Initialize session state variables for UI features."""
@@ -12,8 +14,6 @@ def initialize_session_state():
         st.session_state["tutorial_mode"] = False
     if "tutorial_step" not in st.session_state:
         st.session_state["tutorial_step"] = 0
-    if "show_whats_new" not in st.session_state:
-        st.session_state["show_whats_new"] = False
 
 
 def show_welcome_modal():
@@ -166,51 +166,47 @@ def show_info_tooltip(text: str, tooltip: str) -> str:
     return f"{text} :gray[ⓘ]"
 
 
+TUTORIAL_STEPS = {
+    0: {
+        "title": "Step 1: Generate Data",
+        "message": "Use the sidebar controls to generate messy sample data. Adjust the number of records and messiness level to simulate real-world scenarios.",
+    },
+    1: {
+        "title": "Step 2: Review KPIs",
+        "message": "Check the Key Performance Indicators to understand the current data quality. Red metrics indicate issues that need attention.",
+    },
+    2: {
+        "title": "Step 3: Configure Cleaning",
+        "message": "Go to the Data Preparation tab and configure which cleaning steps to apply. Each step targets specific data quality issues.",
+    },
+    3: {
+        "title": "Step 4: Run Cleaning",
+        "message": "Click 'Run Cleaning Algorithms' to automatically fix data quality issues. Watch the execution log for details.",
+    },
+    4: {
+        "title": "Step 5: View Analytics",
+        "message": "Navigate to the Analytics tab to visualize insights from your cleaned data. Use filters to focus on specific segments.",
+    },
+}
+
+TUTORIAL_COMPLETED = "Tutorial completed! You're now ready to use Community Pulse effectively."
+
+
 def show_tutorial_step(step: int) -> bool:
-    """Display tutorial overlay for the current step."""
+    """Render the tutorial card for *step* if the tutorial is on and has reached it.
+
+    Each caller passes the step it anchors (the sidebar 0, the KPI row 1, the Data Preparation tab 2 and
+    3, the Analytics tab 4), so one card and one set of buttons render per run. "Next" on the last step
+    ends the tutorial and queues the completion message, which app.py shows on the run after the rerun.
+    """
     if not st.session_state.get("tutorial_mode", False):
         return False
 
     current_step = st.session_state.get("tutorial_step", 0)
-
-    if current_step != step:
+    if current_step != step or current_step not in TUTORIAL_STEPS:
         return False
 
-    tutorial_steps = {
-        0: {
-            "title": "Step 1: Generate Data",
-            "message": "Use the sidebar controls to generate messy sample data. Adjust the number of records and messiness level to simulate real-world scenarios.",
-            "highlight": "sidebar",
-        },
-        1: {
-            "title": "Step 2: Review KPIs",
-            "message": "Check the Key Performance Indicators to understand the current data quality. Red metrics indicate issues that need attention.",
-            "highlight": "kpis",
-        },
-        2: {
-            "title": "Step 3: Configure Cleaning",
-            "message": "Go to the Data Preparation tab and configure which cleaning steps to apply. Each step targets specific data quality issues.",
-            "highlight": "cleaning",
-        },
-        3: {
-            "title": "Step 4: Run Cleaning",
-            "message": "Click 'Run Cleaning Algorithms' to automatically fix data quality issues. Watch the execution log for details.",
-            "highlight": "run",
-        },
-        4: {
-            "title": "Step 5: View Analytics",
-            "message": "Navigate to the Analytics tab to visualize insights from your cleaned data. Use filters to focus on specific segments.",
-            "highlight": "analytics",
-        },
-    }
-
-    if current_step >= len(tutorial_steps):
-        st.session_state["tutorial_mode"] = False
-        st.success("Tutorial completed! You're now ready to use Community Pulse effectively.")
-        return False
-
-    step_info = tutorial_steps[current_step]
-
+    step_info = TUTORIAL_STEPS[current_step]
     st.info(f"""
     **{step_info['title']}**
 
@@ -222,6 +218,7 @@ def show_tutorial_step(step: int) -> bool:
     with col1:
         if st.button("Skip Tutorial"):
             st.session_state["tutorial_mode"] = False
+            st.session_state["tutorial_step"] = 0
             st.rerun()
 
     with col2:
@@ -231,61 +228,35 @@ def show_tutorial_step(step: int) -> bool:
                 st.rerun()
 
     with col3:
-        if st.button("Next", type="primary"):
-            st.session_state["tutorial_step"] = current_step + 1
+        # Steps 1 to 4 anchor on the KPI row and the tabs, which exist only once data is loaded.
+        waiting_for_data = current_step == 0 and KEY_RAW_DF not in st.session_state
+        if st.button(
+            "Next",
+            type="primary",
+            disabled=waiting_for_data,
+            help="Generate or upload data first" if waiting_for_data else None,
+        ):
+            if current_step == max(TUTORIAL_STEPS):
+                st.session_state["tutorial_mode"] = False
+                st.session_state["tutorial_step"] = 0
+                queue_flash(TUTORIAL_COMPLETED)
+            else:
+                st.session_state["tutorial_step"] = current_step + 1
             st.rerun()
 
     return True
 
 
-def show_whats_new():
-    """Display a "What's New" panel with recent updates."""
-    if not st.session_state.get("show_whats_new", False):
-        return
+def queue_flash(message: str) -> None:
+    """Keep *message* for the next run: ``st.rerun()`` discards everything the current run drew."""
+    st.session_state[KEY_FLASH] = message
 
-    with st.expander("What's New in Community Pulse", expanded=True):
-        st.markdown("""
-        ### Recent Updates
 
-        #### Version 2.0 - UX Enhancement Update
-        *Released: December 2025*
-
-        **New Features:**
-        - **Welcome Modal**: First-time user onboarding experience
-        - **Empty States**: Helpful guidance when no data is available
-        - **Enhanced Tooltips**: Comprehensive help for all features
-        - **Tutorial Mode**: Step-by-step guided tour
-        - **Improved KPIs**: More context and clearer metrics
-
-        **Improvements:**
-        - Refined UI copy for better clarity
-        - Context-aware messages and prompts
-        - Better loading and error feedback
-        - Enhanced accessibility features
-
-        **Bug Fixes:**
-        - Fixed tooltip display issues
-        - Improved mobile responsiveness
-        - Enhanced error handling
-
-        ---
-
-        #### Previous Updates
-
-        **Version 1.5** - Interactive Analytics
-        - Added before/after comparison charts
-        - Enhanced chart export capabilities
-        - Improved data state management
-
-        **Version 1.0** - Initial Release
-        - Core data cleaning pipeline
-        - Health metrics dashboard
-        - Basic visualizations
-        """)
-
-        if st.button("Got it!", key="dismiss_whats_new"):
-            st.session_state["show_whats_new"] = False
-            st.rerun()
+def show_flash() -> None:
+    """Show the message queued by ``queue_flash`` as a toast, once."""
+    message = st.session_state.pop(KEY_FLASH, None)
+    if message:
+        st.toast(message)
 
 
 def show_loading_message(message: str = "Processing your data..."):

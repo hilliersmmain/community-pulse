@@ -10,6 +10,7 @@ import os
 import sys
 import textwrap
 
+import pandas as pd
 import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -148,7 +149,7 @@ class TestMessageConsistency:
 
 
 class TestInitializeSessionState:
-    """Verify ``initialize_session_state`` populates the four UX flags."""
+    """Verify ``initialize_session_state`` populates the three UX flags."""
 
     def test_initialize_sets_default_flags(self):
         script = textwrap.dedent("""
@@ -161,7 +162,8 @@ class TestInitializeSessionState:
         assert at.session_state["show_welcome"] is True
         assert at.session_state["tutorial_mode"] is False
         assert at.session_state["tutorial_step"] == 0
-        assert at.session_state["show_whats_new"] is False
+        # O05: the "What's New" panel had no caller, so its flag went with it.
+        assert "show_whats_new" not in at.session_state
 
     def test_initialize_does_not_overwrite_existing_values(self):
         # Simulate a returning user who has already dismissed the welcome modal:
@@ -171,7 +173,6 @@ class TestInitializeSessionState:
             st.session_state["show_welcome"] = False
             st.session_state["tutorial_mode"] = True
             st.session_state["tutorial_step"] = 3
-            st.session_state["show_whats_new"] = True
             from utils.ui_helpers import initialize_session_state
             initialize_session_state()
             """)
@@ -180,7 +181,6 @@ class TestInitializeSessionState:
         assert at.session_state["show_welcome"] is False
         assert at.session_state["tutorial_mode"] is True
         assert at.session_state["tutorial_step"] == 3
-        assert at.session_state["show_whats_new"] is True
 
 
 class TestShowWelcomeModal:
@@ -358,6 +358,7 @@ class TestShowTutorialStep:
         at = AppTest.from_string(self._scaffold(render_step=0))
         at.session_state["tutorial_mode"] = True
         at.session_state["tutorial_step"] = 0
+        at.session_state["raw_df"] = pd.DataFrame({"Name": ["Ann"]})  # step 0's Next waits for data
         at.run()
         for b in at.button:
             if b.label == "Next":
@@ -392,51 +393,30 @@ class TestShowTutorialStep:
         at.run()
         assert at.session_state["tutorial_mode"] is False
 
-    def test_tutorial_completion_disables_mode_at_overflow(self):
-        # 5 steps total (indices 0-4); step 5 triggers the completion branch.
-        at = AppTest.from_string(self._scaffold(render_step=5))
+    def test_next_on_the_last_step_ends_the_tutorial_and_queues_the_completion_message(self):
+        """L2 (YC6): the old completion branch came after the step check, so no caller could ever reach it."""
+        at = AppTest.from_string(self._scaffold(render_step=4))
         at.session_state["tutorial_mode"] = True
-        at.session_state["tutorial_step"] = 5
+        at.session_state["tutorial_step"] = 4
         at.run()
-        # Completion path disables tutorial_mode and renders a success message
-        # with no buttons.
+        next(b for b in at.button if b.label == "Next").click()
+        at.run()
+        assert at.exception == []
         assert at.session_state["tutorial_mode"] is False
+        assert at.session_state["tutorial_step"] == 0
+        assert at.session_state["flash_message"].startswith("Tutorial completed!")
         assert len(at.button) == 0
 
-
-class TestShowWhatsNew:
-    """Cover the What's New panel."""
-
-    SCAFFOLD = textwrap.dedent("""
-        import streamlit as st
-        st.session_state.setdefault("show_whats_new", False)
-        from utils.ui_helpers import show_whats_new
-        show_whats_new()
-        """)
-
-    def test_whats_new_hidden_when_flag_false(self):
-        at = AppTest.from_string(self.SCAFFOLD)
-        at.session_state["show_whats_new"] = False
+    def test_step_zero_next_waits_for_data(self):
+        """Steps 1 to 4 anchor on the KPI row and the tabs, which exist only once data is loaded."""
+        at = AppTest.from_string(self._scaffold(render_step=0))
+        at.session_state["tutorial_mode"] = True
+        at.session_state["tutorial_step"] = 0
         at.run()
-        assert len(at.button) == 0
-
-    def test_whats_new_renders_dismiss_button(self):
-        at = AppTest.from_string(self.SCAFFOLD)
-        at.session_state["show_whats_new"] = True
+        assert next(b for b in at.button if b.label == "Next").disabled is True
+        at.session_state["raw_df"] = pd.DataFrame({"Name": ["Ann"]})
         at.run()
-        labels = [b.label for b in at.button]
-        assert "Got it!" in labels
-
-    def test_whats_new_dismiss_button_clears_flag(self):
-        at = AppTest.from_string(self.SCAFFOLD)
-        at.session_state["show_whats_new"] = True
-        at.run()
-        for b in at.button:
-            if b.label == "Got it!":
-                b.click()
-                break
-        at.run()
-        assert at.session_state["show_whats_new"] is False
+        assert next(b for b in at.button if b.label == "Next").disabled is False
 
 
 class TestNotificationHelpers:

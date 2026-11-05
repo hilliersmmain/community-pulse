@@ -1,2 +1,7 @@
 # Streamlit configuration. Options: https://docs.streamlit.io/develop/api-reference/configuration/config.toml
 # Only real Streamlit options belong here; tests/test_streamlit_config.py checks every key.
+
+[server]
+# Streamlit refuses a bigger upload itself, in MB. Keep it equal to MAX_UPLOAD_SIZE_MB in utils/constants.py
+# (tests/test_streamlit_config.py checks): the default is 200, buffered in server memory before the app's own check.
+maxUploadSize = 5

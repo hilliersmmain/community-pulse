@@ -4,6 +4,8 @@ from pathlib import Path
 
 import streamlit.config as st_config
 
+from utils.constants import MAX_UPLOAD_SIZE_MB
+
 CONFIG_PATH = Path(__file__).resolve().parent.parent / ".streamlit" / "config.toml"
 
 
@@ -61,3 +63,9 @@ def test_checker_accepts_a_real_streamlit_option(tmp_path):
 def test_config_toml_exists_and_only_sets_valid_streamlit_options():
     assert CONFIG_PATH.is_file(), f"{CONFIG_PATH} is missing; docs/CONFIGURATION.md and docs/DEVELOPMENT.md list it"
     assert unknown_options(CONFIG_PATH) == []
+
+
+def test_streamlit_itself_caps_uploads_at_the_apps_own_limit():
+    """W17: Streamlit buffers up to 200 MB per upload by default, long before the app's own 5 MB check runs."""
+    server = _parse_toml(CONFIG_PATH.read_text()).get("server", {})
+    assert server.get("maxUploadSize") == MAX_UPLOAD_SIZE_MB

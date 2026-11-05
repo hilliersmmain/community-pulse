@@ -30,15 +30,11 @@ def render_kpi_section(metrics: Dict[str, Any]) -> None:
         col2.metric(
             "Duplicate Records",
             metrics["duplicate_records"],
-            delta=f"-{metrics['duplicate_records']}" if metrics["duplicate_records"] > 0 else None,
-            delta_color="inverse",
             help="Records whose email address already appears above them, ignoring case and spaces (lower is better)",
         )
         col2.metric(
             "Missing Values",
             metrics["null_cells"],
-            delta=f"-{metrics['null_cells']}" if metrics["null_cells"] > 0 else None,
-            delta_color="inverse",
             help="Total count of empty or null cells across all columns (0 is ideal)",
         )
 

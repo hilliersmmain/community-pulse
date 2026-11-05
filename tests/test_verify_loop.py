@@ -8,6 +8,7 @@ answers with garbage, and one that answers 500. The lint-step tests compare the 
 import contextlib
 import importlib.util
 import socket
+import subprocess
 import threading
 import urllib.request
 from pathlib import Path
@@ -172,3 +173,14 @@ def test_strict_also_lints_tests(verify_loop):
         strict = lint_paths(script_args(verify_loop, tool, strict=True))
         assert "tests" not in default
         assert strict == default | {"tests"}
+
+
+def test_normalized_changed_files_keeps_the_first_porcelain_path_whole(verify_loop, monkeypatch):
+    """Review overflow O04: get_git_output stripped the first porcelain line's leading space, so ' M app.py' read as 'pp.py'."""
+    porcelain = " M app.py\n?? notes.txt\nR  old.py -> new.py\n"
+    monkeypatch.setattr(
+        verify_loop.subprocess,
+        "run",
+        lambda *args, **kwargs: subprocess.CompletedProcess(args, 0, stdout=porcelain, stderr=""),
+    )
+    assert verify_loop.normalized_changed_files() == ["app.py", "new.py", "notes.txt"]

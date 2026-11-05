@@ -50,7 +50,8 @@ def get_git_output(*args: str) -> str:
             capture_output=True,
             text=True,
         )
-        return result.stdout.strip()
+        # rstrip, not strip: a porcelain line starts with its two status columns, so " M path" keeps its space.
+        return result.stdout.rstrip()
     except (subprocess.CalledProcessError, FileNotFoundError):
         return ""
 

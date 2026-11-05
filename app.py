@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import datetime
 from typing import Dict, cast
-from utils.ui_helpers import initialize_session_state, show_welcome_modal, show_empty_state, MESSAGES
+from utils.ui_helpers import initialize_session_state, show_welcome_modal, show_empty_state, show_flash, MESSAGES
 from utils.health_metrics import get_health_metrics
 from utils.constants import CUSTOM_CSS
 from utils.session_keys import (
@@ -43,6 +43,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+show_flash()
 render_sidebar()
 
 # Load Data: this session's own, from session state; never a file shared with other visitors

@@ -24,6 +24,7 @@ OPTIONAL_COLUMNS = ["Join_Date", "Last_Login", "Event_Attendance", "Role", "Even
 
 MAX_UPLOAD_SIZE_MB = 5
 MAX_UPLOAD_ROWS = 50000
+MAX_UPLOAD_COLUMNS = 50
 
 CLEANING_STEPS_DEFAULT = {
     "standardize_names": True,

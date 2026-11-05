@@ -165,6 +165,16 @@ class TestKPIDisplay:
         assert "email" in help_text
         assert "name" not in help_text
 
+    def test_raw_count_tiles_have_no_delta_arrow(self):
+        """L3 (YC5): Duplicate Records and Missing Values are counts of the data on screen, not changes, yet
+        they carried a negative "inverse" delta, so a raw-data problem was drawn with a green arrow."""
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        by_label = {m.label: m for m in at.metric}
+        assert str(by_label["Duplicate Records"].value) == "1"
+        assert by_label["Duplicate Records"].delta == ""
+        assert by_label["Missing Values"].delta == ""
+
     # The help text ends with a static legend ("90%+ = Excellent | 70-89% = Good | ..."), so a bare
     # "Excellent" or "Good" matches for any score. Only the "assessment: <label>" line is dynamic.
     @pytest.mark.parametrize(
@@ -442,6 +452,48 @@ class TestTabPreparation:
         assert at.session_state["clean_log"] == log
         assert len(at.session_state["clean_df"]) == rows
 
+    ALL_BAD_EMAILS_SCAFFOLD = textwrap.dedent("""
+        import pandas as pd
+        import streamlit as st
+        from utils.session_keys import KEY_CLEANING_STEPS
+        from utils.constants import CLEANING_STEPS_DEFAULT
+        from components.tab_preparation import render_preparation_tab
+
+        st.session_state.setdefault(KEY_CLEANING_STEPS, CLEANING_STEPS_DEFAULT.copy())
+        df = pd.DataFrame({
+            "Name": ["Alice", "Bob"],
+            "Email": ["not an email 1", "not an email 2"],
+            "Role": ["member", "admin"],
+            "Join_Date": ["2024-01-01", "2024-01-02"],
+            "Event_Attendance": [5, 3],
+        })
+        render_preparation_tab(df)
+        """)
+
+    def test_prep_tab_warns_when_cleaning_removes_every_record(self):
+        """W27: with every row dropped the tab said nothing (the Analytics half was fixed earlier)."""
+        at = AppTest.from_string(self.ALL_BAD_EMAILS_SCAFFOLD)
+        at.run()
+        next(b for b in at.button if b.label == "Run Cleaning Algorithms").click()
+        at.run()
+        assert at.exception == []
+        assert at.session_state["cleaned"] is True
+        assert len(at.session_state["clean_df"]) == 0
+        warnings = [w.value for w in at.warning]
+        assert any("removed every record" in w for w in warnings)
+        assert any("Fix Email Formats" in w for w in warnings)
+        # No success confirmation is queued for a run that left nothing.
+        assert "flash_message" not in at.session_state
+
+    def test_row_removing_step_labels_match_the_sidebar_checkboxes(self):
+        """The warning names steps by their sidebar checkbox label; a renamed checkbox must rename it here too."""
+        from components.sidebar import CLEANING_STEP_CHECKBOXES
+        from components.tab_preparation import ROW_REMOVING_STEPS
+
+        checkbox_labels = {key: label for key, label, _help in CLEANING_STEP_CHECKBOXES}
+        assert set(ROW_REMOVING_STEPS) == {"fix_emails", "remove_duplicates"}
+        assert ROW_REMOVING_STEPS == {key: checkbox_labels[key] for key in ROW_REMOVING_STEPS}
+
     def test_prep_tab_no_steps_disables_run_button(self):
         # When the user disables every cleaning step, the Run button should be
         # disabled (Streamlit still renders it; we assert via .disabled).
@@ -680,6 +732,55 @@ class TestSidebar:
             assert "email" in text
             assert "name" not in text
 
+    def test_sidebar_renders_tutorial_step_zero(self):
+        """L2 (YC6): the welcome modal set tutorial_step 0, but no caller rendered step 0, so the tutorial never appeared."""
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.session_state["tutorial_mode"] = True
+        at.session_state["tutorial_step"] = 0
+        at.run()
+        assert at.exception == []
+        assert any("Step 1: Generate Data" in i.value for i in at.sidebar.info)
+        buttons = {b.label: b for b in at.sidebar.button}
+        assert "Skip Tutorial" in buttons
+        # The steps after this one anchor on widgets that exist only once data is loaded.
+        assert buttons["Next"].disabled is True
+
+    def test_tutorial_step_zero_next_is_enabled_once_data_exists(self):
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.session_state["tutorial_mode"] = True
+        at.session_state["tutorial_step"] = 0
+        at.session_state["raw_df"] = _sample_dataframe()
+        at.run()
+        assert at.exception == []
+        assert {b.label: b for b in at.sidebar.button}["Next"].disabled is False
+
+    def test_sidebar_without_tutorial_renders_no_tutorial_card(self):
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        assert not any("Step 1: Generate Data" in i.value for i in at.sidebar.info)
+        assert not any(b.label in ("Next", "Skip Tutorial") for b in at.sidebar.button)
+
+    def test_help_guide_names_only_controls_that_exist(self):
+        """W56 text / O05: the guide told visitors to enable "Tutorial Mode" and check "What's New"; neither control exists."""
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        guide = "\n".join(m.value for m in at.sidebar.markdown)
+        assert "Quick Start Guide" in guide
+        assert "What's New" not in guide
+        assert "Tutorial Mode" not in guide
+
+    def test_help_guide_can_start_the_tutorial(self):
+        """The tutorial used to be reachable only from the first-visit welcome card."""
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.session_state["show_welcome"] = False
+        at.run()
+        at.button(key="help_start_tutorial").click().run()
+        assert at.exception == []
+        assert at.session_state["tutorial_mode"] is True
+        assert at.session_state["tutorial_step"] == 0
+        assert at.session_state["show_welcome"] is False
+        assert any("Step 1: Generate Data" in i.value for i in at.sidebar.info)
+
     def test_sidebar_cleaning_step_count_caption_present(self):
         # 5 steps default to True, so the caption should reflect "5 step(s)".
         at = AppTest.from_string(self.SCAFFOLD)
@@ -754,6 +855,39 @@ class TestSidebar:
         assert at.exception == []
         assert any("Missing required columns" in e.value for e in at.sidebar.error)
         assert len(at.sidebar.success) == 0
+        assert "raw_df" not in at.session_state
+
+    def test_overwide_upload_is_refused_before_it_is_parsed(self, monkeypatch):
+        """W14: the column cap is checked on the raw header, so a hostile header never reaches pd.read_csv."""
+        wide = ",".join(["Name", "Email", "Role", "Join_Date", "Event_Attendance"] + [f"extra_{i}" for i in range(200)])
+        parsed: list[object] = []
+        real_read_csv = pd.read_csv
+
+        def spy(*args, **kwargs):
+            parsed.append(args[0])
+            return real_read_csv(*args, **kwargs)
+
+        monkeypatch.setattr(pd, "read_csv", spy)
+        at = AppTest.from_string(_sidebar_script(upload=f"{wide}\nx\n".encode()))
+        at.run()
+        at.radio(key="data_source").set_value("Upload CSV").run()
+        assert at.exception == []
+        assert [e.value for e in at.sidebar.error] == ["Too many columns: uploads are limited to 50 columns."]
+        assert len(at.sidebar.success) == 0
+        assert "raw_df" not in at.session_state
+        assert parsed == []
+
+    def test_semicolon_upload_error_names_the_delimiter(self):
+        """W26: the sidebar showed "Missing required columns" naming all five columns the file does have."""
+        csv = b"Name;Email;Role;Join_Date;Event_Attendance\nAnn;a@x.com;Member;2025-01-01;3\n"
+        at = AppTest.from_string(_sidebar_script(upload=csv))
+        at.run()
+        at.radio(key="data_source").set_value("Upload CSV").run()
+        assert at.exception == []
+        errors = [e.value for e in at.sidebar.error]
+        assert len(errors) == 1
+        assert errors[0].startswith("Missing required columns: Name, Email, Role, Join_Date, Event_Attendance. ")
+        assert "semicolon-delimited" in errors[0]
         assert "raw_df" not in at.session_state
 
     def test_export_radio_switches_between_raw_and_cleaned_downloads(self):

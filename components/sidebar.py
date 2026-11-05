@@ -4,8 +4,14 @@ import pandas as pd
 from datetime import datetime
 from utils.data_generator import generate_messy_data
 from utils.health_metrics import DataHealthMetrics
-from utils.ui_helpers import show_loading_message, show_success_message, show_error_message, get_contextual_message
-from utils.upload_validation import validate_upload_dataframe
+from utils.ui_helpers import (
+    show_loading_message,
+    show_error_message,
+    get_contextual_message,
+    queue_flash,
+    show_tutorial_step,
+)
+from utils.upload_validation import validate_upload_dataframe, validate_upload_header
 from utils.session_keys import (
     KEY_RAW_DF,
     KEY_CLEANED,
@@ -76,6 +82,32 @@ def _store_upload(file_id: str, upload_df: pd.DataFrame) -> None:
     st.session_state[KEY_UPLOADED_FILE_ID] = file_id
 
 
+def _handle_upload(uploaded_file) -> None:
+    """Check an uploaded file in the order that keeps hostile input cheap, then store it.
+
+    Size first, then the header's width from the raw bytes (before pandas parses anything), then the
+    parsed schema.
+    """
+    try:
+        upload_size_mb = uploaded_file.size / (1024 * 1024)
+        if upload_size_mb > MAX_UPLOAD_SIZE_MB:
+            st.sidebar.error(f"File too large ({upload_size_mb:.2f}MB). Max allowed is {MAX_UPLOAD_SIZE_MB}MB.")
+            return
+        raw = uploaded_file.getvalue()
+        errors = validate_upload_header(raw)
+        if not errors:
+            upload_df = pd.read_csv(io.BytesIO(raw))
+            errors = validate_upload_dataframe(upload_df).errors
+        for error in errors:
+            st.sidebar.error(error)
+        if not errors:
+            _store_upload(uploaded_file.file_id, upload_df)
+            st.sidebar.success(f"Uploaded {len(upload_df)} records successfully.")
+    except Exception as e:
+        st.sidebar.error("Error reading file. Please ensure it is a valid CSV.")
+        st.sidebar.caption(f"Details: {e}")
+
+
 def export_json(df: pd.DataFrame) -> str:
     """Serialize data for the JSON download, with dates as ISO 8601 strings rather than epoch ms."""
     return df.to_json(orient="records", indent=2, date_format="iso")
@@ -84,6 +116,10 @@ def export_json(df: pd.DataFrame) -> str:
 def render_sidebar() -> None:  # noqa: C901
     """Render the complete sidebar with all controls."""
     st.sidebar.header("Data Controls")
+
+    # Tutorial step 0 ("Generate Data") anchors here; the KPI row and the tabs render steps 1 to 4.
+    with st.sidebar:
+        show_tutorial_step(0)
 
     # Both are widget keys. Streamlit drops a widget's key on any run that doesn't render the
     # widget (while "Upload CSV" is selected), so write them back each run to keep the choice.
@@ -153,7 +189,8 @@ def render_sidebar() -> None:  # noqa: C901
             with show_loading_message(get_contextual_message("loading_data")):
                 try:
                     _set_raw_data(generate_messy_data(num_records=num_records, messiness_level=messiness_level))
-                    show_success_message(
+                    # st.rerun() below wipes what this run drew, so the confirmation waits for the next run.
+                    queue_flash(
                         get_contextual_message("data_generated", num_records=num_records, messiness=messiness_level)
                     )
                     reset_clean_state()
@@ -173,23 +210,7 @@ def render_sidebar() -> None:  # noqa: C901
         )
 
         if uploaded_file is not None:
-            try:
-                upload_size_mb = uploaded_file.size / (1024 * 1024)
-                if upload_size_mb > MAX_UPLOAD_SIZE_MB:
-                    st.sidebar.error(f"File too large ({upload_size_mb:.2f}MB). Max allowed is {MAX_UPLOAD_SIZE_MB}MB.")
-                else:
-                    upload_df = pd.read_csv(uploaded_file)
-
-                    validation = validate_upload_dataframe(upload_df)
-                    if not validation.is_valid:
-                        for error in validation.errors:
-                            st.sidebar.error(error)
-                    else:
-                        _store_upload(uploaded_file.file_id, upload_df)
-                        st.sidebar.success(f"Uploaded {len(upload_df)} records successfully.")
-            except Exception as e:
-                st.sidebar.error("Error reading file. Please ensure it is a valid CSV.")
-                st.sidebar.caption(f"Details: {e}")
+            _handle_upload(uploaded_file)
         else:
             st.sidebar.info("Upload a CSV file to get started")
 
@@ -340,10 +361,6 @@ def render_sidebar() -> None:  # noqa: C901
       Switch between raw/cleaned data
       Compare before/after improvements
 
-    - **Tutorial Mode:**
-      Enable for step-by-step guidance
-      Perfect for learning the workflow
-
     ---
 
     ### Cleaning Steps Explained
@@ -359,7 +376,13 @@ def render_sidebar() -> None:  # noqa: C901
     ### Need Help?
 
     - Hover over **info icons** for context-specific help
-    - Enable **Tutorial Mode** for guided walkthrough
-    - Check **What's New** for latest features
     - All metrics include detailed tooltips
+    - New here? Start the five-step tutorial below
     """)
+        if st.button(
+            "Start the tutorial", key="help_start_tutorial", help="Generate, review, configure, clean, analyse"
+        ):
+            st.session_state["show_welcome"] = False
+            st.session_state["tutorial_mode"] = True
+            st.session_state["tutorial_step"] = 0
+            st.rerun()
