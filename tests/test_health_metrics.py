@@ -389,6 +389,18 @@ class TestValidatorRegistry:
         # "User_Email" matches the email pattern but nothing else — just confirming priority
         assert _find_validator("User_Email") is _validate_email_series
 
+    @pytest.mark.parametrize(
+        "column, validator",
+        [
+            ("date_email", _validate_email_series),  # matches the email and the date pattern
+            ("Date_Name", _validate_date_series),  # matches the date and the name pattern
+            ("Join_Date_ID", _validate_date_series),  # matches the date and the id pattern
+        ],
+    )
+    def test_a_name_matching_two_patterns_gets_the_earlier_registry_entry(self, column, validator):
+        """O31: the registry is searched in order, so its order decides which validator scores a column."""
+        assert _find_validator(column) is validator
+
     def test_column_no_validator_scores_100(self):
         """Columns without a matching validator contribute 100% (no penalty)."""
         df = pd.DataFrame({"Role": ["Member", "Admin", "Guest"], "Event_Attendance": [5, 10, 8]})
@@ -523,3 +535,18 @@ class TestOneDefinitionOfADuplicate:
         metrics = DataHealthMetrics(df).get_detailed_metrics()
         assert metrics["duplicate_records"] == 1
         assert round(metrics["duplicate_score"], 1) == 66.7
+
+
+class TestHealthScoreWeights:
+    """O23: the overall score weighs Completeness 40%, Uniqueness 30% and Formatting 30%."""
+
+    def test_overall_score_uses_the_40_30_30_weights(self):
+        # Completeness 4 of 6 cells = 66.67%, Uniqueness 100%, Formatting 100% (Note has no validator).
+        # 0.4 * 66.67 + 0.3 * 100 + 0.3 * 100 = 86.7. Swapping the Completeness and Formatting weights
+        # gives 90.0, which the 50-90 range in test_overall_health_score_mixed_quality still accepts.
+        df = pd.DataFrame({"Name": ["Ann Lee", "Bo Kim"], "Email": ["a@x.com", "b@x.com"], "Note": [None, None]})
+        metrics = DataHealthMetrics(df)
+        assert round(metrics.calculate_completeness_score(), 1) == 66.7
+        assert metrics.calculate_duplicate_score() == 100.0
+        assert metrics.calculate_formatting_score() == 100.0
+        assert metrics.calculate_overall_health_score() == 86.7

@@ -243,6 +243,22 @@ class TestDataCleaner:
         assert len(result) == 1
         assert result["Email"].tolist() == ["ann@test.com"]
 
+    def test_clean_all_leaves_the_callers_frame_untouched(self):
+        """O29: the cleaner works on its own copy; demo_charts plots the frame it passed in as the raw data."""
+        df = pd.DataFrame(
+            {
+                "Name": ["ann lee", "BO KIM", "ann lee"],
+                "Email": [" Ann@Test.COM ", "bo at test.com", "ann@test.com"],
+                "Join_Date": ["2025-01-05", "Unknown", "01/05/2025"],
+                "Event_Attendance": [3, None, 3],
+            }
+        )
+        before = df.copy()
+
+        DataCleaner(df).clean_all()
+
+        pd.testing.assert_frame_equal(df, before)
+
     def test_clean_all_empty_dataframe(self):
         """Test clean_all handles empty DataFrame gracefully."""
         empty_df = pd.DataFrame(columns=["Name", "Email", "Join_Date", "Event_Attendance"])

@@ -82,6 +82,18 @@ def sample_df() -> pd.DataFrame:
     return _sample_dataframe()
 
 
+# O25: every health metric of this frame differs from the others, so a tile that shows the wrong metric fails.
+# 4 records, 3 unique, 1 duplicate (a@x.com again), 2 missing cells, Completeness 10/12 = 83.3%, Duplicate Score
+# 3/4 = 75.0%, Formatting 87.5% (Name 3 of 4 valid, Email 3 of 3), overall 0.4 * 83.3 + 0.3 * 75 + 0.3 * 87.5 = 82.1%.
+DISTINCT_METRICS_DATA = {
+    "Name": ["Ann Lee", "Bo Kim", "Ann Lee", "cy_day"],
+    "Email": ["a@x.com", "b@x.com", "a@x.com", None],
+    "Event_Attendance": [1, 2, 1, None],
+}
+# The same data as source text, for the AppTest scaffolds.
+DISTINCT_METRICS_FRAME = repr(DISTINCT_METRICS_DATA)
+
+
 VALID_UPLOAD_CSV = b"Name,Email,Role,Join_Date,Event_Attendance\nAnn,a@x.com,Member,2025-01-01,3\n"
 
 
@@ -174,6 +186,43 @@ class TestKPIDisplay:
         assert str(by_label["Duplicate Records"].value) == "1"
         assert by_label["Duplicate Records"].delta == ""
         assert by_label["Missing Values"].delta == ""
+
+    def test_each_kpi_tile_shows_its_own_metric(self):
+        """O25: the tiles were checked by label only, so two tiles could swap values and the suite stayed green."""
+        at = AppTest.from_string(textwrap.dedent(f"""
+            import pandas as pd
+            from utils.health_metrics import get_health_metrics
+            from components.kpi_display import render_kpi_section
+
+            render_kpi_section(get_health_metrics(pd.DataFrame({DISTINCT_METRICS_FRAME})))
+            """))
+        at.run()
+        assert at.exception == []
+        assert {m.label: str(m.value) for m in at.metric} == {
+            "Total Records": "4",
+            "Unique Records": "3",
+            "Duplicate Records": "1",
+            "Missing Values": "2",
+            "Completeness Score": "83.3%",
+            "Duplicate Score": "75.0%",
+            "Formatting Score": "87.5%",
+            "Data Health Score": "82.1%",
+        }
+
+    def test_health_score_help_states_the_weights_the_score_uses(self):
+        """O23: the help text spells the weights out, so it must change when the constants do."""
+        from utils.constants import (
+            HEALTH_SCORE_WEIGHT_COMPLETENESS,
+            HEALTH_SCORE_WEIGHT_FORMATTING,
+            HEALTH_SCORE_WEIGHT_UNIQUENESS,
+        )
+
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        help_text = {m.label: m.help for m in at.metric}["Data Health Score"]
+        assert f"{round(HEALTH_SCORE_WEIGHT_COMPLETENESS * 100)}% Completeness" in help_text
+        assert f"{round(HEALTH_SCORE_WEIGHT_UNIQUENESS * 100)}% Uniqueness" in help_text
+        assert f"{round(HEALTH_SCORE_WEIGHT_FORMATTING * 100)}% Formatting" in help_text
 
     # The help text ends with a static legend ("90%+ = Excellent | 70-89% = Good | ..."), so a bare
     # "Excellent" or "Good" matches for any score. Only the "assessment: <label>" line is dynamic.
@@ -563,6 +612,25 @@ class TestTabExplorer:
         assert "Formatting" in labels
         assert "Overall Health" in labels
 
+    def test_each_explorer_tile_shows_its_own_metric(self):
+        """O25: swapping two of these tiles' values used to leave the suite green."""
+        at = AppTest.from_string(textwrap.dedent(f"""
+            import pandas as pd
+            from utils.health_metrics import get_health_metrics
+            from components.tab_explorer import render_explorer_tab
+
+            df = pd.DataFrame({DISTINCT_METRICS_FRAME})
+            render_explorer_tab(df, "Raw", get_health_metrics(df))
+            """))
+        at.run()
+        assert at.exception == []
+        assert {m.label: str(m.value) for m in at.metric} == {
+            "Completeness": "83.3%",
+            "Uniqueness": "75.0%",
+            "Formatting": "87.5%",
+            "Overall Health": "82.1%",
+        }
+
     def test_explorer_renders_dataframe(self):
         at = AppTest.from_string(self.SCAFFOLD)
         at.run()
@@ -759,6 +827,14 @@ class TestSidebar:
         at.run()
         assert not any("Step 1: Generate Data" in i.value for i in at.sidebar.info)
         assert not any(b.label in ("Next", "Skip Tutorial") for b in at.sidebar.button)
+
+    def test_quick_stats_show_the_record_count_and_the_overall_score(self):
+        """O25: Quick Stats was checked by label only; Records must be every row, Health Score the overall score."""
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.session_state["raw_df"] = pd.DataFrame(DISTINCT_METRICS_DATA)
+        at.run()
+        assert at.exception == []
+        assert {m.label: str(m.value) for m in at.sidebar.metric} == {"Records": "4", "Health Score": "82.1%"}
 
     def test_help_guide_names_only_controls_that_exist(self):
         """W56 text / O05: the guide told visitors to enable "Tutorial Mode" and check "What's New"; neither control exists."""

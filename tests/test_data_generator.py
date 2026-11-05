@@ -53,6 +53,11 @@ class TestGenerateMessyData:
         # High = 20% duplicates, so ~240 rows
         assert len(df) >= 220
 
+    @pytest.mark.parametrize("level, rows", [("low", 206), ("medium", 220), ("high", 240)])
+    def test_each_messiness_level_adds_its_exact_share_of_duplicates(self, level, rows):
+        """O24: 200 records plus int(200 * duplicate_rate) repeats, at 3%, 10% and 20%; the bounds above allow others."""
+        assert len(generate_messy_data(num_records=200, messiness_level=level)) == rows
+
     def test_save_to_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, "test_data.csv")

@@ -420,6 +420,18 @@ class TestChartDataValues:
         assert list(trend.x) == ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05"]
         assert list(trend.y) == pytest.approx([1.0, 0.9, 0.8, 0.7, 0.6])
 
+    @pytest.mark.parametrize(
+        "join_dates, has_trend",
+        [
+            (["2025-01-10", "2025-02-10"], False),
+            (["2025-01-10", "2025-02-10", "2025-03-10"], True),
+        ],
+    )
+    def test_trend_line_needs_at_least_three_months(self, join_dates, has_trend):
+        """O32: MIN_POINTS_FOR_TREND is 3, so two months of joins get no trend line and three months do."""
+        fig = plot_attendance_trend(pd.DataFrame({"Join_Date": join_dates}), data_state="cleaned")
+        assert ("Trend Line" in [t.name for t in fig.data]) is has_trend
+
     def test_role_pie_labels_match_their_values(self):
         df = pd.DataFrame({"Role": ["Member"] * 5 + ["Guest"] * 3 + ["Admin"]})
         fig = plot_role_distribution(df, data_state="cleaned")
