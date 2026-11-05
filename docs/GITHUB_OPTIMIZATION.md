@@ -105,24 +105,29 @@ Link to this project from your profile README for maximum visibility.
 ```markdown
 ## 📊 Featured Projects
 
-### [Community Pulse - Data Analytics Dashboard](https://github.com/hilliersmmain/community_pulse)
+### [Community Pulse - Data Analytics Dashboard](https://github.com/hilliersmmain/community-pulse)
 
 Production-ready data analytics platform with automated ETL pipelines and interactive visualizations.
 
-**Key Features:** Data cleaning | Health scoring | Interactive charts | 70 unit tests
+**Key Features:** Data cleaning | Health scoring | Interactive charts | pytest suite run by CI
 
 **Tech Stack:** Python | Streamlit | Plotly | Pandas | pytest
 
-🔗 [Live Demo](https://community-pulse.streamlit.app/) | ⭐ 70/70 tests passing
+🔗 [Live Demo](https://community-pulse.streamlit.app/)
 ```
 
 ---
 
 ## Repository Settings Checklist
 
+The ☑️ marks below are the recommended settings, not a record of the repository's current ones. For example, the
+repository has no topics, About description or website set yet, and automatic head-branch deletion is off;
+`gh repo view hilliersmmain/community-pulse --json repositoryTopics,description,homepageUrl,deleteBranchOnMerge`
+shows the current values.
+
 ### General Settings
 
-- ☑️ **Repository name:** `community_pulse` (consistent with deployment)
+- ☑️ **Repository name:** `community-pulse` (consistent with deployment)
 - ☑️ **Description:** Set via About section
 - ☑️ **Website:** https://community-pulse.streamlit.app/
 - ☑️ **Topics:** 10+ relevant tags
@@ -153,34 +158,34 @@ Production-ready data analytics platform with automated ETL pipelines and intera
 
 ## GitHub Actions Badge Updates
 
-Current badges in README are excellent. Optional enhancements:
+Hand-typed badges (a test count, a coverage figure) go stale whenever the code changes. The dynamic badges below update themselves:
 
 ### Dynamic Badges
 
 **Test Status (from CI):**
 
 ```markdown
-[![CI Tests](https://github.com/hilliersmmain/community_pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/hilliersmmain/community_pulse/actions/workflows/ci.yml)
+[![CI Tests](https://github.com/hilliersmmain/community-pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/hilliersmmain/community-pulse/actions/workflows/ci.yml)
 ```
 
 **GitHub Stats:**
 
 ```markdown
-[![GitHub Stars](https://img.shields.io/github/stars/hilliersmmain/community_pulse?style=social)](https://github.com/hilliersmmain/community_pulse)
-[![GitHub Forks](https://img.shields.io/github/forks/hilliersmmain/community_pulse?style=social)](https://github.com/hilliersmmain/community_pulse)
-[![GitHub Watchers](https://img.shields.io/github/watchers/hilliersmmain/community_pulse?style=social)](https://github.com/hilliersmmain/community_pulse)
+[![GitHub Stars](https://img.shields.io/github/stars/hilliersmmain/community-pulse?style=social)](https://github.com/hilliersmmain/community-pulse)
+[![GitHub Forks](https://img.shields.io/github/forks/hilliersmmain/community-pulse?style=social)](https://github.com/hilliersmmain/community-pulse)
+[![GitHub Watchers](https://img.shields.io/github/watchers/hilliersmmain/community-pulse?style=social)](https://github.com/hilliersmmain/community-pulse)
 ```
 
 **Last Commit (shows active maintenance):**
 
 ```markdown
-[![Last Commit](https://img.shields.io/github/last-commit/hilliersmmain/community_pulse)](https://github.com/hilliersmmain/community_pulse/commits/main)
+[![Last Commit](https://img.shields.io/github/last-commit/hilliersmmain/community-pulse)](https://github.com/hilliersmmain/community-pulse/commits/main)
 ```
 
 **Code Size:**
 
 ```markdown
-[![Code Size](https://img.shields.io/github/languages/code-size/hilliersmmain/community_pulse)](https://github.com/hilliersmmain/community_pulse)
+[![Code Size](https://img.shields.io/github/languages/code-size/hilliersmmain/community-pulse)](https://github.com/hilliersmmain/community-pulse)
 ```
 
 ---
@@ -200,7 +205,7 @@ Current badges in README are excellent. Optional enhancements:
 - Python data engineering
 
 **Structured Sections for Scanning:**
-Current README already excellent. Maintain:
+Keep:
 
 - Clear H2/H3 hierarchy
 - Bulleted lists for features
@@ -218,24 +223,25 @@ Pin this project to your GitHub profile for maximum visibility:
 
 1. Go to your profile page
 2. Click "Customize your pins"
-3. Select `community_pulse`
+3. Select `community-pulse`
 4. Reorder to top position
 
 ### Release Management
 
-Create a v1.0.0 release to signal production-ready status:
+The repository has no tags or GitHub releases yet. Tag the version that `pyproject.toml` and `CHANGELOG.md` name
+(shown here as `vX.Y.Z`):
 
 ```bash
-git tag -a v1.0.0 -m "Initial production release"
-git push origin v1.0.0
+git tag -a vX.Y.Z -m "Community Pulse vX.Y.Z"
+git push origin vX.Y.Z
 ```
 
 **GitHub Release Notes Template:**
 
 ```markdown
-# Community Pulse v1.0.0
+# Community Pulse vX.Y.Z
 
-## 🎉 Initial Production Release
+## 🎉 Release Highlights
 
 Production-ready data analytics dashboard featuring:
 
@@ -245,7 +251,7 @@ Production-ready data analytics dashboard featuring:
 - ✅ Automated 5-step data cleaning pipeline
 - ✅ Health scoring with composite metrics
 - ✅ Interactive Plotly visualizations
-- ✅ 70 passing unit tests (100% pass rate)
+- ✅ pytest suite, run by CI on Python 3.11 and 3.12
 - ✅ Live deployment on Streamlit Cloud
 
 ### Documentation
@@ -257,7 +263,7 @@ Production-ready data analytics dashboard featuring:
 
 ### Tech Stack
 
-Python 3.9+ | Streamlit 1.52+ | Plotly 6.5+ | Pandas 2.2+ | pytest 9.0+
+Python 3.10+ | Streamlit 1.54+ | Plotly 6.5+ | Pandas 2.3 | pytest 9.0+
 
 🔗 **Live Demo:** https://community-pulse.streamlit.app/
 
@@ -298,39 +304,9 @@ Current file is excellent. Consider adding:
 
 ### Issue Templates
 
-Create `.github/ISSUE_TEMPLATE/` with templates:
-
-**Bug Report Template:**
-
-```markdown
----
-name: Bug Report
-about: Report a bug or unexpected behavior
-title: "[BUG] "
-labels: bug
----
-
-**Describe the bug:**
-Clear description of the issue
-
-**To Reproduce:**
-
-1. Step one
-2. Step two
-3. See error
-
-**Expected behavior:**
-What should happen
-
-**Environment:**
-
-- OS: [e.g., Windows 10]
-- Python version: [e.g., 3.9.7]
-- Browser: [e.g., Chrome 96]
-
-**Screenshots:**
-If applicable, add screenshots
-```
+Done: `.github/ISSUE_TEMPLATE/` holds two issue forms, `bug_report.yml` and `feature_request.yml`, plus
+`config.yml`, which turns off blank issues and adds contact links. One of those links points to GitHub
+Discussions, which is not enabled on the repository yet: enable Discussions or drop that link.
 
 ---
 
@@ -353,21 +329,22 @@ Add Streamlit deployment status badge:
 - [x] Documentation structure
 - [x] CI/CD pipeline
 - [x] Test suite
+- [x] Issue templates (`.github/ISSUE_TEMPLATE/`)
+- [x] Dependabot version updates (`.github/dependabot.yml`: weekly pip and GitHub Actions PRs)
 
 ### 🔨 Manual Tasks (5 minutes)
 
 - [ ] Add repository topics (10+ suggested above)
 - [ ] Update About section with description and website
-- [ ] Create v1.0.0 GitHub release
+- [ ] Create a GitHub release for the current version
 - [ ] Pin repository to profile
 - [ ] Upload social preview image (optional)
 
 ### 🎯 Optional Enhancements
 
-- [ ] Create issue templates
 - [ ] Add GitHub Discussions
 - [ ] Set up GitHub Projects for roadmap
-- [ ] Enable Dependabot for security updates
+- [ ] Turn on Dependabot alerts and Dependabot security updates in the repository settings (both are off)
 - [ ] Add CODEOWNERS file for PR reviews
 
 ---
@@ -400,7 +377,6 @@ Add Streamlit deployment status badge:
 
 ### Regular Updates (Monthly)
 
-- Update "Last Updated" date in README if making changes
 - Review and respond to issues (if any)
 - Check dependencies for security updates
 - Update CHANGELOG.md for new releases

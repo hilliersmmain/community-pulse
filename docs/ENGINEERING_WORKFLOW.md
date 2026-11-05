@@ -19,7 +19,11 @@ For each meaningful change:
 - Mypy type checks
 - Full pytest suite
 - Coverage gate (`--cov-fail-under=70`)
-- Optional Streamlit localhost smoke test
+- Optional Streamlit localhost smoke test (`--localhost-check`, port 8502 by default)
+
+The Black, flake8 and mypy steps cover the same paths as the CI workflow (`tests/test_verify_loop.py` compares
+them with `.github/workflows/ci.yml`). `--strict` also runs flake8 and mypy on `tests/`. A passing run writes
+`.verification/last_verify_success.json`, which is gitignored.
 
 ## Subagent-Driven Delivery Pattern
 

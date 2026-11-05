@@ -23,7 +23,7 @@ Complete guide for developers who want to contribute to or extend Community Puls
 
 ### Prerequisites
 
-- **Python:** 3.9 or higher
+- **Python:** 3.10 or higher (CI tests 3.11 and 3.12)
 - **pip:** Latest version recommended
 - **Virtual Environment:** venv, conda, or pyenv
 - **Git:** For version control
@@ -33,8 +33,8 @@ Complete guide for developers who want to contribute to or extend Community Puls
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/hilliersmmain/community_pulse.git
-   cd community_pulse
+   git clone https://github.com/hilliersmmain/community-pulse.git
+   cd community-pulse
    ```
 
 2. **Create virtual environment**
@@ -51,12 +51,15 @@ Complete guide for developers who want to contribute to or extend Community Puls
 
 3. **Install dependencies**
    ```bash
-   # Install main dependencies
+   # Install the app's dependencies
    pip install -r requirements.txt
    
-   # Install development dependencies (optional)
-   pip install -e ".[dev]"
+   # Or, for development: the app's dependencies plus pytest, Black, flake8, mypy and pre-commit
+   pip install -r requirements-dev.txt
    ```
+
+   This is an application, not an installable package: `pip install -e .` fails with
+   "Multiple top-level packages discovered in a flat-layout".
 
 4. **Verify installation**
    ```bash
@@ -76,10 +79,10 @@ Complete guide for developers who want to contribute to or extend Community Puls
 
 ### First-Time Setup Checklist
 
-- [ ] Python 3.9+ installed
+- [ ] Python 3.10+ installed
 - [ ] Virtual environment created and activated
 - [ ] Dependencies installed successfully
-- [ ] Tests passing (70/70)
+- [ ] `pytest` reports 0 failed (an expected skip says AppTest does not surface plotly_chart)
 - [ ] Application runs without errors
 - [ ] Can generate data and perform cleaning
 
@@ -90,67 +93,64 @@ Complete guide for developers who want to contribute to or extend Community Puls
 ### Directory Structure
 
 ```
-community_pulse/
-├── app.py                          # Main Streamlit application
-├── requirements.txt                # Python dependencies
-├── pyproject.toml                  # Modern Python packaging configuration
-├── verify_setup.py                 # Installation verification script
+community-pulse/
+├── app.py                          # Streamlit entry point: loads state, calls the components
+├── requirements.txt                # App dependencies
+├── requirements-dev.txt            # App dependencies plus test and lint tools
+├── pyproject.toml                  # Project metadata and pytest, Black and coverage settings
+├── verify_setup.py                 # Installation check
 │
-├── utils/                          # Core business logic modules
-│   ├── __init__.py                # Package initializer
-│   ├── data_generator.py          # Synthetic data generation
-│   ├── cleaner.py                 # Data cleaning pipeline
-│   ├── health_metrics.py          # Quality scoring algorithms
-│   ├── visualizer.py              # Plotly chart generation
-│   └── ui_helpers.py              # Streamlit UI components
+├── components/                     # The UI, one module per area
+│   ├── sidebar.py                 # Data source, upload, cleaning steps, export, view
+│   ├── kpi_display.py             # KPI tiles
+│   ├── comparison.py              # Before/after comparison
+│   ├── tab_preparation.py         # Cleaning tab
+│   ├── tab_analytics.py           # Charts tab
+│   └── tab_explorer.py            # Data table tab
 │
-├── community_pulse/                # Additional modules
-│   ├── __init__.py
-│   └── demo_charts.py             # Demo visualization examples
+├── utils/                          # Logic, no page layout
+│   ├── constants.py               # Every tunable value
+│   ├── data_generator.py          # Synthetic messy data
+│   ├── cleaner.py                 # DataCleaner, the cleaning pipeline
+│   ├── duplicates.py              # The one definition of a duplicate row
+│   ├── date_parsing.py            # Mixed-format date parsing
+│   ├── health_metrics.py          # Quality scores
+│   ├── upload_validation.py       # Checks on uploaded CSVs
+│   ├── visualizer.py              # Plotly charts
+│   ├── session_keys.py            # st.session_state key names
+│   └── ui_helpers.py              # Shared Streamlit helpers (welcome, tutorial, messages)
 │
-├── tests/                          # Comprehensive test suite
-│   ├── __init__.py
-│   ├── test_data_generator.py     # Data generation tests
-│   ├── test_cleaner.py            # Cleaning pipeline tests
-│   ├── test_health_metrics.py     # Metrics calculation tests
-│   ├── test_visualizer.py         # Chart rendering tests
-│   ├── test_ui_helpers.py         # UI component tests
-│   ├── test_demo_charts.py        # Demo tests
-│   └── test_emoji_removal.py      # Text sanitization tests
+├── community_pulse/
+│   └── demo_charts.py             # Writes static chart images to demo_outputs/ (gitignored)
 │
-├── docs/                           # Documentation
-│   ├── API.md                     # API reference
-│   ├── DEVELOPMENT.md             # This file
-│   ├── ARCHITECTURAL_OVERVIEW.md  # System architecture
-│   ├── KPI_DEFINITIONS.md         # Metric definitions
-│   ├── SOP_DATA_CLEANING.md       # Cleaning procedures
+├── scripts/
+│   └── verify_loop.py             # Local Black, flake8, mypy, pytest and coverage loop
+│
+├── tests/                          # pytest suite, one test_*.py file per area
+│   └── snapshots/                 # Chart snapshots for test_visualizer.py
+│
+├── docs/                           # Documentation, including this file
 │   └── screenshots/               # UI screenshots
 │
-├── .github/                        # GitHub configuration
-│   └── workflows/
-│       └── ci.yml                 # CI/CD pipeline
+├── .github/
+│   ├── workflows/ci.yml           # CI: Black, flake8, mypy, pytest, coverage, Bandit
+│   ├── dependabot.yml             # Weekly dependency update PRs
+│   └── ISSUE_TEMPLATE/            # Bug report and feature request forms
 │
-├── .devcontainer/                  # Dev container configuration
-│   └── devcontainer.json
-│
-├── .streamlit/                     # Streamlit configuration
-│   └── config.toml
-│
-├── data/                           # Generated data (gitignored)
-├── artifacts/                      # Project reports and analysis
-├── CHANGELOG.md                    # Version history
-├── CONTRIBUTING.md                 # Contribution guidelines
-├── LICENSE                         # MIT License
-└── README.md                       # Project overview
+├── .devcontainer/devcontainer.json # Dev container / Codespaces
+├── .streamlit/config.toml          # Streamlit options (one: the upload cap)
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── LICENSE
+└── README.md
 ```
 
 ### Module Overview
 
 #### `app.py` - Main Application
-- Entry point for Streamlit dashboard
-- Handles page layout and navigation
-- Manages session state
-- Coordinates all UI components
+- Entry point for the Streamlit dashboard
+- Initialises session state and picks the raw or cleaned data to show
+- Calls the render functions in `components/`, which hold the UI itself
 
 #### `utils/data_generator.py` - Data Generation
 - **Purpose:** Generate synthetic datasets with quality issues
@@ -176,19 +176,23 @@ community_pulse/
 - **Dependencies:** Plotly
 - **Use Case:** Data exploration and presentation
 
-#### `utils/ui_helpers.py` - UI Components
+#### `utils/ui_helpers.py` - UI Helpers
 - **Purpose:** Reusable Streamlit UI elements
-- **Key Functions:** `show_welcome_modal()`, `show_empty_state()`, `show_loading_message()`
+- **Key Functions:** `show_welcome_modal()`, `show_tutorial_step()`, `show_empty_state()`, `show_loading_message()`, `queue_flash()`
 - **Use Case:** Consistent user experience
+
+#### `components/` - The UI
+- **Purpose:** One render function per part of the page: `render_sidebar()`, `render_kpi_section()`, `render_comparison()`, `render_preparation_tab()`, `render_analytics_tab()`, `render_explorer_tab()`
+- **State:** The data lives in `st.session_state` (raw data under `"raw_df"`); nothing is written to disk
 
 ### Data Flow
 
 ```
 User Input (Sidebar)
     ↓
-Data Generation (data_generator.py)
+Data Generation (data_generator.py) or CSV upload (upload_validation.py)
     ↓
-Raw DataFrame
+Raw DataFrame (st.session_state)
     ↓
 Data Cleaning (cleaner.py)
     ↓
@@ -205,12 +209,12 @@ Dashboard KPIs    Interactive Charts   Downloads
 ### Design Patterns
 
 **1. Separation of Concerns**
-- UI logic in `app.py` and `ui_helpers.py`
+- UI in `components/`, wired together by `app.py`, with shared helpers in `utils/ui_helpers.py`
 - Business logic in `utils/` modules
 - Tests in separate `tests/` directory
 
 **2. Immutability**
-- DataCleaner creates copies to preserve originals
+- DataCleaner copies its input: `raw_df` keeps the original, `clean_df` is the working copy
 - Session state manages mutable UI state
 
 **3. Logging**
@@ -278,6 +282,10 @@ pre-commit install
 pre-commit run --all-files
 ```
 
+The flake8 hook adds the `flake8-docstrings` plugin, which CI does not use, so `pre-commit run --all-files`
+reports docstring codes (D1xx, D2xx, D4xx) on the current code. The CI lint gate is the Black, flake8 and mypy
+steps in `.github/workflows/ci.yml`; `python scripts/verify_loop.py` runs those same steps locally.
+
 Configured in `.pre-commit-config.yaml`:
 - Trailing whitespace removal
 - End-of-file fixer
@@ -302,8 +310,8 @@ pytest -v
 # Run specific test file
 pytest tests/test_cleaner.py
 
-# Run specific test function
-pytest tests/test_cleaner.py::test_standardize_names
+# Run one test (test_cleaner.py's tests are in a class, so the class is part of the id)
+pytest tests/test_cleaner.py::TestDataCleaner::test_standardize_names
 
 # Run tests matching pattern
 pytest -k "cleaner"
@@ -312,11 +320,11 @@ pytest -k "cleaner"
 ### Test Coverage
 
 ```bash
-# Run with coverage report
-pytest --cov=utils --cov=community_pulse
+# Run with coverage report (the source list is [tool.coverage.run] in pyproject.toml)
+pytest --cov --cov-report=term
 
 # Generate HTML coverage report
-pytest --cov=utils --cov=community_pulse --cov-report=html
+pytest --cov --cov-report=html
 
 # Open coverage report
 open htmlcov/index.html  # macOS
@@ -329,24 +337,24 @@ start htmlcov/index.html  # Windows
 ```python
 # tests/test_cleaner.py example
 
-import pytest
 import pandas as pd
 from utils.cleaner import DataCleaner
 
-def test_standardize_names():
-    """Test that names are converted to Title Case."""
-    # Arrange
-    df = pd.DataFrame({
-        'Name': ['john doe', 'JANE SMITH', 'Bob Wilson']
-    })
-    
-    # Act
-    cleaner = DataCleaner(df)
-    cleaner.standardize_names()
-    
-    # Assert
-    expected = ['John Doe', 'Jane Smith', 'Bob Wilson']
-    assert cleaner.df['Name'].tolist() == expected
+class TestDataCleaner:
+    def test_standardize_names(self):
+        """Test that names are converted to Title Case."""
+        # Arrange
+        df = pd.DataFrame({
+            'Name': ['john doe', 'JANE SMITH', 'Bob Wilson']
+        })
+
+        # Act
+        cleaner = DataCleaner(df)
+        cleaner.standardize_names()
+
+        # Assert
+        expected = ['John Doe', 'Jane Smith', 'Bob Wilson']
+        assert cleaner.clean_df['Name'].tolist() == expected
 ```
 
 ### Writing New Tests
@@ -512,7 +520,8 @@ x = 5
 
 6. **Commit Changes**
    ```bash
-   git add .
+   git status                      # check nothing unexpected is listed
+   git add path/to/changed_file.py tests/test_new_feature.py
    git commit -m "Add [feature]: Brief description"
    ```
 
@@ -534,17 +543,17 @@ class DataCleaner:
         """
         Remove emoji characters from text fields.
         
-        Modifies self.df in-place by removing emoji from
-        Name and other text columns.
+        Modifies self.clean_df in place by removing emoji from
+        the Name column.
         """
-        before_count = self.df['Name'].str.contains('[^\x00-\x7F]').sum()
+        before_count = self.clean_df['Name'].str.contains('[^\x00-\x7F]').sum()
         
         # Remove non-ASCII characters
-        self.df['Name'] = self.df['Name'].str.replace(
+        self.clean_df['Name'] = self.clean_df['Name'].str.replace(
             r'[^\x00-\x7F]+', '', regex=True
         )
         
-        after_count = self.df['Name'].str.contains('[^\x00-\x7F]').sum()
+        after_count = self.clean_df['Name'].str.contains('[^\x00-\x7F]').sum()
         removed = before_count - after_count
         
         self.log.append(f"✓ Removed emoji from {removed} names")
@@ -563,8 +572,8 @@ def test_remove_emoji():
     cleaner = DataCleaner(df)
     cleaner.remove_emoji()
     
-    assert '😀' not in cleaner.df['Name'].iloc[0]
-    assert 'John' in cleaner.df['Name'].iloc[0]
+    assert '😀' not in cleaner.clean_df['Name'].iloc[0]
+    assert 'John' in cleaner.clean_df['Name'].iloc[0]
 ```
 
 ---
@@ -632,8 +641,8 @@ streamlit run app.py --server.runOnSave false
 find . -name "*.pyc" -delete
 find . -type d -name "__pycache__" -delete
 
-# Reinstall in development mode
-pip install -e .
+# Reinstall the dependencies
+pip install -r requirements-dev.txt
 ```
 
 **Issue: Import errors**
@@ -642,7 +651,7 @@ pip install -e .
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 # Or run from project root
-cd /path/to/community_pulse
+cd community-pulse
 python -m pytest
 ```
 
@@ -716,7 +725,7 @@ streamlit run app.py
 
 ```dockerfile
 # Dockerfile
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -769,7 +778,7 @@ pyenv local 3.11
 pip install -r requirements.txt
 
 # Ensure in correct directory
-pwd  # Should show .../community_pulse
+pwd  # Should show .../community-pulse
 ```
 
 **Problem: Streamlit won't start**
@@ -796,8 +805,7 @@ streamlit run app.py --server.port=8502
 
 ## Getting Help
 
-- **GitHub Issues:** [Report bugs or request features](https://github.com/hilliersmmain/community_pulse/issues)
-- **Discussions:** [Ask questions](https://github.com/hilliersmmain/community_pulse/discussions)
+- **GitHub Issues:** [Report bugs, request features or ask questions](https://github.com/hilliersmmain/community-pulse/issues)
 - **Contributing:** See [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ---
