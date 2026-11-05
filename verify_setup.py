@@ -15,11 +15,11 @@ BOLD = "\033[1m"
 
 
 def check_python_version() -> Tuple[bool, str]:
-    """Check if Python version is 3.9 or higher."""
+    """Check if Python version is 3.10 or higher (pyproject.toml's requires-python)."""
     version = sys.version_info
-    if version >= (3, 9):
+    if version >= (3, 10):
         return True, f"Python {version.major}.{version.minor}.{version.micro}"
-    return False, f"Python {version.major}.{version.minor}.{version.micro} (requires 3.9+)"
+    return False, f"Python {version.major}.{version.minor}.{version.micro} (requires 3.10+)"
 
 
 def check_package(package_name: str, min_version: Optional[str] = None) -> Tuple[bool, str]:
@@ -91,6 +91,13 @@ def check_project_structure() -> List[Tuple[str, bool, str]]:
         ("utils/health_metrics.py", "file"),
         ("utils/visualizer.py", "file"),
         ("utils/ui_helpers.py", "file"),
+        ("components/", "directory"),
+        ("components/sidebar.py", "file"),
+        ("components/kpi_display.py", "file"),
+        ("components/comparison.py", "file"),
+        ("components/tab_preparation.py", "file"),
+        ("components/tab_analytics.py", "file"),
+        ("components/tab_explorer.py", "file"),
         ("tests/", "directory"),
     ]
 
@@ -116,6 +123,12 @@ def test_imports() -> List[Tuple[str, bool, str]]:
         "utils.health_metrics",
         "utils.visualizer",
         "utils.ui_helpers",
+        "components.sidebar",
+        "components.kpi_display",
+        "components.comparison",
+        "components.tab_preparation",
+        "components.tab_analytics",
+        "components.tab_explorer",
     ]
 
     results = []
@@ -199,7 +212,7 @@ def main():  # noqa: C901
         print(f"  {RED}{BOLD}✗ Some checks failed. Please fix the issues above.{RESET}\n")
         print(f"  {YELLOW}Common fixes:{RESET}")
         print(f"  - Install missing packages: {BOLD}pip install -r requirements.txt{RESET}")
-        print("  - Ensure Python 3.9+ is installed")
+        print("  - Ensure Python 3.10+ is installed")
         print("  - Run from the project root directory\n")
         return 1
 

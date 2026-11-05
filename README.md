@@ -1,10 +1,9 @@
 # Community Pulse:  Data Analytics Dashboard
 
-[![Python 3.9+](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.52+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.54+-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Plotly](https://img.shields.io/badge/Plotly-Interactive-3F4F75?logo=plotly&logoColor=white)](https://plotly.com/)
-[![Tests: 106/106](https://img.shields.io/badge/Tests-106%2F106%20passing-brightgreen)](./tests)
-[![Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen)]()
+[![CI](https://github.com/hilliersmmain/community-pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/hilliersmmain/community-pulse/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Live Demo](https://img.shields.io/badge/%20Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://community-pulse.streamlit.app/)
 
@@ -21,7 +20,7 @@ A production-grade data analytics platform that transforms raw, unstructured com
 ## Dashboard Preview
 
 | Dashboard Overview | Data Cleaning Pipeline |
-|: --:|:--:|
+|:--:|:--:|
 | ![Dashboard Overview](docs/screenshots/dashboard-overview.png) | ![Data Cleaning](docs/screenshots/data-cleaning-pipeline.png) |
 
 | Before/After Comparison | Data Explorer |
@@ -34,20 +33,23 @@ A production-grade data analytics platform that transforms raw, unstructured com
 
 **1. Automated Data Engineering Pipeline**
 
-- Robust ETL Process:  Ingests raw CSV data, handles missing values, standardizes date formats, and deduplicates records automatically
-- Intelligent Validation: Enforces strict data quality schemas with configurable rules
-- High Performance:  Optimized for processing datasets with 10,000+ records in seconds
+- Two data sources: generate 100-1000 synthetic records at a low, medium or high messiness level, or upload a CSV with the columns `Name`, `Email`, `Role`, `Join_Date` and `Event_Attendance`
+- Upload checks: files are capped at 5 MB, 50 columns and 50,000 rows, and a missing required column is named in the error
+- Five cleaning steps, each switchable in the sidebar: Standardize Names, Fix Email Formats, Remove Duplicates (same Email, ignoring case and spaces), Clean Dates (every `Join_Date` format read into one date type; unreadable dates are left blank, not guessed) and Handle Missing Values (missing attendance becomes 0)
+- An execution log in the Data Preparation tab records what each step did
 
-**2. Interactive Real-Time Analytics Dashboard**
+**2. Interactive Analytics Dashboard**
 
-- Live KPI Tracking:  Monitors Total Messages, Active Users, Engagement Rates, and Growth Velocity in real-time
-- Dynamic Visualizations: Plotly-powered interactive charts with drill-down capabilities, date range filtering, and category segmentation
-- Trend Analysis & Forecasting: Identifies growth patterns, peak activity periods, and anomalies to drive community strategy
+- Eight KPI tiles: Total Records, Unique Records, Duplicate Records, Missing Values, Completeness Score, Duplicate Score, Formatting Score and Data Health Score
+- Plotly charts of the cleaned data in the Analytics tab: membership growth by month with a linear trend line and a mean line, an attendance histogram with mean and median lines, and a role breakdown pie chart
+- A Role filter for the Analytics charts, and a PNG export from each chart's toolbar
+- A Data Explorer tab showing the raw or cleaned table
 
 **3. Comprehensive Data Quality Monitoring**
 
-- Automated Health Scoring: Generates composite "Data Quality Score" based on completeness (40%), uniqueness (30%), and formatting consistency (30%)
-- Before/After Visualization:  Demonstrates pipeline impact with clear metrics improvement tracking
+- Automated Health Scoring: a composite Data Health Score from completeness (40%), uniqueness (30%) and formatting (30%)
+- Before/After Comparison: records, duplicates, missing values and health score before and after cleaning, plus the raw and cleaned charts side by side
+- CSV and JSON export of the raw or cleaned data, and a five-step tutorial for first-time users
 
 ---
 
@@ -55,17 +57,18 @@ A production-grade data analytics platform that transforms raw, unstructured com
 
 | Metric | Before | After | Improvement |
 |--------|--------|-------|-------------|
-| Records Processed | 500 raw | 450 clean | -10% duplicates removed |
-| Data Quality Score | 72% | 98% | +36% relative improvement |
-| Missing Values | 23 | 0 | 100% resolved |
-| Duplicate Records | 50 (10%) | 0 | Eliminated |
-| Manual Processing Time | 2+ hours | 0 | Fully automated |
+| Records Processed | 550 raw | 499 clean | 51 rows removed |
+| Data Health Score | 93.9% | 97.0% | +3.1 points |
+| Missing Values | 369 | 335 | 34 fewer (only missing attendance is filled) |
+| Duplicate Records | 45 | 0 | Eliminated |
+
+Measured on generated data with seed 1, 500 records and messiness "medium" (the generator adds duplicate rows on top of the 500), all five cleaning steps on; other runs give different numbers.
 
 ---
 
 ## Quick Start
 
-**Prerequisites:** Python 3.9+
+**Prerequisites:** Python 3.10+
 
 ```bash
 # Clone and install
@@ -85,12 +88,12 @@ Open browser to `http://localhost:8501`
 
 ## Usage Workflow
 
-1. Generate Data — Create synthetic community data with configurable messiness levels (100-1000 records)
-1b. **Or Upload CSV** — Upload your own data file with `Name`, `Email`, `Role`, `Join_Date`, and `Event_Attendance` columns
-2. Configure Cleaning — Select cleaning algorithms via sidebar toggles or use optimized defaults
-3. Execute Pipeline — Run automated cleaning with real-time progress logging
-4. Analyze Results — Explore interactive dashboard with filters, drill-downs, and exports
-5. Export Insights — Download cleaned data (CSV/JSON) or charts (PNG) for stakeholder presentations
+1. Generate Data — Create synthetic community data at a low, medium or high messiness level (100-1000 records)
+1b. **Or Upload CSV** — Upload your own data file with `Name`, `Email`, `Role`, `Join_Date`, and `Event_Attendance` columns (up to 5 MB, 50 columns and 50,000 rows)
+2. Configure Cleaning — Switch the five cleaning steps on or off in the sidebar, or keep the defaults (all on)
+3. Execute Pipeline — Click "Run Cleaning Algorithms" in the Data Preparation tab and read the execution log
+4. Analyze Results — Compare the KPI tiles before and after cleaning, filter the Analytics charts by Role, and browse the table in the Data Explorer tab
+5. Export Insights — Download the raw or cleaned data (CSV/JSON) from the sidebar, or a chart (PNG) from its toolbar
 
 ---
 
@@ -98,12 +101,12 @@ Open browser to `http://localhost:8501`
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| Frontend | Streamlit 1.52+ | Interactive web UI with reactive components |
-| Data Processing | Pandas 2.2+, NumPy | High-performance DataFrame operations |
+| Frontend | Streamlit 1.54+ | Interactive web UI with reactive components |
+| Data Processing | Pandas 2.3.3, NumPy 2.2.6 | High-performance DataFrame operations |
 | Visualization | Plotly 6.5+ | Interactive, publication-quality charts |
-| Testing | pytest 9.0+ | 106 unit tests with comprehensive coverage |
-| Data Generation | Faker | Realistic synthetic data with controlled quality issues |
-| CI/CD | GitHub Actions | Automated testing, linting, and deployment |
+| Testing | pytest 9.0.3+ | Unit tests, plus Streamlit AppTest runs of the app and its UI components |
+| Data Generation | Faker 39+ | Realistic synthetic data with controlled quality issues |
+| CI/CD | GitHub Actions | Formatting, linting, type checks, tests, coverage and a Bandit scan on every push and pull request to `main` |
 
 ---
 
@@ -111,7 +114,8 @@ Open browser to `http://localhost:8501`
 
 ```
 community-pulse/
-├── app.py                     # Thin orchestrator (111 lines)
+├── app.py                    # Thin orchestrator
+├── verify_setup.py           # Environment self-check
 ├── components/               # UI component modules
 │   ├── sidebar.py            # Sidebar controls and data source selection
 │   ├── kpi_display.py        # KPI metrics row
@@ -125,8 +129,14 @@ community-pulse/
 │   ├── cleaner.py            # Multi-step cleaning pipeline with logging
 │   ├── visualizer.py         # Plotly chart components and themes
 │   ├── health_metrics.py     # Quality scoring algorithms
+│   ├── duplicates.py         # The one duplicate rule (Email, case and spaces ignored)
+│   ├── date_parsing.py       # Reads date columns that mix several formats
+│   ├── upload_validation.py  # CSV upload checks (required columns, column and row caps)
+│   ├── session_keys.py       # Shared session-state keys
 │   └── ui_helpers.py         # Reusable UI components
-├── tests/                    # 106 comprehensive unit tests
+├── community_pulse/          # demo_charts.py: writes the charts as PNG files
+├── scripts/                  # verify_loop.py: the verification loop below
+├── tests/                    # The pytest suite
 ├── docs/                     # Technical documentation
 │   ├── API.md                # Module API reference
 │   ├── ARCHITECTURAL_OVERVIEW.md
@@ -139,14 +149,14 @@ community-pulse/
 ## Testing & Quality
 
 ```bash
-pytest                    # Run all 106 tests
-pytest --cov=utils        # Generate coverage report
+pytest                    # Run the suite
+pytest --cov              # Run it with a coverage report
 python verify_setup.py    # Verify installation
 ```
 
 **Quality Metrics:**
-- 106/106 tests passing
-- Comprehensive coverage (core modules 92%+)
+- CI runs the suite on Python 3.11 and 3.12; the badge above shows the latest result
+- CI fails if total coverage drops below 70%
 - Type hints throughout with mypy enforcement
 - Comprehensive docstrings
 
@@ -175,7 +185,7 @@ The loop validates formatting, linting, typing, tests, coverage, and localhost a
 
 **Docker:**
 ```dockerfile
-FROM python:3.9-slim
+FROM python:3.12-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
@@ -192,11 +202,11 @@ CMD ["streamlit", "run", "app.py"]
 - End-to-end ETL pipeline design and implementation
 - Data quality assessment and automated remediation
 - Statistical analysis and KPI definition
-- Real-time data processing and visualization
+- Interactive data processing and visualization
 
 **Software Engineering**
 - Modular, maintainable Python architecture
-- Comprehensive test coverage (106 tests with modular component architecture)
+- Comprehensive test coverage (a pytest suite covering the utils and the UI components)
 - CI/CD pipeline with GitHub Actions
 - Production deployment on Streamlit Cloud
 

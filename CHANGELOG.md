@@ -7,12 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Upload limits**: uploads are capped at 5 MB, 50 columns and 50,000 rows. Streamlit itself refuses a file over 5 MB (`.streamlit/config.toml`), and the column count is read from the header before the file is parsed.
+- **Clearer upload errors**: a file whose header reads as one column containing `;`, a tab or `|` gets a hint to re-save it comma-delimited.
+- **"Start the tutorial" button** in the sidebar's Help & Guide, so the tutorial can be started again after the welcome card is gone.
+
 ### Changed
 - **CI lint enforcement restored**: Flake8 complexity checks (`--max-complexity=10`) now fail correctly instead of being suppressed.
-- **Bandit behavior restored to advisory**: Security scan output is retained in CI logs/artifacts, but low-severity findings (e.g., demo data generator `B311`) no longer fail the build.
+- **Bandit behavior restored to advisory**: an advisory Bandit run prints every finding to the CI log (no report is kept as an artifact), and a second run with `-lll -iii` fails the build only on high-severity, high-confidence findings, so low-severity findings (e.g., demo data generator `B311`) no longer fail it.
 - **CSV upload UX safety**: Invalid uploads no longer short-circuit sidebar rendering; downstream controls remain available.
 - **Data generator refactor**: Split `generate_messy_data()` into smaller helpers to satisfy complexity linting while preserving behavior.
 - **Upload contract clarified**: Required CSV schema documented as `Name`, `Email`, `Role`, `Join_Date`, and `Event_Attendance`.
+- **Each visitor's data stays in their own session**: generated and uploaded data live in the browser session's state, not in one file on the server that every visitor shared and could overwrite.
+- **One definition of a duplicate**: the Duplicate Records tile, the Duplicate Score and the Remove Duplicates step all match rows on the lower-cased, trimmed Email (whole-row matching only when there is no Email column).
+- **Unreadable dates are left blank**: Clean Dates no longer fills an unreadable date with the most common one; the execution log says how many it left blank.
+- **Names and emails**: the name check accepts letters in any script; one email pattern is shared by the cleaner and the Formatting score, so cleaned data can reach 100% Formatting; Standardize Names only re-cases names written all upper or all lower case, so names like "McDonald" are left alone.
+- **Confirmations are toasts**: "Generate New Data", "Run Cleaning Algorithms" and the end of the tutorial confirm with a toast that survives the page rerun.
+- **KPI tiles**: the Duplicate Records and Missing Values tiles show counts without delta arrows; the before/after comparison keeps its deltas.
+- **Dependencies**: numpy 2.2.6 and pandas 2.3.3; CI uses `actions/checkout` v6, `actions/setup-python` v6 and `codecov/codecov-action` v6.
+- **Python 3.10 is the minimum** (`requires-python = ">=3.10"`); CI tests 3.11 and 3.12.
+- **Black 26.10.1** is pinned in CI, the pre-commit hook, `requirements-dev.txt` and the `pyproject.toml` dev extras.
+
+### Fixed
+- The tutorial works: its first step now shows (in the sidebar), and "Next" on the last step finishes it.
+- Timestamps with mixed UTC offsets are parsed as dates instead of dropping out of the growth chart.
+- The histogram caption shows "Std Dev: 0.0" rather than `nan` for a single value.
+- Role labels are HTML-escaped before they reach the pie chart.
+- When cleaning removes every row, the Data Preparation and Analytics tabs say so and name the steps that drop rows.
+- Generated data: Registration_Date spans six months (it fell on a single day), and the "no event" value is "No Event", which no longer reads back as a missing value.
+
+### Security
+- Dependency floors raised for published advisories: `streamlit>=1.54.0`, `pytest>=9.0.3`.
+- The dev container no longer starts Streamlit with CORS and XSRF protection turned off.
+
+### Removed
+- `scripts/update_claude_md.py` (documented under 2.0.0 below).
+- The unused `show_whats_new()` panel and the Help & Guide's mentions of "Tutorial Mode" and "What's New" controls that did not exist.
+- `utils/data_access.py` and the shared data file it read.
 
 ## [2.0.0] - 2026-04-02
 
@@ -198,6 +229,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for planned enhancements including:
 
 ---
 
-[2.0.0]: https://github.com/hilliersmmain/community_pulse/releases/tag/v2.0.0
-[1.0.0]: https://github.com/hilliersmmain/community_pulse/releases/tag/v1.0.0
-[0.1.0]: https://github.com/hilliersmmain/community_pulse/releases/tag/v0.1.0
+[2.0.0]: https://github.com/hilliersmmain/community-pulse/releases/tag/v2.0.0
+[1.0.0]: https://github.com/hilliersmmain/community-pulse/releases/tag/v1.0.0
+[0.1.0]: https://github.com/hilliersmmain/community-pulse/releases/tag/v0.1.0

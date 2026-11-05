@@ -4,15 +4,13 @@ Thank you for your interest in the security of Community Pulse. We take security
 
 ## Supported Versions
 
-Community Pulse currently maintains the following support matrix:
+Community Pulse has no tagged releases. Fixes land on the `main` branch, the only supported version:
 
 | Version | Status      | Support |
 |---------|-------------|---------|
-| 2.x     | Current     | Supported |
-| 1.x     | EOL         | Not supported |
-| < 1.0   | EOL         | Not supported |
+| `main`  | Current     | Supported |
 
-We recommend using the latest 2.x release. Security updates will be provided for the current major version.
+Use the latest `main`. Older commits do not receive security fixes.
 
 ## Reporting a Vulnerability
 
@@ -23,7 +21,7 @@ If you discover a security vulnerability in Community Pulse, please report it **
 **Please include:**
 - A description of the vulnerability
 - Steps to reproduce the issue (if applicable)
-- The affected version(s)
+- The commit you tested (or say it was the live demo)
 - Any potential impact assessment
 
 **Please do NOT:**
@@ -49,10 +47,11 @@ Community Pulse is a portfolio project focused on data analytics and quality ass
 
 ## Dependencies & Updates
 
-We maintain security by:
-- Regularly updating dependencies listed in `requirements.txt`
-- Running GitHub Actions CI/CD that includes Bandit security scanning
-- Using GitHub Dependabot to monitor for vulnerable dependencies
+How dependencies and code are kept in check:
+- Dependabot **version updates** are configured in `.github/dependabot.yml`: a weekly check that opens pull requests for newer `pip` packages (minor and patch updates grouped into one, at most 5 open) and for GitHub Actions versions (at most 3 open). These are version bumps, not vulnerability reports.
+- Dependabot **security alerts are not enabled** on this repository, so GitHub raises no Dependabot alert for a dependency with a published advisory. Run `pip-audit` (below) for that.
+- The pins and floors in `requirements.txt` are raised by hand, from those pull requests or when an advisory affects a floor.
+- The CI workflow (`.github/workflows/ci.yml`) runs Bandit twice over `utils/ community_pulse/ components/ app.py verify_setup.py scripts/`: first an advisory run that prints every finding to the CI log and never fails the build, then a gate (`-lll -iii`) that fails the build only on a high-severity, high-confidence finding.
 
 Developers can verify dependency security locally:
 

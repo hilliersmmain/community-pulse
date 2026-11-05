@@ -9,7 +9,7 @@ A comprehensive demonstration of production-ready software engineering, data ana
 ## 🎯 Project Overview
 
 **Live Demo:** [community-pulse.streamlit.app](https://community-pulse.streamlit.app/)  
-**GitHub:** [github.com/hilliersmmain/community_pulse](https://github.com/hilliersmmain/community_pulse)  
+**GitHub:** [github.com/hilliersmmain/community-pulse](https://github.com/hilliersmmain/community-pulse)  
 **Tech Stack:** Python, Streamlit, Pandas, Plotly, Pytest
 
 **What It Does:**  
@@ -36,22 +36,23 @@ Real-world data is messy. Sales teams export CRMs with duplicates. Event organiz
 
 ### Production Deployment
 ✅ **Live Application:** Deployed on Streamlit Cloud, publicly accessible  
-✅ **CI/CD Pipeline:** Automated testing with GitHub Actions  
-✅ **100% Test Success Rate:** 70/70 tests passing  
-✅ **High Performance:** Processes 1,000 records in <1 second  
-✅ **User-Friendly:** Tutorial mode and contextual help throughout
+✅ **CI/CD Pipeline:** Formatting, linting, type checks, tests, coverage and a Bandit scan with GitHub Actions  
+✅ **Tested:** a pytest suite that CI runs on Python 3.11 and 3.12  
+✅ **User-Friendly:** a five-step tutorial and contextual help throughout
 
 ### Data Quality Impact
 | Metric | Before Cleaning | After Cleaning | Improvement |
 |--------|----------------|----------------|-------------|
-| **Health Score** | 68-75% | 95-98% | **+27-30%** |
-| **Duplicate Records** | 10-20% | 0% | **-100%** |
-| **Missing Values** | 5-15% | 0% | **-100%** |
-| **Format Errors** | 5-10% | 0% | **-100%** |
+| **Data Health Score** | 93.9% | 97.0% | **+3.1 points** |
+| **Duplicate Records** | 45 | 0 | **-100%** |
+| **Missing Values** | 369 | 335 | **34 fewer** (only missing attendance is filled) |
+| **Formatting Score** | 97.7% | 100.0% | **+2.3 points** |
+
+*Generated data, seed 1, 500 records, messiness "medium", all five cleaning steps; other runs give different numbers.*
 
 ### Code Quality Metrics
-- **Test Coverage:** 85% across core modules
-- **Code Quality:** A-grade (Black formatting, Flake8 linting)
+- **Test Coverage:** CI fails if total coverage drops below 70%
+- **Code Quality:** Black formatting, Flake8 linting (complexity limit 10), mypy type checks
 - **Documentation:** Complete API docs, development guide, architecture overview
 - **Type Safety:** Comprehensive type hints for IDE support
 
@@ -64,27 +65,25 @@ Real-world data is messy. Sales teams export CRMs with duplicates. Event organiz
 **Object-Oriented Programming:**
 ```python
 class DataCleaner:
-    """Pipeline for cleaning messy datasets with execution logging."""
-    
     def __init__(self, df: pd.DataFrame):
-        self.original_df = df.copy()
-        self.df = df.copy()
-        self.log = []
-    
-    def clean_all(self, steps: List[str] = None) -> pd.DataFrame:
-        """Execute cleaning pipeline with selected steps."""
+        """Initialize the DataCleaner with a raw dataframe."""
+        self.raw_df = df.copy()
+        self.clean_df = df.copy()
+        self.log: List[str] = []
+        ...
+
+    def clean_all(self, steps=None) -> pd.DataFrame:
+        """Runs the full data cleaning pipeline or selected steps."""
         # Modular, reusable, testable
 ```
 
 **Design Patterns:**
-- Factory pattern for data generation
-- Pipeline pattern for cleaning operations
-- Observer pattern for logging
-- Strategy pattern for configurable algorithms
+- Pipeline pattern for cleaning operations, each step switchable
+- One shared rule per concept: a single duplicate definition and a single email pattern used by both the cleaner and the scoring
 
 **Best Practices:**
 - Type hints throughout (`typing` module)
-- Comprehensive docstrings (Google style)
+- Comprehensive docstrings
 - PEP 8 compliance with Black formatting
 - Immutability (copies preserve originals)
 - Error handling with informative messages
@@ -96,15 +95,15 @@ class DataCleaner:
 2. **Transform:** Apply 5-stage cleaning pipeline
    - Name standardization
    - Email validation
-   - Deduplication
-   - Date formatting
-   - Missing value handling
-3. **Load:** Export cleaned data (CSV/JSON)
+   - Deduplication (same Email, ignoring case and spaces)
+   - Date parsing (unreadable dates left blank, not guessed)
+   - Missing attendance filled with 0
+3. **Load:** Export raw or cleaned data (CSV/JSON)
 
 **Data Validation:**
-- Input validation for all user parameters
-- Schema validation for required columns
-- Format validation (emails, dates)
+- Generator inputs checked (record count, messiness level)
+- Uploads checked for the required columns and capped at 5 MB, 50 columns and 50,000 rows
+- Format validation (emails, dates, names)
 - Integrity checks (duplicates, nulls)
 
 **Quality Metrics:**
@@ -120,69 +119,64 @@ overall_score = (
 ### 3. Data Visualization
 
 **Interactive Charts with Plotly:**
-- Time-series line charts with trend analysis (LOWESS smoothing)
+- Monthly membership growth line chart with a linear trend line and a mean line
 - Distribution histograms with statistical overlays (mean, median)
-- Demographic pie charts with drill-down capabilities
-- Responsive design supporting mobile/tablet/desktop
-- High-resolution exports (1920x1080 PNG)
+- Role breakdown pie chart
+- PNG export from each chart's toolbar (1000x600 at 2x scale)
 
 **Statistical Analysis:**
-- Central tendency calculations (mean, median, mode)
-- Trend detection and smoothing
+- Mean, median, standard deviation and range
+- Linear trend fit
 - Distribution analysis and binning
-- Outlier identification
 
 ### 4. Web Development
 
 **Streamlit Framework:**
-- Multi-page application with tab navigation
-- Session state management for user workflows
-- Real-time updates without page refreshes
+- Single-page application with tab navigation (Data Preparation, Analytics, Data Explorer)
+- Session state management: each visitor's data stays in their own session
 - Responsive CSS styling for professional appearance
-- Dark/light mode support
 
 **UX Design:**
-- Welcome modal for first-time users
-- Tutorial mode with step-by-step guidance
+- Welcome card for first-time users
+- Five-step tutorial
 - Contextual help tooltips on all metrics
 - Loading indicators for long operations
-- Success/error notifications with actionable feedback
+- Success toasts and error messages with actionable feedback
 
 ### 5. Software Engineering Practices
 
 **Testing:**
 ```python
-# Comprehensive test coverage
+# Comprehensive test coverage (a selection of the test files)
 tests/
 ├── test_data_generator.py    # Synthetic data tests
-├── test_cleaner.py            # Pipeline tests
-├── test_health_metrics.py     # Scoring tests
-├── test_visualizer.py         # Chart tests
-└── test_ui_helpers.py         # UI component tests
+├── test_cleaner.py           # Pipeline tests
+├── test_health_metrics.py    # Scoring tests
+├── test_csv_upload.py        # Upload checks
+├── test_visualizer.py        # Chart tests
+├── test_components.py        # UI components (Streamlit AppTest)
+└── test_app.py               # The whole app (Streamlit AppTest)
 
-# 70 tests, 85% coverage, all passing
-pytest --cov=utils --cov=community_pulse
+# Run the suite with a coverage report (sources set in pyproject.toml)
+pytest --cov
 ```
 
 **CI/CD:**
 ```yaml
-# Automated testing on every push/PR
+# Automated testing on every push/PR to main
 - name: Run tests with pytest
   run: pytest tests/ -v --tb=short
 
-# Quality gates prevent broken code from merging
+# Black, Flake8, mypy, coverage (70% floor) and a Bandit gate run in the same job
 ```
 
 **Version Control:**
-- Semantic versioning (v1.0.0)
-- Conventional commits
-- Feature branch workflow
-- Pull request reviews
+- Version number in `pyproject.toml`
 - CHANGELOG maintenance
 
 **Documentation:**
 - Comprehensive README with screenshots
-- API documentation for all public functions
+- API reference (`docs/API.md`)
 - Development guide for contributors
 - Architecture overview
 - SOP for data cleaning procedures
@@ -193,14 +187,8 @@ pytest --cov=utils --cov=community_pulse
 - Streamlit Cloud deployment (production)
 - GitHub Actions CI/CD pipeline
 - Dev container for consistent environments
-- Docker support for containerized deployment
-- Environment configuration management
-
-**Monitoring:**
-- Real-time performance metrics
-- Error tracking with detailed messages
-- User interaction logging
-- Data quality trend analysis
+- A Docker recipe in the README for containerized deployment
+- Dependabot pull requests for pip and GitHub Actions version updates
 
 ---
 
@@ -233,55 +221,30 @@ pytest --cov=utils --cov=community_pulse
 
 | Component | Technology | Purpose |
 |-----------|-----------|----------|
-| **Backend** | Python 3.9+ | Core logic and data processing |
-| **Framework** | Streamlit 1.52+ | Web application framework |
-| **Data Processing** | Pandas 2.2+ | DataFrame manipulation |
+| **Backend** | Python 3.10+ | Core logic and data processing |
+| **Framework** | Streamlit 1.54+ | Web application framework |
+| **Data Processing** | Pandas 2.3.3, NumPy 2.2.6 | DataFrame manipulation |
 | **Visualization** | Plotly 6.5+ | Interactive charts |
-| **Testing** | Pytest 9.0+ | Unit testing framework |
-| **Data Generation** | Faker, NumPy | Synthetic data creation |
-| **CI/CD** | GitHub Actions | Automated testing |
+| **Testing** | Pytest 9.0.3+ | Unit tests and Streamlit AppTest runs |
+| **Data Generation** | Faker 39+, NumPy | Synthetic data creation |
+| **CI/CD** | GitHub Actions | Formatting, linting, type checks, tests, coverage, Bandit |
 | **Deployment** | Streamlit Cloud | Production hosting |
 
 ### Design Principles
 
 1. **Modularity:** Each utility module has single responsibility
-2. **Testability:** All functions are pure and easy to test
+2. **Testability:** The logic in `utils/` is tested apart from the UI
 3. **Reusability:** Components can be used independently
 4. **Maintainability:** Clear structure, comprehensive documentation
-5. **Performance:** Optimized Pandas operations, efficient algorithms
-6. **Scalability:** Can handle 100-1000+ record datasets
+5. **Bounded input:** Generated sets of 100-1000 records; uploads capped at 5 MB, 50 columns and 50,000 rows
 
 ---
 
 ## 📊 Project Metrics
 
-### Code Statistics
-- **Lines of Code:** ~3,000+ (excluding tests and docs)
-- **Test Files:** 7
-- **Test Cases:** 70
-- **Test Coverage:** 85%
-- **Modules:** 6 core utilities
-- **Functions:** 30+ documented functions
-- **Classes:** 2 main classes (DataCleaner, DataHealthMetrics)
-
-### Performance Benchmarks
-
-| Operation | Dataset Size | Processing Time | Memory Usage |
-|-----------|--------------|-----------------|--------------|
-| Data Generation | 1,000 records | ~0.5s | <50 MB |
-| Data Cleaning (5 steps) | 1,000 records | ~0.3s | <75 MB |
-| Health Score Calculation | 1,000 records | ~0.1s | <30 MB |
-| Chart Rendering (3 charts) | 1,000 records | ~0.6s | <100 MB |
-| **Total Workflow** | **1,000 records** | **<2 seconds** | **<150 MB** |
-
-*Test Environment: Python 3.11, 4GB RAM, Ubuntu 22.04*
-
-### User Engagement
-- **Live Demo Uptime:** 99.9%
-- **Interactive Features:** 15+ user controls
+- **Main classes:** DataGenerator, DataCleaner, DataHealthMetrics
 - **Export Options:** CSV, JSON, PNG charts
-- **Tutorial Steps:** 4-step guided walkthrough
-- **Help Tooltips:** 25+ contextual help messages
+- **Tutorial Steps:** a five-step guided walkthrough
 
 ---
 
@@ -289,36 +252,33 @@ pytest --cov=utils --cov=community_pulse
 
 ### Dashboard Features
 
-**1. Real-Time KPI Display**
-- 8 key metrics updated dynamically
-- Color-coded health scores (red/yellow/green)
-- Delta indicators showing improvements
+**1. KPI Display**
+- 8 key metrics, recalculated for the raw or cleaned view
+- The Data Health Score's tooltip rates it Excellent, Good or Needs Work
 - Tooltips explaining each metric
 
 **2. Before/After Comparison**
 - Side-by-side metric comparison
-- Visual improvement indicators
-- Percentage change calculations
-- Detailed breakdown by category
+- Deltas for records, duplicates, missing values and health score
+- The raw and cleaned charts side by side, or one at a time with a toggle
 
 **3. Interactive Visualizations**
-- Time-series attendance trends
+- Monthly membership growth with a trend line
 - Distribution histograms with statistical overlays
-- Demographic pie charts
+- Role breakdown pie chart
 - Zoom, pan, hover interactions
-- High-resolution export buttons
+- PNG export from each chart's toolbar
 
 **4. Configurable Pipeline**
 - Toggle individual cleaning steps
-- Preview selected operations
-- Real-time execution logs
-- Detailed cleaning summary
+- A count of the selected steps before you run them
+- An execution log
+- A cleaning summary: records removed, health score change and run time
 
 **5. User Guidance**
-- Welcome modal for new users
-- Step-by-step tutorial mode
+- Welcome card for new users
+- Five-step tutorial
 - Contextual help throughout
-- "What's New" feature highlights
 
 ### Screenshots
 
@@ -339,7 +299,6 @@ pytest --cov=utils --cov=community_pulse
 ## 💼 Business Value
 
 ### For Data Analysts
-- **Time Savings:** Reduces manual data cleaning from hours to seconds
 - **Consistency:** Automated pipeline ensures repeatable results
 - **Transparency:** Detailed logs show exactly what changed
 - **Validation:** Before/after metrics prove quality improvements
@@ -347,8 +306,8 @@ pytest --cov=utils --cov=community_pulse
 ### For Data Engineers
 - **Reusable Pipeline:** Modular design for easy integration
 - **Extensible:** Add new cleaning steps with minimal code
-- **Well-Tested:** 70 unit tests ensure reliability
-- **Documented:** Complete API documentation for integration
+- **Well-Tested:** a pytest suite that CI runs on every push and pull request to `main`
+- **Documented:** an API reference (`docs/API.md`) for integration
 
 ### For Business Users
 - **No Coding Required:** Point-and-click interface
@@ -395,15 +354,14 @@ pytest --cov=utils --cov=community_pulse
 ### Technical Skills
 - **Advanced Pandas:** Mastered vectorized operations, chaining, and optimization
 - **Interactive Visualization:** Created production-quality Plotly charts
-- **Streamlit Development:** Built complex multi-page applications with state management
-- **Test-Driven Development:** Wrote tests first, achieved 85% coverage
-- **CI/CD Pipelines:** Automated testing and deployment workflows
+- **Streamlit Development:** Built a multi-tab application with per-session state management
+- **Test-Driven Development:** Wrote failing tests first, then the fix
+- **CI/CD Pipelines:** Automated testing workflows
 
 ### Software Engineering
 - **Clean Code:** Followed PEP 8, used Black formatting, comprehensive type hints
 - **Documentation:** Created user-facing and developer-facing documentation
-- **Version Control:** Managed features branches, PRs, semantic versioning
-- **Performance Optimization:** Profiled and optimized bottlenecks
+- **Version Control:** Kept a CHANGELOG
 - **Error Handling:** Implemented graceful degradation and user-friendly messages
 
 ### Product Development
@@ -411,12 +369,11 @@ pytest --cov=utils --cov=community_pulse
 - **Feature Prioritization:** Built MVP first, iterated based on feedback
 - **Quality Metrics:** Defined and tracked meaningful KPIs
 - **Documentation:** Created comprehensive guides for multiple audiences
-- **Deployment:** Launched production application with monitoring
+- **Deployment:** Launched a production application
 
 ### Problem Solving
 - **Data Quality:** Researched common data quality issues and solutions
 - **Algorithm Design:** Developed weighted scoring algorithm for composite metrics
-- **Performance:** Optimized for 1000+ record datasets
 - **Testing Strategy:** Covered edge cases, error conditions, integration scenarios
 
 ---
@@ -428,19 +385,17 @@ pytest --cov=utils --cov=community_pulse
 2. ✅ Data engineering (ETL pipelines, data validation)
 3. ✅ Data visualization (interactive charts, dashboards)
 4. ✅ Software testing (unit tests, integration tests, TDD)
-5. ✅ DevOps (CI/CD, deployment, monitoring)
+5. ✅ DevOps (CI/CD, deployment)
 6. ✅ Technical documentation (API docs, guides, READMEs)
-7. ✅ UI/UX design (user research, iterative design)
-8. ✅ Performance optimization (profiling, benchmarking)
+7. ✅ UI/UX design (tutorial, tooltips, clear error messages)
 
 **Portfolio Highlights:**
 - 🚀 **Production Application:** Live demo accessible to anyone
-- 🧪 **Test Coverage:** 70 tests, 85% coverage, all passing
-- 📚 **Documentation:** 15+ markdown files covering all aspects
-- 🎨 **Professional UI:** Dark/light mode, responsive design, tooltips
-- ⚡ **Performance:** Sub-second processing for 1000 records
+- 🧪 **Test Coverage:** a pytest suite, with a 70% coverage floor in CI
+- 📚 **Documentation:** README, CHANGELOG, contributing and security guides, and the `docs/` folder
+- 🎨 **Professional UI:** tooltips, toasts, a guided tutorial
 - 🔧 **Modern Tooling:** Type hints, linting, pre-commit hooks
-- 📦 **Package Management:** pyproject.toml, semantic versioning
+- 📦 **Package Management:** pyproject.toml
 
 ---
 
@@ -454,7 +409,7 @@ pytest --cov=utils --cov=community_pulse
    - Comprehensive error handling and validation
 
 2. **Professional Engineering**
-   - 85% test coverage with meaningful tests
+   - A pytest suite with meaningful tests and a 70% coverage floor in CI
    - Complete documentation for users and developers
    - Modern Python best practices (type hints, Black, Flake8)
 
@@ -466,7 +421,6 @@ pytest --cov=utils --cov=community_pulse
 4. **Technical Depth**
    - Data engineering pipeline
    - Statistical analysis and visualization
-   - Performance optimization
    - Full-stack web development
 
 5. **Business Value**
@@ -491,7 +445,7 @@ GitHub: [@hilliersmmain](https://github.com/hilliersmmain)
 
 **Project Links:**
 - Live Demo: [community-pulse.streamlit.app](https://community-pulse.streamlit.app/)
-- Source Code: [github.com/hilliersmmain/community_pulse](https://github.com/hilliersmmain/community_pulse)
+- Source Code: [github.com/hilliersmmain/community-pulse](https://github.com/hilliersmmain/community-pulse)
 - Documentation: [API Docs](./docs/API.md) | [Development Guide](./docs/DEVELOPMENT.md)
 
 ---

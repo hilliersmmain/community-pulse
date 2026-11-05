@@ -4,12 +4,12 @@ Thanks for helping improve Community Pulse.
 
 ## Local Setup
 
+Python 3.10 or newer (`requires-python` in `pyproject.toml`). Name the virtual environment `venv`: `.gitignore` ignores `venv/`, not `.venv/`.
+
 ```bash
-python -m venv .venv
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-pip install black flake8 mypy pytest-cov pre-commit
+python -m venv venv
+source venv/bin/activate        # Windows PowerShell: venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt   # requirements.txt plus the pinned dev tools (Black 26.10.1, flake8, mypy, pytest-cov, pre-commit)
 pre-commit install
 ```
 

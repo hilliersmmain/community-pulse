@@ -1,5 +1,6 @@
 """Tests for the setup verifier (verify_setup.py at the repo root)."""
 
+import collections
 import importlib
 
 import pytest
@@ -91,3 +92,55 @@ def test_main_still_prints_summary_when_an_optional_import_crashes(broken_import
     output = capsys.readouterr().out
     assert "kaleido failed to import" in output
     assert "Summary" in output
+
+
+VersionInfo = collections.namedtuple("VersionInfo", "major minor micro releaselevel serial")
+
+
+def test_python_floor_is_3_10(monkeypatch):
+    """pyproject.toml says requires-python >=3.10, so 3.9 fails the check and 3.10 passes it."""
+    monkeypatch.setattr(verify_setup.sys, "version_info", VersionInfo(3, 9, 18, "final", 0))
+    assert verify_setup.check_python_version() == (False, "Python 3.9.18 (requires 3.10+)")
+
+    monkeypatch.setattr(verify_setup.sys, "version_info", VersionInfo(3, 10, 0, "final", 0))
+    assert verify_setup.check_python_version() == (True, "Python 3.10.0")
+
+
+def test_failure_footer_names_the_3_10_floor(monkeypatch, capsys):
+    monkeypatch.setattr(verify_setup.sys, "version_info", VersionInfo(3, 9, 18, "final", 0))
+
+    assert verify_setup.main() == 1
+    assert "Ensure Python 3.10+ is installed" in capsys.readouterr().out
+
+
+COMPONENT_MODULES = [
+    "components.sidebar",
+    "components.kpi_display",
+    "components.comparison",
+    "components.tab_preparation",
+    "components.tab_analytics",
+    "components.tab_explorer",
+]
+
+
+def test_imports_cover_every_components_module():
+    checked = [module for module, _, _ in verify_setup.test_imports()]
+
+    assert set(COMPONENT_MODULES) <= set(checked)
+
+
+def test_project_structure_covers_the_components_package():
+    checked = [item for item, _, _ in verify_setup.check_project_structure()]
+
+    assert "components/" in checked
+    assert {f"{module.replace('.', '/')}.py" for module in COMPONENT_MODULES} <= set(checked)
+
+
+def test_main_fails_when_the_components_package_is_missing(broken_import, capsys):
+    """A missing UI package used to leave every check green and print 'All checks passed'."""
+    broken_import("components.sidebar", ModuleNotFoundError("No module named 'components'", name="components"))
+
+    assert verify_setup.main() == 1
+    output = capsys.readouterr().out
+    assert "components.sidebar failed" in output
+    assert "All checks passed" not in output
