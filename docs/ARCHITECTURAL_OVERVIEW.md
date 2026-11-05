@@ -9,30 +9,48 @@ Nonprofit organizations often struggle with "messy" data exported from legacy CR
 The application follows a simple functional architecture:
 
 ```text
-[Data Source] -> [DataCleaner Class] -> [Pandas DataFrame] -> [Visualizer Module] -> [Streamlit UI]
+[DataGenerator / CSV upload] -> [st.session_state["raw_df"]] -> [DataCleaner] -> [DataHealthMetrics] -> [Visualizer] -> [Streamlit UI]
 ```
 
-- **`data_generator.py`**: Uses the `Faker` library to synthesize realistic robust datasets with intentional errors (entropy).
+Each browser session keeps its own data in `st.session_state` (raw data under `"raw_df"`, cleaned data under `"clean_df"`); nothing is written to the server's disk, so one visitor never sees another's data.
+
+**`utils/`: the logic**
+
+- **`data_generator.py`**: Uses the `Faker` library to synthesize realistic member data with intentional errors.
+- **`upload_validation.py`**: Checks an uploaded CSV (column count from the raw header, required columns, row count) before the app uses it.
 - **`cleaner.py`**: The core logic engine. It encapsulates data cleaning rules into a reusable `DataCleaner` object.
+- **`duplicates.py`**: The one definition of a duplicate (same Email, ignoring case and surrounding spaces), shared by the cleaner and the health metrics.
+- **`date_parsing.py`**: Parses date columns that mix several formats; unreadable dates become NaT.
+- **`health_metrics.py`**: Completeness, Duplicate, Formatting and overall Data Health scores (see [KPI_DEFINITIONS.md](KPI_DEFINITIONS.md)).
 - **`visualizer.py`**: A pure functional module that takes a DataFrame and returns Plotly Figure objects.
-- **`app.py`**: Tying it all together in a reactive web interface.
+- **`ui_helpers.py`**, **`session_keys.py`**, **`constants.py`**: Shared UI helpers (tutorial, toasts, messages), session-state key names, and the shared tunables (chart colours, record-count and upload limits, cleaning defaults, score weights and thresholds, date formats, email and name patterns).
+
+**`components/`: the UI**
+
+- **`sidebar.py`**: Data source (generate or upload), cleaning-step choices, export, view toggle, help.
+- **`kpi_display.py`**: The Key Performance Indicators row.
+- **`comparison.py`**: The before/after cleaning comparison tiles.
+- **`tab_preparation.py`**, **`tab_analytics.py`**, **`tab_explorer.py`**: The Data Preparation, Analytics and Data Explorer tabs.
+
+**`app.py`**: A thin orchestrator: loads this session's data, sets up state and calls the render functions.
 
 ## 3. Key Features Deep Dive
 
 ### Data Cleaning Logic (`utils/cleaner.py`)
 
-The pipeline runs in a specific order to maximize efficiency:
+The pipeline always runs its selected steps in this order:
 
-1.  **Standardization**: Converts inputs to standard formats (e.g., Title Case for names, lowercase for emails).
-2.  **Deduplication**: Identifies duplicates based on normalized email addresses, keeping the primary record.
-3.  **Type Coercion**: Forces date columns into proper `datetime` objects, handling errors gracefully.
-4.  **Imputation**: Fills missing values (e.g., setting missing attendance to 0) to ensure charts render correctly.
+1.  **Standardize Names**: Title Case for names written entirely in upper or lower case; mixed-case names are kept.
+2.  **Fix Email Formats**: Lower-cases emails, turns " at " into "@", and drops rows whose email is still invalid or blank.
+3.  **Remove Duplicates**: Removes rows whose email (ignoring case and surrounding spaces) repeats an earlier row, keeping the first. It runs after the email fix, so repaired addresses are matched too.
+4.  **Clean Dates**: Parses `Join_Date` into `datetime` values; a date nothing can read is left blank (NaT), never guessed.
+5.  **Handle Missing Values**: Sets missing or non-numeric `Event_Attendance` to 0 so the attendance chart renders correctly.
 
 ### Visualization (`utils/visualizer.py`)
 
 - **Growth Trend**: A line chart aggregating new members by month.
-- **Role Distribution**: A pie chart showing the breakdown of Members vs. Admins.
-- **Attendance Histogram**: A frequency distribution of event attendance to identify "Super Users".
+- **Role Distribution**: A pie chart showing the breakdown of Members, Admins and Guests.
+- **Attendance Histogram**: A frequency distribution of event attendance, with mean and median lines.
 
 ## 4. Code Example: Using the Cleaner Standalone
 
@@ -51,7 +69,8 @@ clean_df = cleaner.clean_all()
 
 # View the log of changes
 print(cleaner.log)
-# Output: ['Standardized Names...', 'Removed 12 duplicates...']
+# Output: ['Standardized Names to Title Case.', 'Fixed email formatting. Removed 0 invalid emails.',
+#          'Removed 51 duplicate rows.', ...]
 
 # Save result
 clean_df.to_csv('clean_data.csv', index=False)
@@ -79,22 +98,22 @@ clean_df.to_csv('clean_data.csv', index=False)
 
 **Target Audience**: Single nonprofit organization, data team of 1-3 users  
 **Infrastructure**: Local Streamlit app or Streamlit Community Cloud  
-**Data Volume**: Up to 10,000 member records  
-**Storage**: CSV files stored locally or in the app's data directory
+**Data Volume**: Uploads up to 50,000 rows, 50 columns and 5 MB; generated samples of 100 to 1,000 records  
+**Storage**: In memory, per browser session (`st.session_state`); nothing is saved on the server
 
 **Current Capabilities**:
 
 - Interactive data cleaning with real-time feedback
 - Basic analytics dashboard with role filtering
-- CSV export for cleaned data
+- CSV and JSON export of raw or cleaned data
 - Manual data generation for testing
 
 **Limitations**:
 
-- No persistent storage (data resets on app restart)
-- Single-user concurrent access
+- No persistent storage: data lasts only as long as the browser session
+- Each visitor works alone on their own data; nothing is shared between sessions
 - No authentication or user management
-- Limited to CSV file format
+- CSV is the only upload format
 
 ---
 

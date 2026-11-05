@@ -6,22 +6,36 @@ This guide documents common errors you may encounter when using Community Pulse 
 
 ## Common Errors
 
-### FileNotFoundError: 'data/messy_club_data.csv'
+### "No Data Generated Yet"
 
-**Cause:** No data has been generated yet, or the data file was deleted.
+**Cause:** No data has been generated or uploaded in this browser session yet. Data is kept per session in memory, never in a file, so a new session starts empty.
 
 **Solution:**
 
 1. Navigate to the sidebar in the application
-2. Click **"Generate New Data"** button
-3. Adjust the number of records and messiness level if needed
-4. The data file will be created automatically
-
-**Prevention:** Always generate data before attempting to run cleaning operations.
+2. Adjust the number of records and messiness level if needed
+3. Click the **"Generate New Data"** button, or switch **Data Source** to **Upload CSV** and choose a file
 
 ---
 
-### ValueError: Invalid messiness level
+### Upload rejected in the sidebar
+
+The sidebar checks an upload in the order of this table. The first three stop at the first failure; the last three are checked together, so one upload can show several of them.
+
+| Message                                                    | Cause                                                       | Solution                                              |
+| ---------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------- |
+| The uploader refuses the file as too large                 | The file is over 5 MB                                       | Split the file or drop columns you do not need        |
+| `Too many columns: uploads are limited to 50 columns.`     | The header has more than 50 fields                          | Drop the columns you do not need                      |
+| `Error reading file. Please ensure it is a valid CSV.`     | pandas could not parse the file (the details line says why) | Open it in a spreadsheet and save it again as CSV     |
+| `Missing required columns: Join_Date, Event_Attendance`    | Column names are missing or spelled differently             | Rename the columns (see below)                        |
+| `... The header looks semicolon-delimited; re-save the file with commas as the delimiter.` | The file uses semicolons, tabs or pipes | Re-save it as a comma-separated CSV             |
+| `Row count exceeds limit (50,000).`                        | More than 50,000 data rows                                  | Split the file                                        |
+
+**Required columns** (names are case-sensitive): `Name`, `Email`, `Role`, `Join_Date`, `Event_Attendance`. Other columns are allowed and kept.
+
+---
+
+### ValueError: messiness_level must be 'low', 'medium', or 'high'
 
 **Cause:** Incorrect parameter passed to the data generator function.
 
@@ -37,54 +51,29 @@ This guide documents common errors you may encounter when using Community Pulse 
 from utils.data_generator import generate_messy_data
 
 # Correct usage
-generate_messy_data(500, "data/sample.csv", "medium")
+generate_messy_data(500, messiness_level="medium")
 
-# Incorrect usage (will raise ValueError)
-generate_messy_data(500, "data/sample.csv", "extreme")  # ❌
+# Incorrect usage: raises ValueError("messiness_level must be 'low', 'medium', or 'high', got 'extreme'")
+generate_messy_data(500, messiness_level="extreme")
 ```
 
----
-
-### MemoryError: Cannot allocate memory
-
-**Cause:** Dataset is too large for available system RAM, or insufficient memory for data processing.
-
-**Solution:**
-
-1. **Reduce dataset size:** Lower the number of records (try 100-500 instead of 1000)
-2. **Close other applications:** Free up system memory
-3. **Restart the application:** Clear any cached data
-
-**System Requirements:**
-
-- **Minimum RAM:** 2GB available
-- **Recommended RAM:** 4GB+ for smooth operation
-- **Maximum records:** 1000 (enforced by application)
+A `num_records` that is not a positive integer raises `ValueError: num_records must be a positive integer, got ...` the same way.
 
 ---
 
-### KeyError: 'ColumnName' not found
+### "Cleaning removed every record"
 
-**Cause:** Required column is missing from the dataset, or column name mismatch.
+**Cause:** Every row was dropped, almost always by **Fix Email Formats**, which removes rows whose email is blank or invalid.
 
-**Solution:**
-
-1. Regenerate the data using the built-in data generator
-2. Verify that imported CSV files have the expected columns:
-   - `Name`, `Email`, `JoinDate`, `AttendanceCount`, `Role`, `Status`
-
-**For custom data:** Ensure your CSV matches the expected schema before importing.
+**Solution:** Turn off the step the warning names in the sidebar's **Configure Cleaning Steps**, or fix the `Email` column, then run the cleaning again.
 
 ---
 
-### StreamlitAPIException: Widget outside of form
+### A chart is empty
 
-**Cause:** Internal Streamlit state management issue, typically due to rapid interactions.
+**Cause:** The chart's column is missing, or none of its values are usable. The Membership Growth chart needs readable `Join_Date` values (unreadable dates are left out); the attendance histogram needs numeric `Event_Attendance` values; the pie chart needs a `Role` column.
 
-**Solution:**
-
-1. Refresh the browser page
-2. Restart the Streamlit application: `streamlit run app.py`
+**Solution:** Check those columns in the Data Explorer tab. The Analytics tab shows charts only after cleaning has run; its main charts use the cleaned data.
 
 ---
 
@@ -113,18 +102,6 @@ python verify_setup.py
 
 ---
 
-### plotly.exceptions.PlotlyError: Invalid figure
-
-**Cause:** Insufficient data to generate visualization, or data type mismatch.
-
-**Solution:**
-
-1. Ensure dataset has at least 10 records for meaningful visualizations
-2. Verify data has been cleaned before attempting advanced analytics
-3. Check that date columns are properly formatted
-
----
-
 ## Testing-Specific Errors
 
 ### pytest: command not found
@@ -134,7 +111,7 @@ python verify_setup.py
 **Solution:**
 
 ```bash
-pip install pytest pytest-cov
+pip install -r requirements-dev.txt
 pytest --version  # Verify installation
 ```
 
@@ -149,7 +126,7 @@ pytest --version  # Verify installation
 1. Review the specific test that failed
 2. Check if the test expectations are still valid
 3. Update tests if functionality has intentionally changed
-4. Run individual test for debugging: `pytest tests/test_file.py::test_function_name -v`
+4. Run individual test for debugging: `pytest tests/test_file.py::test_function_name -v`, or `pytest tests/test_file.py::TestClassName::test_function_name -v` for a test inside a class
 
 ---
 
@@ -173,13 +150,9 @@ pytest --version  # Verify installation
 
 **Solution:**
 
-1. Pin exact versions in `requirements.txt`:
-   ```
-   streamlit==1.52.2
-   pandas==2.2.2
-   ```
+1. Keep the exact pins in `requirements.txt` (`pandas==2.3.3`, `numpy==2.2.6`); CI installs from the same file, so a green CI run means those versions work together
 2. Check Streamlit Cloud logs for specific error messages
-3. Ensure Python version compatibility (3.9+)
+3. Ensure Python version compatibility (3.10+, as `requires-python` in `pyproject.toml` says)
 
 ---
 
@@ -188,7 +161,7 @@ pytest --version  # Verify installation
 If you encounter an error not listed here:
 
 1. **Check the logs:** Review terminal output or Streamlit Cloud logs
-2. **Search Issues:** Check the [GitHub Issues](https://github.com/hilliersmmain/community_pulse/issues) page
+2. **Search Issues:** Check the [GitHub Issues](https://github.com/hilliersmmain/community-pulse/issues) page
 3. **Create an Issue:** Provide:
    - Error message (full traceback)
    - Steps to reproduce
@@ -197,17 +170,9 @@ If you encounter an error not listed here:
 
 ---
 
-## Debug Mode
+## Where Errors Show
 
-Enable verbose logging for troubleshooting:
-
-```bash
-# Set environment variable before running
-export LOG_LEVEL=DEBUG  # On Windows: set LOG_LEVEL=DEBUG
-streamlit run app.py
-```
-
-This will provide detailed information about application operations and data transformations.
+There is no debug mode or log-level setting: the application code reads no environment variables. When generating data or running the cleaning fails, the page shows a short message with the technical text in an **Error Details** expander; an upload that cannot be read shows a `Details:` line under the sidebar error. Anything else appears as a traceback in the terminal running `streamlit run app.py`, or in the Streamlit Cloud logs.
 
 ---
 

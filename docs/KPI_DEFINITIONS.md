@@ -2,213 +2,129 @@
 
 ## Overview
 
-This document defines the key metrics used in the Community Pulse Analytics Dashboard to measure member engagement and data quality. Each KPI includes its calculation method, interpretation guidelines, and target benchmarks.
+This document defines the data quality metrics the Community Pulse dashboard shows. Every number here is computed by `DataHealthMetrics` in `utils/health_metrics.py`; the weights and thresholds live in `utils/constants.py`. Change a constant there, not a number in this file.
+
+The KPI row at the top of the page scores the data in the **current view**: raw data, or cleaned data once cleaning has run and the sidebar's "Current view" is set to Cleaned Data. The four scores (5 to 8 below) also appear in the Data Explorer tab's "Data Health Overview".
 
 ---
 
-## Member Engagement Metrics
+## Count Metrics
 
-These metrics help assess how actively members participate in the organization and track growth patterns.
+### 1. Total Records
 
-### 1. Member Growth Rate
+**Definition**: The number of rows in the dataset, duplicates included.
 
-**Definition**: The percentage change in total member count over a specified time period (typically monthly).
+**Source**: `get_detailed_metrics()["total_records"]`
+
+### 2. Duplicate Records
+
+**Definition**: The number of rows whose Email, lower-cased and stripped of surrounding spaces, already appeared in an earlier row. The first row of each group is not counted. Rows with a missing email are never counted as duplicates. A dataset without an `Email` column falls back to counting whole identical rows.
+
+**Source**: `get_detailed_metrics()["duplicate_records"]`, from `duplicate_mask()` in `utils/duplicates.py`. The cleaner's "Remove Duplicates" step uses the same function, so run on its own it removes exactly this many rows. In the full pipeline it can remove more than the raw count shows, because "Fix Email Formats" runs first and repairs addresses such as "ann at x.com", which can then match an earlier row.
+
+### 3. Unique Records
 
 **Formula**:
 
 ```
-Growth Rate = ((Current Month Members - Previous Month Members) / Previous Month Members) × 100
+Unique Records = Total Records - Duplicate Records
 ```
 
-**Interpretation**:
+**Source**: `get_detailed_metrics()["unique_records"]`
 
-- **Positive value**: Member base is growing
-- **Negative value**: Member attrition exceeds new sign-ups
-- **Zero**: Stable membership
+### 4. Missing Values
 
-**Target Benchmark**: +5% monthly growth
+**Definition**: The number of empty (null/NaN) cells across every column of the dataset.
 
-**Data Source**: Derived from `Join_Date` field by counting unique members joining in each month
+**Source**: `get_detailed_metrics()["null_cells"]`
+
+Some columns are blank by design and no cleaning step fills them: `Last_Login` has gaps, and `Registration_Date` is blank whenever a member has no registration. So Missing Values rarely reaches 0 on the generated data, even after cleaning.
+
+The Duplicate Records and Missing Values tiles show the count for the current view only, with no up or down arrow. The before/after change is shown in the "Before vs. After Cleaning Comparison" section that appears once cleaning has run.
 
 ---
 
-### 2. Average Event Attendance
+## Score Metrics (0-100%)
 
-**Definition**: The mean number of events attended per member across the entire member base.
+Each score is shown rounded to one decimal place.
+
+### 5. Completeness Score
+
+**Definition**: The share of all cells that are not empty.
 
 **Formula**:
 
 ```
-Avg Attendance = Sum of all Event_Attendance values / Total number of members
+Completeness = (Total Cells - Missing Values) / Total Cells × 100
 ```
 
-**Interpretation**:
+`Total Cells` is rows × columns. An empty dataset scores 0%.
 
-- **Higher values (>10)**: Highly engaged member base
-- **Mid-range (5-10)**: Moderate engagement
-- **Lower values (<5)**: Opportunity to increase event participation
+**Method**: `calculate_completeness_score()`
 
-**Target Benchmark**: 8+ events per member annually
+### 6. Duplicate Score (shown as "Uniqueness" in the Data Explorer)
 
-**Data Source**: Calculated from the `Event_Attendance` column
-
-**Usage**: Helps identify if engagement initiatives are working and whether events are reaching the community
-
----
-
-### 3. Engagement Score
-
-**Definition**: A composite metric combining attendance frequency with recency of last login to assess overall member activity.
+**Definition**: The share of rows that are not duplicates, using the Duplicate Records rule above.
 
 **Formula**:
 
 ```
-Engagement Score = (Event_Attendance × 0.7) + (Days Since Last Login × 0.3)
+Duplicate Score = (Total Records - Duplicate Records) / Total Records × 100
 ```
 
-_Note: Days since login is normalized to a 0-100 scale where recent logins score higher_
+An empty dataset scores 100%.
 
-**Interpretation**:
+**Method**: `calculate_duplicate_score()`
 
-- **High (>70)**: "Super Users" - highly active members
-- **Medium (40-69)**: Regular members with moderate activity
-- **Low (<40)**: At-risk members who may need re-engagement
+### 7. Formatting Score
 
-**Target Benchmark**: 60% of members should score >50
+**Definition**: The average validity of the columns that have a format check. A column is checked when its name matches an entry in `FORMATTING_VALIDATORS` (`utils/health_metrics.py`); the first match wins:
 
-**Data Source**: Combines `Event_Attendance` and `Last_Login` fields
+| Column name matches          | Check                                                                   |
+| ---------------------------- | ----------------------------------------------------------------------- |
+| `Email`, or ends in `_email` | Fully matches `EMAIL_PATTERN` (`utils/constants.py`)                    |
+| a `date` word, e.g. `Join_Date`, `Registration_Date` | Readable by `parse_dates` (ISO, MM/DD/YYYY, DD-MM-YYYY, and other forms pandas can read) |
+| `Name`, or ends in `_name`   | Fully matches `NAME_PATTERN`: letters of any script, spaces, apostrophes, full stops, hyphens |
+| `ID`, or ends in `_id`       | Not blank                                                               |
 
-**Usage**: Prioritize re-engagement campaigns for low-scoring members
+Name matching ignores case. Only non-empty cells are checked; empty cells count against Completeness instead. Each checked column scores the percentage of its values that pass, and the Formatting Score is the plain average of those column scores. Columns with no check (for the generated data: `Last_Login`, `Event_Attendance`, `Role`, `Event_Registered`) are left out of the average. A dataset that is empty, or has no checked column, scores 100%.
 
----
+**Method**: `calculate_formatting_score()`
 
-## Data Health Metrics
+### 8. Data Health Score
 
-These metrics measure the quality and cleanliness of the member data in the CRM system.
-
-### 4. Duplicate Rate
-
-**Definition**: The percentage of records that are duplicates based on email address matching.
+**Definition**: A weighted average of the three scores above.
 
 **Formula**:
 
 ```
-Duplicate Rate = (Number of Duplicate Records / Total Raw Records) × 100
+Data Health Score = (0.4 × Completeness) + (0.3 × Duplicate Score) + (0.3 × Formatting)
 ```
 
-**Interpretation**:
+The weights are `HEALTH_SCORE_WEIGHT_COMPLETENESS` (0.4), `HEALTH_SCORE_WEIGHT_UNIQUENESS` (0.3) and `HEALTH_SCORE_WEIGHT_FORMATTING` (0.3) in `utils/constants.py`. Because an empty dataset scores 0% Completeness and 100% on the other two, it gets a Data Health Score of 60%.
 
-- **Healthy (<5%)**: Well-maintained data entry processes
-- **Concerning (5-10%)**: Review data entry procedures
-- **Critical (>10%)**: Immediate process improvement needed
+**Interpretation** (`SCORE_THRESHOLDS` in `utils/constants.py`):
 
-**Target Benchmark**: <5%
+- **90% and above**: Excellent
+- **70% to under 90%**: Good
+- **Below 70%**: Needs Work
 
-**Data Source**: Detected during the cleaning pipeline's deduplication step
-
-**Usage**: Monitors CRM data entry quality; high rates indicate need for staff training or validation rules
+**Method**: `calculate_overall_health_score()`
 
 ---
 
-### 5. Missing Data Rate
+## Before vs. After Cleaning
 
-**Definition**: The percentage of records with null or missing values in critical fields.
-
-**Formula**:
-
-```
-Missing Data Rate = (Total Missing Values Across Key Fields / (Total Records × Number of Key Fields)) × 100
-```
-
-**Key Fields Tracked**: Email, Event_Attendance, Join_Date, Last_Login
-
-**Interpretation**:
-
-- **Excellent (<2%)**: Complete and reliable data
-- **Acceptable (2-5%)**: Minor gaps, manageable
-- **Poor (>5%)**: Insights may be skewed by incomplete data
-
-**Target Benchmark**: <3%
-
-**Data Source**: Calculated from null/NaN counts before cleaning
-
-**Usage**: Identifies data collection gaps; helps prioritize which fields need mandatory entry rules
+After "Run Cleaning Algorithms", the dashboard adds a "Before vs. After Cleaning Comparison" section with four pairs of tiles: Records, Duplicates, Missing Values and Health Score. "Before" scores the raw data and "After" scores the cleaned data, with the change shown under "After". The Data Preparation tab's "Cleaning Summary" also shows Records Removed and the cleaned Data Health Score with its change.
 
 ---
 
-### 6. Email Validity Rate
+## Charts
 
-**Definition**: The percentage of email addresses that pass basic format validation (contains "@" and a domain).
+The Analytics tab's main charts use the cleaned data (its Before/After Cleaning Visual Comparison section adds the raw-data versions); they are views of the data, not KPIs:
 
-**Formula**:
+- **Membership Growth Over Time**: new members per month from `Join_Date`, with a straight-line trend and the mean.
+- **Event Attendance Distribution**: a histogram of `Event_Attendance` with mean and median lines.
+- **Member Role Distribution**: a pie chart of `Role`.
 
-```
-Email Validity Rate = (Valid Emails After Cleaning / Total Emails Before Cleaning) × 100
-```
-
-**Interpretation**:
-
-- **Excellent (>95%)**: Clean CRM data
-- **Good (90-95%)**: Some legacy data issues
-- **Poor (<90%)**: Systemic data quality problems
-
-**Target Benchmark**: >95%
-
-**Data Source**: Tracked during the email cleaning step
-
-**Usage**: Directly impacts email campaign deliverability; low rates suggest need for email verification tools
-
----
-
-## Role Distribution Metric
-
-### 7. Member Type Breakdown
-
-**Definition**: The percentage distribution of members across different role categories.
-
-**Calculation**:
-
-```
-Role % = (Count of Members in Role / Total Members) × 100
-```
-
-**Standard Roles**:
-
-- **Member**: Regular community participants (target: ~80%)
-- **Admin**: Leadership and staff (target: ~5%)
-- **Guest**: Trial or limited-access users (target: ~15%)
-
-**Interpretation**: Helps understand community composition and whether the organization maintains a healthy ratio of engaged members to administrative oversight.
-
-**Data Source**: `Role` column
-
----
-
-## Dashboard Usage Notes
-
-- All metrics are calculated **after** data cleaning to ensure accuracy
-- Time-series metrics (e.g., Growth Rate) require at least 2 months of data
-- Use the **Role Filter** in the Analytics Dashboard to segment metrics by member type
-- KPIs refresh automatically when you re-run the cleaning pipeline with updated data
-
----
-
-## Reporting Frequency
-
-| Metric                   | Recommended Review Frequency      |
-| ------------------------ | --------------------------------- |
-| Member Growth Rate       | Monthly                           |
-| Average Event Attendance | Quarterly                         |
-| Engagement Score         | Monthly (for targeting campaigns) |
-| Duplicate Rate           | Weekly                            |
-| Missing Data Rate        | Monthly                           |
-| Email Validity Rate      | Monthly                           |
-
----
-
-## Document Control
-
-- **Version**: 1.0
-- **Last Updated**: December 2025
-- **Owner**: Analytics Team
-- **Review Cycle**: Bi-annually
+The Role filter on the Analytics tab narrows these charts. It does not change the KPI row.
