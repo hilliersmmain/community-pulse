@@ -36,7 +36,7 @@ Real-world data is messy. Sales teams export CRMs with duplicates. Event organiz
 
 ### Production Deployment
 ✅ **Live Application:** Deployed on Streamlit Cloud, publicly accessible  
-✅ **CI/CD Pipeline:** Formatting, linting, type checks, tests, coverage and a Bandit scan with GitHub Actions  
+✅ **CI Pipeline:** Formatting, linting, type checks, tests, coverage and a Bandit scan with GitHub Actions  
 ✅ **Tested:** a pytest suite that CI runs on Python 3.11 and 3.12  
 ✅ **User-Friendly:** a five-step tutorial and contextual help throughout
 
@@ -53,7 +53,7 @@ Real-world data is messy. Sales teams export CRMs with duplicates. Event organiz
 ### Code Quality Metrics
 - **Test Coverage:** CI fails if total coverage drops below 70%
 - **Code Quality:** Black formatting, Flake8 linting (complexity limit 10), mypy type checks
-- **Documentation:** Complete API docs, development guide, architecture overview
+- **Documentation:** API reference for the generator, cleaner, health metrics, visualizer, upload validation and UI helpers (`docs/API.md`), development guide, architecture overview
 - **Type Safety:** Comprehensive type hints for IDE support
 
 ---
@@ -134,12 +134,12 @@ overall_score = (
 **Streamlit Framework:**
 - Single-page application with tab navigation (Data Preparation, Analytics, Data Explorer)
 - Session state management: each visitor's data stays in their own session
-- Responsive CSS styling for professional appearance
+- Custom CSS styling for a professional appearance (`CUSTOM_CSS` in `utils/constants.py`)
 
 **UX Design:**
 - Welcome card for first-time users
 - Five-step tutorial
-- Contextual help tooltips on all metrics
+- Contextual help tooltips on every KPI, Data Explorer, before/after comparison and cleaning-summary metric tile
 - Loading indicators for long operations
 - Success toasts and error messages with actionable feedback
 
@@ -161,7 +161,7 @@ tests/
 pytest --cov
 ```
 
-**CI/CD:**
+**CI:**
 ```yaml
 # Automated testing on every push/PR to main
 - name: Run tests with pytest
@@ -185,7 +185,7 @@ pytest --cov
 
 **Infrastructure:**
 - Streamlit Cloud deployment (production)
-- GitHub Actions CI/CD pipeline
+- GitHub Actions CI pipeline
 - Dev container for consistent environments
 - A Docker recipe in the README for containerized deployment
 - Dependabot pull requests for pip and GitHub Actions version updates
@@ -227,7 +227,7 @@ pytest --cov
 | **Visualization** | Plotly 6.5+ | Interactive charts |
 | **Testing** | Pytest 9.0.3+ | Unit tests and Streamlit AppTest runs |
 | **Data Generation** | Faker 39+, NumPy | Synthetic data creation |
-| **CI/CD** | GitHub Actions | Formatting, linting, type checks, tests, coverage, Bandit |
+| **CI** | GitHub Actions | Formatting, linting, type checks, tests, coverage, Bandit |
 | **Deployment** | Streamlit Cloud | Production hosting |
 
 ### Design Principles

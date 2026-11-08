@@ -19,18 +19,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Data generator refactor**: Split `generate_messy_data()` into smaller helpers to satisfy complexity linting while preserving behavior.
 - **Upload contract clarified**: Required CSV schema documented as `Name`, `Email`, `Role`, `Join_Date`, and `Event_Attendance`.
 - **Each visitor's data stays in their own session**: generated and uploaded data live in the browser session's state, not in one file on the server that every visitor shared and could overwrite.
-- **One definition of a duplicate**: the Duplicate Records tile, the Duplicate Score and the Remove Duplicates step all match rows on the lower-cased, trimmed Email (whole-row matching only when there is no Email column).
+- **One definition of a duplicate**: the Duplicate Records tile, the Duplicate Score and the Remove Duplicates step all match rows on the lower-cased, trimmed Email (whole-row matching only when there is no Email column). A row with no Email is never counted or removed as a duplicate, so the Duplicate Records count can rise; the sidebar's Remove Duplicates text, the Help & Guide and the Duplicate Records tile now say Email instead of "Email and Name".
 - **Unreadable dates are left blank**: Clean Dates no longer fills an unreadable date with the most common one; the execution log says how many it left blank.
 - **Names and emails**: the name check accepts letters in any script; one email pattern is shared by the cleaner and the Formatting score, so cleaned data can reach 100% Formatting; Standardize Names only re-cases names written all upper or all lower case, so names like "McDonald" are left alone.
 - **Confirmations are toasts**: "Generate New Data", "Run Cleaning Algorithms" and the end of the tutorial confirm with a toast that survives the page rerun.
 - **KPI tiles**: the Duplicate Records and Missing Values tiles show counts without delta arrows; the before/after comparison keeps its deltas.
 - **Dependencies**: numpy 2.2.6 and pandas 2.3.3; CI uses `actions/checkout` v6, `actions/setup-python` v6 and `codecov/codecov-action` v6.
 - **Python 3.10 is the minimum** (`requires-python = ">=3.10"`); CI tests 3.11 and 3.12.
-- **Black 26.10.1** is pinned in CI, the pre-commit hook, `requirements-dev.txt` and the `pyproject.toml` dev extras.
+- **Black 26.10.1** is pinned in CI, the pre-commit hook, `requirements-dev.txt` and the `pyproject.toml` dev extras; `tests/test_tool_pins.py` fails if the four pins differ.
+- **`verify_setup.py`** fails below Python 3.10 (its floor was 3.9) and checks the `components/` package: the folder, its six modules and their imports.
 
 ### Fixed
 - The tutorial works: its first step now shows (in the sidebar), and "Next" on the last step finishes it.
 - Timestamps with mixed UTC offsets are parsed as dates instead of dropping out of the growth chart.
+- The Membership Growth chart reads each date in its own format instead of guessing one format from the first value, so dates written another way no longer drop out of it.
+- The Analytics tab's note no longer says the sidebar view toggle changes its charts; it points to the Before/After Cleaning Visual Comparison section.
+- CI's pytest step passes again: from 2026-10-30 a fresh install pulled a pyarrow that refuses numpy 1.26.4, and numpy 2.2.6 clears it.
+- `scripts/verify_loop.py` keeps the leading space of the first `git status --porcelain` line, so ` M app.py` is no longer read as `pp.py`.
 - The histogram caption shows "Std Dev: 0.0" rather than `nan` for a single value.
 - Role labels are HTML-escaped before they reach the pie chart.
 - When cleaning removes every row, the Data Preparation and Analytics tabs say so and name the steps that drop rows.
@@ -43,7 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - `scripts/update_claude_md.py` (documented under 2.0.0 below).
 - The unused `show_whats_new()` panel and the Help & Guide's mentions of "Tutorial Mode" and "What's New" controls that did not exist.
-- `utils/data_access.py` and the shared data file it read.
+- `utils/data_access.py`, the shared data file it read, the `DATA_PATH` and `DATA_DIR` constants and `tests/test_data_access.py`.
+- The `bandit-report.json` line in `.gitignore`: CI prints Bandit's findings to the log and writes no report file.
 
 ## [2.0.0] - 2026-04-02
 
@@ -218,7 +224,7 @@ First installation - no upgrade needed. See [README.md](./README.md) for setup i
 
 ### Future Roadmap
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for planned enhancements including:
+Planned enhancements at the time included the following; most are in [PORTFOLIO.md](./PORTFOLIO.md)'s Future Roadmap:
 - Multi-file upload and batch processing
 - PostgreSQL database backend
 - RESTful API for programmatic access
@@ -229,6 +235,6 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for planned enhancements including:
 
 ---
 
-[2.0.0]: https://github.com/hilliersmmain/community-pulse/releases/tag/v2.0.0
-[1.0.0]: https://github.com/hilliersmmain/community-pulse/releases/tag/v1.0.0
-[0.1.0]: https://github.com/hilliersmmain/community-pulse/releases/tag/v0.1.0
+[Unreleased]: https://github.com/hilliersmmain/community-pulse/compare/9364f411a2bffd1d52f7a762991d4d5fa2300e13...main
+[2.0.0]: https://github.com/hilliersmmain/community-pulse/commit/9364f411a2bffd1d52f7a762991d4d5fa2300e13
+[1.0.0]: https://github.com/hilliersmmain/community-pulse/commit/052f0364fb7285ecff047d325a42957169340d8c

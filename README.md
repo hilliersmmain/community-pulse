@@ -48,7 +48,7 @@ A production-grade data analytics platform that transforms raw, unstructured com
 **3. Comprehensive Data Quality Monitoring**
 
 - Automated Health Scoring: a composite Data Health Score from completeness (40%), uniqueness (30%) and formatting (30%)
-- Before/After Comparison: records, duplicates, missing values and health score before and after cleaning, plus the raw and cleaned charts side by side
+- Before/After Comparison: records, duplicates, missing values and health score before and after cleaning, plus the raw and cleaned membership-growth charts side by side and a toggle view of all three charts for either data state
 - CSV and JSON export of the raw or cleaned data, and a five-step tutorial for first-time users
 
 ---
@@ -106,7 +106,7 @@ Open browser to `http://localhost:8501`
 | Visualization | Plotly 6.5+ | Interactive, publication-quality charts |
 | Testing | pytest 9.0.3+ | Unit tests, plus Streamlit AppTest runs of the app and its UI components |
 | Data Generation | Faker 39+ | Realistic synthetic data with controlled quality issues |
-| CI/CD | GitHub Actions | Formatting, linting, type checks, tests, coverage and a Bandit scan on every push and pull request to `main` |
+| CI | GitHub Actions | Formatting, linting, type checks, tests, coverage and a Bandit scan on every push and pull request to `main` |
 
 ---
 
@@ -141,7 +141,7 @@ community-pulse/
 │   ├── API.md                # Module API reference
 │   ├── ARCHITECTURAL_OVERVIEW.md
 │   └── screenshots/          # Dashboard screenshots
-└── .github/workflows/        # CI/CD automation
+└── .github/workflows/        # CI automation
 ```
 
 ---
@@ -149,6 +149,7 @@ community-pulse/
 ## Testing & Quality
 
 ```bash
+pip install -r requirements-dev.txt   # pytest-cov, Black, flake8, mypy: pytest --cov and the loop below need them
 pytest                    # Run the suite
 pytest --cov              # Run it with a coverage report
 python verify_setup.py    # Verify installation
@@ -157,7 +158,7 @@ python verify_setup.py    # Verify installation
 **Quality Metrics:**
 - CI runs the suite on Python 3.11 and 3.12; the badge above shows the latest result
 - CI fails if total coverage drops below 70%
-- Type hints throughout with mypy enforcement
+- Type hints on most functions, checked by mypy in CI
 - Comprehensive docstrings
 
 ---
@@ -207,7 +208,7 @@ CMD ["streamlit", "run", "app.py"]
 **Software Engineering**
 - Modular, maintainable Python architecture
 - Comprehensive test coverage (a pytest suite covering the utils and the UI components)
-- CI/CD pipeline with GitHub Actions
+- CI pipeline with GitHub Actions
 - Production deployment on Streamlit Cloud
 
 **Technical Communication**
