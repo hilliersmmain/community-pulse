@@ -25,6 +25,9 @@ OPTIONAL_COLUMNS = ["Join_Date", "Last_Login", "Event_Attendance", "Role", "Even
 MAX_UPLOAD_SIZE_MB = 5
 MAX_UPLOAD_ROWS = 50000
 MAX_UPLOAD_COLUMNS = 50
+# How much of an upload is read to count its header fields. Parsing a header of tens of thousands of
+# columns takes pandas seconds, so the count is made on the raw bytes before pandas sees the file.
+HEADER_PEEK_BYTES = 65536
 
 CLEANING_STEPS_DEFAULT = {
     "standardize_names": True,

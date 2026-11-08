@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 import csv
+import io
 from dataclasses import dataclass
 import pandas as pd
 
-from utils.constants import MAX_UPLOAD_COLUMNS, MAX_UPLOAD_ROWS, REQUIRED_COLUMNS
-
-# How much of an upload is read to count its header fields. Parsing a header of tens of thousands of
-# columns takes pandas seconds, so the count is made on the raw bytes before pandas sees the file.
-HEADER_PEEK_BYTES = 65536
+from utils.constants import HEADER_PEEK_BYTES, MAX_UPLOAD_COLUMNS, MAX_UPLOAD_ROWS, REQUIRED_COLUMNS
 
 # Delimiters a spreadsheet export may use instead of a comma, by the name the error message gives them.
 _OTHER_DELIMITERS = {";": "semicolon", "\t": "tab", "|": "pipe"}
@@ -31,11 +28,20 @@ def validate_required_columns(df: pd.DataFrame) -> list[str]:
     return [col for col in REQUIRED_COLUMNS if col not in df.columns]
 
 
+def _is_blank(row: list[str]) -> bool:
+    """True for a row pandas skips: an empty line, or one holding only spaces or tabs (a line of commas is not)."""
+    return len(row) == 0 or (len(row) == 1 and not row[0].strip())
+
+
 def validate_upload_header(raw: bytes) -> list[str]:
-    """Reject an upload whose first line has too many fields, judged from the raw bytes, before any parsing."""
-    first_line = raw[:HEADER_PEEK_BYTES].split(b"\n", 1)[0].decode("utf-8", errors="replace")
-    field_count = len(next(csv.reader([first_line]), []))
-    return [TOO_MANY_COLUMNS] if field_count > MAX_UPLOAD_COLUMNS else []
+    """Reject an upload whose header row has too many fields, judged from the raw bytes, before any parsing.
+
+    The header is the first row that is not blank, as pandas reads it: blank lines before it are skipped, a
+    quoted field may span lines, and lines may end in CR, LF or CRLF.
+    """
+    text = raw[:HEADER_PEEK_BYTES].decode("utf-8", errors="replace")
+    header = next((row for row in csv.reader(io.StringIO(text, newline="")) if not _is_blank(row)), [])
+    return [TOO_MANY_COLUMNS] if len(header) > MAX_UPLOAD_COLUMNS else []
 
 
 def _delimiter_hint(df: pd.DataFrame) -> str:

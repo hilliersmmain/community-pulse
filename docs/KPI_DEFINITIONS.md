@@ -18,7 +18,7 @@ The KPI row at the top of the page scores the data in the **current view**: raw 
 
 ### 2. Duplicate Records
 
-**Definition**: The number of rows whose Email, lower-cased and stripped of surrounding spaces, already appeared in an earlier row. The first row of each group is not counted. Rows with a missing email are never counted as duplicates. A dataset without an `Email` column falls back to counting whole identical rows.
+**Definition**: The number of rows whose Email, lower-cased and stripped of surrounding spaces, already appeared in an earlier row. The first row of each group is not counted. Rows with a missing or blank email are never counted as duplicates. A dataset without an `Email` column falls back to counting whole identical rows.
 
 **Source**: `get_detailed_metrics()["duplicate_records"]`, from `duplicate_mask()` in `utils/duplicates.py`. The cleaner's "Remove Duplicates" step uses the same function, so run on its own it removes exactly this many rows. In the full pipeline it can remove more than the raw count shows, because "Fix Email Formats" runs first and repairs addresses such as "ann at x.com", which can then match an earlier row.
 

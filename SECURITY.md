@@ -48,7 +48,7 @@ Community Pulse is a portfolio project focused on data analytics and quality ass
 ## Dependencies & Updates
 
 How dependencies and code are kept in check:
-- Dependabot **version updates** are configured in `.github/dependabot.yml`: a weekly check that opens pull requests for newer `pip` packages (minor and patch updates grouped into one, at most 5 open) and for GitHub Actions versions (at most 3 open). These are version bumps, not vulnerability reports.
+- Dependabot **version updates** are configured in `.github/dependabot.yml`: a monthly check that opens pull requests for newer `pip` packages (minor and patch updates grouped into one, at most 5 open) and for GitHub Actions versions (all grouped into one, at most 3 open). These are version bumps, not vulnerability reports.
 - Dependabot **security alerts are not enabled** on this repository, so GitHub raises no Dependabot alert for a dependency with a published advisory. Run `pip-audit` (below) for that.
 - The pins and floors in `requirements.txt` are raised by hand, from those pull requests or when an advisory affects a floor.
 - The CI workflow (`.github/workflows/ci.yml`) runs Bandit twice over `utils/ community_pulse/ components/ app.py verify_setup.py scripts/`: first an advisory run that prints every finding to the CI log and never fails the build, then a gate (`-lll -iii`) that fails the build only on a high-severity, high-confidence finding.

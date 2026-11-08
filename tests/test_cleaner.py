@@ -313,6 +313,13 @@ class TestDataCleaner:
         cleaner.remove_duplicates()
         assert cleaner.clean_df["Name"].tolist() == ["A", "B", "C"]
 
+    def test_remove_duplicates_keeps_every_row_with_a_blank_email(self):
+        """read_csv keeps a cell of spaces as a string; a blank email is as missing as an empty one."""
+        df = pd.DataFrame({"Name": ["A", "B", "C", "D"], "Email": ["  ", "", " ", "a@b.co"]})
+        cleaner = DataCleaner(df)
+        cleaner.remove_duplicates()
+        assert cleaner.clean_df["Name"].tolist() == ["A", "B", "C", "D"]
+
     def test_remove_duplicates_ignores_case_and_surrounding_spaces_in_emails(self):
         """The shared duplicate key is the lower-cased, stripped Email (remove_duplicates used to skip the strip)."""
         df = pd.DataFrame({"Name": ["A", "B", "C"], "Email": ["a@x.com", " A@x.com ", "c@x.com"]})

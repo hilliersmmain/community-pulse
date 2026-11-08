@@ -149,7 +149,7 @@ def test_main_fails_when_the_components_package_is_missing(broken_import, capsys
 
 
 def test_minimum_versions_match_requirements_txt(monkeypatch):
-    """Every minimum verify_setup checks is the floor or pin requirements.txt sets for that package.
+    """Every package verify_setup checks carries the floor or pin requirements.txt sets for it, as a minimum.
 
     It still asked for streamlit 1.52.2, pandas 2.2.2 and numpy 1.26.4 after requirements.txt moved to
     1.54.0, 2.3.3 and 2.2.6, so it passed environments the app no longer supports.
@@ -170,5 +170,8 @@ def test_minimum_versions_match_requirements_txt(monkeypatch):
     verify_setup.verify_dependencies()
 
     minimums = {name: version for name, version in checked if version is not None}
+    # faker and kaleido expose no __version__, so check_package could not compare a minimum for them.
+    unversioned = {"faker", "kaleido"}
+    expected = {name: requirements[name] for name, _ in checked if name in requirements and name not in unversioned}
     assert minimums, "verify_setup no longer checks any minimum version"
-    assert minimums == {name: requirements.get(name) for name in minimums}
+    assert minimums == expected

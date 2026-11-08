@@ -74,6 +74,7 @@ All of these live in `utils/constants.py`. Change the constant, not a literal in
 |---|---|---|
 | `MAX_UPLOAD_SIZE_MB` | `5` | A larger file is refused (and `server.maxUploadSize` above stops it earlier) |
 | `MAX_UPLOAD_COLUMNS` | `50` | A header with more fields is refused before the file is parsed |
+| `HEADER_PEEK_BYTES` | `65536` | How many bytes of an upload that header check reads |
 | `MAX_UPLOAD_ROWS` | `50000` | A file with more rows is refused |
 | `REQUIRED_COLUMNS` | see [Data Schema](#data-schema) | A file missing any of them is refused |
 

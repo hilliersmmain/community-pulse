@@ -530,6 +530,12 @@ class TestOneDefinitionOfADuplicate:
         assert metrics["duplicate_records"] == 0
         assert metrics["duplicate_score"] == 100.0
 
+    def test_blank_emails_are_never_duplicates_of_each_other(self):
+        df = pd.DataFrame({"Name": ["A", "B", "C", "D"], "Email": ["  ", "", " ", "a@b.co"]})
+        metrics = DataHealthMetrics(df).get_detailed_metrics()
+        assert metrics["duplicate_records"] == 0
+        assert metrics["duplicate_score"] == 100.0
+
     def test_without_an_email_column_whole_rows_are_compared(self):
         df = pd.DataFrame({"Name": ["Ann", "Ann", "Ann"], "Role": ["Member", "Member", "Admin"]})
         metrics = DataHealthMetrics(df).get_detailed_metrics()

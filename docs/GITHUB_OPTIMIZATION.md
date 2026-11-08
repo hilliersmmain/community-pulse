@@ -305,8 +305,8 @@ Current file is excellent. Consider adding:
 ### Issue Templates
 
 Done: `.github/ISSUE_TEMPLATE/` holds two issue forms, `bug_report.yml` and `feature_request.yml`, plus
-`config.yml`, which turns off blank issues and adds contact links. One of those links points to GitHub
-Discussions, which is not enabled on the repository yet: enable Discussions or drop that link.
+`config.yml`, which turns off blank issues and links to the live demo. (Its link to GitHub Discussions was
+dropped: Discussions are not enabled on the repository.)
 
 ---
 
@@ -330,7 +330,7 @@ Add Streamlit deployment status badge:
 - [x] CI/CD pipeline
 - [x] Test suite
 - [x] Issue templates (`.github/ISSUE_TEMPLATE/`)
-- [x] Dependabot version updates (`.github/dependabot.yml`: weekly pip and GitHub Actions PRs)
+- [x] Dependabot version updates (`.github/dependabot.yml`: monthly pip and GitHub Actions PRs)
 
 ### 🔨 Manual Tasks (5 minutes)
 

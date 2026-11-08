@@ -81,7 +81,7 @@
     ],
     "showlegend": true,
     "title": {
-      "text": "Membership Growth Over Time<br><sub>Data State: Cleaned | Total Members: 206</sub>",
+      "text": "Membership Growth Over Time<br><sub>Data State: Cleaned | Total Members: 206 | 7 without a readable join date</sub>",
       "x": 0.5,
       "xanchor": "center"
     },

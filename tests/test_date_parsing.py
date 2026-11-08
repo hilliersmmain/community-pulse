@@ -68,3 +68,10 @@ class TestParseDates:
     def test_naive_dates_are_left_exactly_as_they_were(self):
         out = parse_dates(pd.Series(["2024-01-05", "01/06/2024", "07-01-2024"]))
         assert out.tolist() == [pd.Timestamp("2024-01-05"), pd.Timestamp("2024-01-06"), pd.Timestamp("2024-01-07")]
+
+    def test_a_tz_aware_column_comes_back_naive_in_utc(self):
+        """The docstring promises datetime64[ns]; a tz-aware column used to come back untouched, zone and all."""
+        values = pd.Series(pd.to_datetime(["2024-01-01T00:30:00+02:00", "2024-06-01T12:00:00+00:00"], utc=True))
+        result = parse_dates(values)
+        assert str(result.dtype) == "datetime64[ns]"
+        assert list(result) == [pd.Timestamp("2023-12-31 22:30"), pd.Timestamp("2024-06-01 12:00")]

@@ -112,7 +112,7 @@ The rules run in the order shown. Only the columns named here are changed: `Last
 | "Missing required columns: ..." on upload   | Column names differ from the required ones  | Ensure CSV has Name, Email, Role, Join_Date, and Event_Attendance columns |
 | "... The header looks semicolon-delimited"  | File saved with semicolons (or tabs, pipes) | Re-save the file with commas as the delimiter                             |
 | File refused as too large, or "Too many columns" | Over 5 MB, or more than 50 columns     | Split the file, or drop the columns you do not need                       |
-| "Cleaning removed every record" warning     | Every row had an invalid or missing email   | Turn off "Fix Email Formats" or "Remove Duplicates", or fix the Email column |
+| "Cleaning removed every record" warning     | Every row had an invalid or missing email   | Turn off "Fix Email Formats", or fix the Email column                     |
 | Dates show as "NaT" after cleaning          | Date in a form the parser cannot read       | Expected: unreadable dates are left blank, not guessed. Check CRM export settings |
 
 ---

@@ -483,6 +483,15 @@ class TestDateColumnsAndLabels:
         assert list(line.y) == [1, 1, 1, 1]
         assert "Total: 4" in fig.layout.annotations[-1].text
 
+    def test_trend_subtitle_says_how_many_members_have_no_readable_date(self):
+        """The subtitle counted every row while the chart and its Total left out unreadable dates, unexplained."""
+        df = pd.DataFrame({"Join_Date": ["2025-01-10", "2025-02-05", "Unknown"]})
+        fig = plot_attendance_trend(df, data_state="cleaned")
+        assert fig.layout.title.text.endswith("Total Members: 3 | 1 without a readable join date</sub>")
+        assert fig.layout.annotations[-1].text.endswith("Total: 2")
+        every_date_readable = plot_attendance_trend(df.iloc[:2], data_state="cleaned")
+        assert every_date_readable.layout.title.text.endswith("Total Members: 2</sub>")
+
     def test_trend_counts_every_member_across_utc_offsets(self):
         """W02, through the cleaner: the chart used to keep only the rows sharing the first row's offset."""
         from utils.cleaner import DataCleaner

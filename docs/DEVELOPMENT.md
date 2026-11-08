@@ -134,7 +134,7 @@ community-pulse/
 │
 ├── .github/
 │   ├── workflows/ci.yml           # CI: Black, flake8, mypy, pytest, coverage, Bandit
-│   ├── dependabot.yml             # Weekly dependency update PRs
+│   ├── dependabot.yml             # Monthly dependency update PRs
 │   └── ISSUE_TEMPLATE/            # Bug report and feature request forms
 │
 ├── .devcontainer/devcontainer.json # Dev container / Codespaces

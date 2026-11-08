@@ -21,9 +21,10 @@ from utils.ui_helpers import (
     queue_flash,
 )
 
-# The cleaning steps that drop rows, by their sidebar checkbox label (components/sidebar.py,
-# CLEANING_STEP_CHECKBOXES; a test keeps the two in step).
-ROW_REMOVING_STEPS = {"fix_emails": "Fix Email Formats", "remove_duplicates": "Remove Duplicates"}
+# The cleaning steps that can drop every row, by their sidebar checkbox label (components/sidebar.py,
+# CLEANING_STEP_CHECKBOXES; a test keeps the two in step). Only Fix Email Formats can: it drops rows whose
+# email is blank or invalid. Remove Duplicates keeps the first row of each group, so it never empties a table.
+ROW_REMOVING_STEPS = {"fix_emails": "Fix Email Formats"}
 
 
 def _every_record_removed_message(selected_steps: list[str]) -> str:

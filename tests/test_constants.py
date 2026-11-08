@@ -34,3 +34,11 @@ class TestConstants:
     def test_custom_css_contains_style(self):
         assert "<style>" in CUSTOM_CSS
         assert "</style>" in CUSTOM_CSS
+
+
+def test_upload_header_peek_window_lives_in_constants():
+    """utils/constants.py holds every tunable, so the upload header check reads its window size from there."""
+    from utils import constants, upload_validation
+
+    assert constants.HEADER_PEEK_BYTES == 65536
+    assert upload_validation.HEADER_PEEK_BYTES is constants.HEADER_PEEK_BYTES

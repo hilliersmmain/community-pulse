@@ -115,11 +115,12 @@ def plot_attendance_trend(df: pd.DataFrame, data_state: str = "cleaned") -> go.F
         annotation_position="right",
     )
 
-    _apply_standard_layout(
-        fig,
-        title="Membership Growth Over Time",
-        subtitle=f"Data State: {data_state.title()} | Total Members: {len(df)}",
-    )
+    # The chart and its Total leave out rows without a readable date; say how many, so the two totals agree.
+    unplotted = len(df) - len(temp_df)
+    subtitle = f"Data State: {data_state.title()} | Total Members: {len(df)}"
+    if unplotted:
+        subtitle += f" | {unplotted} without a readable join date"
+    _apply_standard_layout(fig, title="Membership Growth Over Time", subtitle=subtitle)
     fig.update_layout(
         xaxis_title="Month (YYYY-MM)",
         yaxis_title="Number of New Members Joined",

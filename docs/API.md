@@ -183,7 +183,7 @@ Lower-case and strip each email, replace " at " with "@", and keep it only if it
 def remove_duplicates(self) -> None
 ```
 
-Remove rows whose Email, lower-cased and stripped of surrounding spaces, already appeared in an earlier row; the first row is kept. Rows with a missing email are never treated as duplicates. Without an `Email` column, whole identical rows are removed instead. The rule lives in `utils/duplicates.py` (`duplicate_mask`), which the Duplicate Records KPI and the Duplicate Score also use.
+Remove rows whose Email, lower-cased and stripped of surrounding spaces, already appeared in an earlier row; the first row is kept. Rows with a missing or blank email are never treated as duplicates. Without an `Email` column, whole identical rows are removed instead. The rule lives in `utils/duplicates.py` (`duplicate_mask`), which the Duplicate Records KPI and the Duplicate Score also use.
 
 **Modifies:** `self.clean_df` (drops rows)
 **Logs:** `Removed N duplicate rows.`
@@ -330,7 +330,7 @@ fig.write_image("attendance.png")  # Save as image (uses kaleido)
 ```
 
 **Features:**
-- Dates are parsed with `utils.date_parsing.parse_dates`; unreadable dates are dropped from the chart
+- Dates are parsed with `utils.date_parsing.parse_dates`; unreadable dates are dropped from the chart, and the subtitle says how many
 - Zoom/pan controls and a PNG download button in the modebar
 
 ### `plot_role_distribution()`
@@ -426,7 +426,7 @@ Checks an uploaded CSV before the app uses it. Streamlit's own upload limit (`ma
 def validate_upload_header(raw: bytes) -> list[str]
 ```
 
-Count the fields on the first line of the raw bytes, before pandas parses anything. Returns `["Too many columns: uploads are limited to 50 columns."]` when there are more than `MAX_UPLOAD_COLUMNS`, otherwise `[]`.
+Count the fields of the header row in the first `HEADER_PEEK_BYTES` of the raw bytes, before pandas parses anything. The header is the first row that is not blank (blank and whitespace-only lines are skipped, as pandas skips them); a quoted field may span lines, and lines may end in CR, LF or CRLF. Returns `["Too many columns: uploads are limited to 50 columns."]` when there are more than `MAX_UPLOAD_COLUMNS`, otherwise `[]`.
 
 ### `validate_upload_dataframe()`
 

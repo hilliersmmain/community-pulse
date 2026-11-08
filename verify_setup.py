@@ -58,7 +58,7 @@ def verify_dependencies() -> Dict[str, List[Tuple[str, bool, str]]]:
         ("plotly", "6.5.0"),
         ("numpy", "2.2.6"),
         ("faker", None),
-        ("pytest", None),
+        ("pytest", "9.0.3"),
     ]
 
     optional_packages = [

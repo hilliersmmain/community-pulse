@@ -157,3 +157,21 @@ class TestUploadWidth:
         assert validate_upload_header(raw) == [self.TOO_MANY]
         # A normal header followed by a huge body is not looked at beyond its first line.
         assert validate_upload_header(b"Name,Email\n" + b"," * 1_000_000) == []
+
+    def test_header_check_skips_blank_lines_before_the_header(self):
+        # pandas skips empty and whitespace-only lines, so a wide header after one used to reach it unchecked.
+        wide = ",".join(self._header(MAX_UPLOAD_COLUMNS)).encode()
+        for prefix in (b"\n", b"\r\n", b" \n", b"\t\r\n\n"):
+            assert validate_upload_header(prefix + wide + b"\nx\n") == [self.TOO_MANY], prefix
+
+    def test_header_check_reads_a_quoted_header_field_that_spans_lines(self):
+        wide = ",".join(self._header(MAX_UPLOAD_COLUMNS)).encode()
+        assert validate_upload_header(b'"Na\nme",' + wide + b"\nx\n") == [self.TOO_MANY]
+
+    def test_header_check_accepts_a_cr_only_file_that_pandas_reads(self):
+        # Classic Mac and Excel "CSV (Macintosh)" files end each line with a bare CR.
+        raw = b"Name,Email,Role,Join_Date,Event_Attendance\rAnn,a@x.com,Member,2025-01-01,3\r"
+        assert pd.read_csv(io.BytesIO(raw)).shape == (1, 5)
+        assert validate_upload_header(raw) == []
+        wide = ",".join(self._header(MAX_UPLOAD_COLUMNS)).encode()
+        assert validate_upload_header(wide + b"\rx\r") == [self.TOO_MANY]

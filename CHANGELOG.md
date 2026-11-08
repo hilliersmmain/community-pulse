@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Upload limits**: uploads are capped at 5 MB, 50 columns and 50,000 rows. Streamlit itself refuses a file over 5 MB (`.streamlit/config.toml`), and the column count is read from the header before the file is parsed.
+- **Upload header check**: the column limit is checked on the raw header before pandas parses the file. It skips blank and whitespace-only lines before the header, as pandas does, and reads a quoted header field that spans lines, so neither lets a wide header through; files whose lines end in a bare CR (Excel's "CSV (Macintosh)") upload as before. Its window size, `HEADER_PEEK_BYTES`, is in `utils/constants.py`.
 - **Clearer upload errors**: a file whose header reads as one column containing `;`, a tab or `|` gets a hint to re-save it comma-delimited.
 - **"Start the tutorial" button** in the sidebar's Help & Guide, so the tutorial can be started again after the welcome card is gone.
 
@@ -19,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Data generator refactor**: Split `generate_messy_data()` into smaller helpers to satisfy complexity linting while preserving behavior.
 - **Upload contract clarified**: Required CSV schema documented as `Name`, `Email`, `Role`, `Join_Date`, and `Event_Attendance`.
 - **Each visitor's data stays in their own session**: generated and uploaded data live in the browser session's state, not in one file on the server that every visitor shared and could overwrite.
-- **One definition of a duplicate**: the Duplicate Records tile, the Duplicate Score and the Remove Duplicates step all match rows on the lower-cased, trimmed Email (whole-row matching only when there is no Email column). A row with no Email is never counted or removed as a duplicate, so the Duplicate Records count can rise; the sidebar's Remove Duplicates text, the Help & Guide and the Duplicate Records tile now say Email instead of "Email and Name".
+- **One definition of a duplicate**: the Duplicate Records tile, the Duplicate Score and the Remove Duplicates step all match rows on the lower-cased, trimmed Email (whole-row matching only when there is no Email column). A row whose Email is missing, empty or only spaces is never counted or removed as a duplicate, so the Duplicate Records count can rise; the sidebar's Remove Duplicates text, the Help & Guide and the Duplicate Records tile now say Email instead of "Email and Name".
 - **Unreadable dates are left blank**: Clean Dates no longer fills an unreadable date with the most common one; the execution log says how many it left blank.
 - **Names and emails**: the name check accepts letters in any script; one email pattern is shared by the cleaner and the Formatting score, so cleaned data can reach 100% Formatting; Standardize Names only re-cases names written all upper or all lower case, so names like "McDonald" are left alone.
 - **Confirmations are toasts**: "Generate New Data", "Run Cleaning Algorithms" and the end of the tutorial confirm with a toast that survives the page rerun.
@@ -28,18 +29,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dependabot runs monthly**: pip and GitHub Actions updates are checked once a month (they were weekly), and all action bumps arrive as one grouped PR.
 - **Python 3.10 is the minimum** (`requires-python = ">=3.10"`); CI tests 3.11 and 3.12.
 - **Black 26.10.1** is pinned in CI, the pre-commit hook, `requirements-dev.txt` and the `pyproject.toml` dev extras; `tests/test_tool_pins.py` fails if the four pins differ.
-- **`verify_setup.py`** fails below Python 3.10 (its floor was 3.9) and checks the `components/` package: the folder, its six modules and their imports. Its minimum versions match `requirements.txt` (streamlit 1.54.0, pandas 2.3.3, numpy 2.2.6; they still said 1.52.2, 2.2.2 and 1.26.4), and a test keeps them equal.
+- **`verify_setup.py`** fails below Python 3.10 (its floor was 3.9) and checks the `components/` package: the folder, its six modules and their imports. Its version checks use `requirements.txt`'s floors and pins as minimums (streamlit 1.54.0, pandas 2.3.3, numpy 2.2.6, pytest 9.0.3; they said 1.52.2, 2.2.2, 1.26.4 and nothing), and a test keeps them equal. faker and kaleido are checked for presence only: neither exposes a version attribute to compare.
 
 ### Fixed
 - The tutorial works: its first step now shows (in the sidebar), and "Next" on the last step finishes it.
-- Timestamps with mixed UTC offsets are parsed as dates instead of dropping out of the growth chart.
+- Timestamps with mixed UTC offsets are parsed as dates instead of dropping out of the growth chart. A column that already holds zoned dates is converted to UTC the same way, so the parser always returns plain dates.
 - The Membership Growth chart reads each date in its own format instead of guessing one format from the first value, so dates written another way no longer drop out of it.
+- The Membership Growth subtitle says how many members have no readable join date, so its total agrees with the chart's.
 - The Analytics tab's note no longer says the sidebar view toggle changes its charts; it points to the Before/After Cleaning Visual Comparison section.
 - CI's pytest step passes again: from 2026-10-30 a fresh install pulled a pyarrow that refuses numpy 1.26.4, and numpy 2.2.6 clears it.
 - `scripts/verify_loop.py` keeps the leading space of the first `git status --porcelain` line, so ` M app.py` is no longer read as `pp.py`.
 - The histogram caption shows "Std Dev: 0.0" rather than `nan` for a single value.
 - Role labels are HTML-escaped before they reach the pie chart.
-- When cleaning removes every row, the Data Preparation and Analytics tabs say so and name the steps that drop rows.
+- When cleaning removes every row, the Data Preparation and Analytics tabs say so and name Fix Email Formats, the only step that can drop every row (Remove Duplicates keeps the first row of each group; the warning used to name it when it was ticked).
 - Generated data: Registration_Date spans six months (it fell on a single day), and the "no event" value is "No Event", which no longer reads back as a missing value.
 
 ### Security

@@ -63,7 +63,7 @@ A `num_records` that is not a positive integer raises `ValueError: num_records m
 
 ### "Cleaning removed every record"
 
-**Cause:** Every row was dropped, almost always by **Fix Email Formats**, which removes rows whose email is blank or invalid.
+**Cause:** Every row was dropped by **Fix Email Formats**, which removes rows whose email is blank or invalid. It is the only step that can drop every row: **Remove Duplicates** keeps the first row of each group.
 
 **Solution:** Turn off the step the warning names in the sidebar's **Configure Cleaning Steps**, or fix the `Email` column, then run the cleaning again.
 

@@ -20,7 +20,10 @@ def parse_dates(values: pd.Series) -> pd.Series:
     quadratic in cell length, so one huge cell would stall the app.
     """
     if pd.api.types.is_datetime64_any_dtype(values):
-        return values
+        # Already dates: a tz-aware column is converted to UTC and loses its zone, as parsed offsets do below.
+        if isinstance(values.dtype, pd.DatetimeTZDtype):
+            values = values.dt.tz_convert("UTC").dt.tz_localize(None)
+        return values.astype("datetime64[ns]")
     parsed = pd.Series(pd.NaT, index=values.index, dtype="datetime64[ns]")
     readable = values.notna() & (values.astype(str).str.len() <= MAX_DATE_CHARS)
     for date_format in [*DATE_FORMATS, "mixed"]:

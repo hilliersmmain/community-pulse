@@ -540,8 +540,21 @@ class TestTabPreparation:
         from components.tab_preparation import ROW_REMOVING_STEPS
 
         checkbox_labels = {key: label for key, label, _help in CLEANING_STEP_CHECKBOXES}
-        assert set(ROW_REMOVING_STEPS) == {"fix_emails", "remove_duplicates"}
+        assert set(ROW_REMOVING_STEPS) == {"fix_emails"}
         assert ROW_REMOVING_STEPS == {key: checkbox_labels[key] for key in ROW_REMOVING_STEPS}
+
+    def test_every_record_removed_message_never_blames_remove_duplicates(self):
+        """Remove Duplicates keeps the first row of each group, so only Fix Email Formats can empty the table.
+
+        The message used to name whichever of the two was ticked when the tab drew it, so unticking Fix Email
+        Formats after the run made it blame Remove Duplicates.
+        """
+        from components.tab_preparation import _every_record_removed_message
+
+        for selected in (["remove_duplicates"], ["fix_emails", "remove_duplicates"], []):
+            message = _every_record_removed_message(selected)
+            assert "Remove Duplicates" not in message
+            assert '"Fix Email Formats"' in message
 
     def test_prep_tab_no_steps_disables_run_button(self):
         # When the user disables every cleaning step, the Run button should be
