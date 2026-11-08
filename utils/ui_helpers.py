@@ -92,8 +92,7 @@ def show_welcome_modal():
             st.markdown("""
             - Hover over **info icons** for help
             - Toggle between **raw** and **cleaned** views
-            - Enable **Tutorial Mode** for step-by-step guidance
-            - Check **What's New** for latest features
+            - Click **Start Tutorial** below for a step-by-step tour
             """)
 
         st.divider()

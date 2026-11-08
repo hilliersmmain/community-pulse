@@ -53,10 +53,10 @@ def check_package(package_name: str, min_version: Optional[str] = None) -> Tuple
 def verify_dependencies() -> Dict[str, List[Tuple[str, bool, str]]]:
     """Verify all required and optional dependencies."""
     required_packages = [
-        ("streamlit", "1.52.2"),
-        ("pandas", "2.2.2"),
+        ("streamlit", "1.54.0"),
+        ("pandas", "2.3.3"),
         ("plotly", "6.5.0"),
-        ("numpy", "1.26.4"),
+        ("numpy", "2.2.6"),
         ("faker", None),
         ("pytest", None),
     ]

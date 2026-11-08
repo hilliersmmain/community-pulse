@@ -2,6 +2,8 @@
 
 import collections
 import importlib
+import re
+from pathlib import Path
 
 import pytest
 
@@ -144,3 +146,29 @@ def test_main_fails_when_the_components_package_is_missing(broken_import, capsys
     output = capsys.readouterr().out
     assert "components.sidebar failed" in output
     assert "All checks passed" not in output
+
+
+def test_minimum_versions_match_requirements_txt(monkeypatch):
+    """Every minimum verify_setup checks is the floor or pin requirements.txt sets for that package.
+
+    It still asked for streamlit 1.52.2, pandas 2.2.2 and numpy 1.26.4 after requirements.txt moved to
+    1.54.0, 2.3.3 and 2.2.6, so it passed environments the app no longer supports.
+    """
+    requirements = {}
+    for line in (Path(verify_setup.__file__).resolve().parent / "requirements.txt").read_text().splitlines():
+        match = re.match(r"([A-Za-z0-9_.-]+)\s*(?:>=|==)\s*([0-9][0-9A-Za-z.]*)", line.strip())
+        if match:
+            requirements[match.group(1).lower()] = match.group(2)
+
+    checked = []
+
+    def record(package_name, min_version=None):
+        checked.append((package_name, min_version))
+        return True, package_name
+
+    monkeypatch.setattr(verify_setup, "check_package", record)
+    verify_setup.verify_dependencies()
+
+    minimums = {name: version for name, version in checked if version is not None}
+    assert minimums, "verify_setup no longer checks any minimum version"
+    assert minimums == {name: requirements.get(name) for name in minimums}

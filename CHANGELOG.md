@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dependencies**: numpy 2.2.6 and pandas 2.3.3; CI uses `actions/checkout` v6, `actions/setup-python` v6 and `codecov/codecov-action` v6.
 - **Python 3.10 is the minimum** (`requires-python = ">=3.10"`); CI tests 3.11 and 3.12.
 - **Black 26.10.1** is pinned in CI, the pre-commit hook, `requirements-dev.txt` and the `pyproject.toml` dev extras; `tests/test_tool_pins.py` fails if the four pins differ.
-- **`verify_setup.py`** fails below Python 3.10 (its floor was 3.9) and checks the `components/` package: the folder, its six modules and their imports.
+- **`verify_setup.py`** fails below Python 3.10 (its floor was 3.9) and checks the `components/` package: the folder, its six modules and their imports. Its minimum versions match `requirements.txt` (streamlit 1.54.0, pandas 2.3.3, numpy 2.2.6; they still said 1.52.2, 2.2.2 and 1.26.4), and a test keeps them equal.
 
 ### Fixed
 - The tutorial works: its first step now shows (in the sidebar), and "Next" on the last step finishes it.
@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - `scripts/update_claude_md.py` (documented under 2.0.0 below).
-- The unused `show_whats_new()` panel and the Help & Guide's mentions of "Tutorial Mode" and "What's New" controls that did not exist.
+- The unused `show_whats_new()` panel and the Help & Guide's and welcome card's mentions of "Tutorial Mode" and "What's New" controls that did not exist; the welcome card's tip now points at its own "Start Tutorial" button.
 - `utils/data_access.py`, the shared data file it read, the `DATA_PATH` and `DATA_DIR` constants and `tests/test_data_access.py`.
 - The `bandit-report.json` line in `.gitignore`: CI prints Bandit's findings to the log and writes no report file.
 

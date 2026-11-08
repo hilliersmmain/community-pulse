@@ -200,6 +200,17 @@ class TestShowWelcomeModal:
         assert "Start Tutorial" in labels
         assert "Get Started" in labels
 
+    def test_pro_tips_name_only_controls_that_exist(self):
+        # The card's tips pointed at "Tutorial Mode" and "What's New" controls that no longer exist;
+        # the tutorial starts from the card's own "Start Tutorial" button.
+        at = AppTest.from_string(self.SCAFFOLD)
+        at.run()
+        text = "\n".join(m.value for m in at.markdown)
+        assert "Tutorial Mode" not in text
+        assert "What's New" not in text
+        assert "Start Tutorial" in text
+        assert "Start Tutorial" in [b.label for b in at.button]
+
     def test_modal_skipped_when_show_welcome_false(self):
         # When the flag is False the function returns early and renders nothing.
         script = textwrap.dedent("""
