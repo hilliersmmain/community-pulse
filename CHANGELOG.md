@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Confirmations are toasts**: "Generate New Data", "Run Cleaning Algorithms" and the end of the tutorial confirm with a toast that survives the page rerun.
 - **KPI tiles**: the Duplicate Records and Missing Values tiles show counts without delta arrows; the before/after comparison keeps its deltas.
 - **Dependencies**: numpy 2.2.6 and pandas 2.3.3; CI uses `actions/checkout` v6, `actions/setup-python` v6 and `codecov/codecov-action` v6.
+- **Dependabot runs monthly**: pip and GitHub Actions updates are checked once a month (they were weekly), and all action bumps arrive as one grouped PR.
 - **Python 3.10 is the minimum** (`requires-python = ">=3.10"`); CI tests 3.11 and 3.12.
 - **Black 26.10.1** is pinned in CI, the pre-commit hook, `requirements-dev.txt` and the `pyproject.toml` dev extras; `tests/test_tool_pins.py` fails if the four pins differ.
 - **`verify_setup.py`** fails below Python 3.10 (its floor was 3.9) and checks the `components/` package: the folder, its six modules and their imports. Its minimum versions match `requirements.txt` (streamlit 1.54.0, pandas 2.3.3, numpy 2.2.6; they still said 1.52.2, 2.2.2 and 1.26.4), and a test keeps them equal.
